@@ -1,10 +1,40 @@
+import com.android.build.gradle.api.ApkVariantOutput
+import java.io.FileInputStream
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Properties
+import java.util.TimeZone
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.compose.compiler)
 }
 
+val outputDate =
+    SimpleDateFormat("yyyyMMdd").apply { timeZone = TimeZone.getTimeZone("Asia/Taipei") }
+        .format(Date()).toInt() // This will give you the date string e.g., "20231027"
+
+val projectName: String = "common"  // for 可指定項目專案名稱來做特別判斷
+
 android {
+    signingConfigs {
+        create("kika") {
+            val ksFile = rootProject.file("../keystore/kika.properties")
+            val props = Properties()
+            if (ksFile.canRead()) {
+                props.load(FileInputStream(ksFile))
+                storeFile = file(props.getProperty("storeFile"))
+                keyPassword = props.getProperty("keyPassword")
+                keyAlias = props.getProperty("keyAlias")
+                storePassword = props.getProperty("storePassword")
+                println("The key for device has been setup")
+            } else {
+                println("\'keystore.properties\' not found!")
+            }
+        }
+    }
+
     namespace = "com.iqqi.ime"
     compileSdk {
         version = release(36)
@@ -14,19 +44,27 @@ android {
         applicationId = "com.iqqi.imeservice"
         minSdk = 28
         targetSdk = 36
-        versionCode = 1
-        versionName = "1.0"
-
-        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        versionCode = outputDate
+        versionName = "ime-${projectName}-${outputDate}" // 版本名稱會自動加上tool-前綴
     }
 
     buildTypes {
         release {
-            isMinifyEnabled = false
+            signingConfig = signingConfigs.getByName("kika")
+
+            isMinifyEnabled = true
+            isShrinkResources = true
+
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+        }
+
+        debug {
+            isMinifyEnabled = false
+            isShrinkResources = false
+            applicationIdSuffix = ".debug"
         }
     }
     compileOptions {
@@ -35,6 +73,16 @@ android {
     }
     kotlinOptions {
         jvmTarget = "17"
+    }
+
+    applicationVariants.configureEach {
+        val variant = this
+        variant.outputs.configureEach {
+            // 'this' refers to an ApkVariantOutput object
+            val output = this as ApkVariantOutput
+            val newApkName = "${variant.versionName}.apk"
+            output.outputFileName = newApkName
+        }
     }
 }
 
@@ -48,6 +96,8 @@ dependencies {
     implementation(libs.androidx.datastore.preferences)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.lifecycle.viewmodel.ktx)
+
+    implementation("androidx.compose.material:material-icons-extended:1.0.0")
 
     implementation(libs.androidx.savedstate.ktx)
     implementation(libs.androidx.lifecycle.service)
