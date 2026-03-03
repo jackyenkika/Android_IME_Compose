@@ -1,0 +1,115 @@
+<resources>
+    <string name="app_name" translatable="false">Kika Keyboard</string>
+    <string name="ime_subtype_label" translatable="false">Locale Keyboard</string>
+
+    <!-- Titles for ImePreference -->
+    <string name="activity_setting_title">Kika Keyboard Settings</string>
+
+    <!--region Language Info-->
+    <string name="ime_language_english_name" translatable="false">English_US</string>
+    <string name="ime_language_english_9key_name" translatable="false">English_9Key</string>
+    <string name="ime_language_arabic_name" translatable="false">Arabic</string>
+    <string name="ime_language_bulgarian_name" translatable="false">Bulgarian</string>
+    <string name="ime_language_croatian_name" translatable="false">Croatian</string>
+    <string name="ime_language_czech_name" translatable="false">Czech</string>
+    <string name="ime_language_chinese_pinyin_name" translatable="false">Pinyin</string>
+    <string name="ime_language_chinese_pin_9key_name" translatable="false">Pin_9Key</string>
+    <string name="ime_language_chinese_bihua_name" translatable="false">Bihua</string>
+    <string name="ime_language_chinese_cangjie_name" translatable="false">Cangjie</string>
+    <string name="ime_language_chinese_zhuyin_name" translatable="false">Zhuyin</string>
+    <string name="ime_language_chinese_wuxiami_name" translatable="false">Wuxiami</string>
+    <string name="ime_language_danish_name" translatable="false">Danish</string>
+    <string name="ime_language_dutch_name" translatable="false">Dutch</string>
+    <string name="ime_language_estonian_name" translatable="false">Estonian</string>
+    <string name="ime_language_finnish_name" translatable="false">Finnish</string>
+    <string name="ime_language_french_name" translatable="false">French</string>
+    <string name="ime_language_french_swiss_name" translatable="false">French_Swiss</string>
+    <string name="ime_language_german_name" translatable="false">German</string>
+    <string name="ime_language_greek_name" translatable="false">Greek</string>
+    <string name="ime_language_hebrew_name" translatable="false">Hebrew</string>
+    <string name="ime_language_hungarian_name" translatable="false">Hungarian</string>
+    <string name="ime_language_indonesian_name" translatable="false">Indonesian</string>
+    <string name="ime_language_italian_name" translatable="false">Italian</string>
+    <string name="ime_language_japanese_name" translatable="false">Japanese</string>
+    <string name="ime_language_japanese_kana_name" translatable="false">Japanese_kana</string>
+    <string name="ime_language_kazakh_name" translatable="false">Kazakh</string>
+    <string name="ime_language_korean_name" translatable="false">Korean</string>
+    <string name="ime_language_latvian_name" translatable="false">Latvian</string>
+    <string name="ime_language_lithuanian_name" translatable="false">Lithuanian</string>
+    <string name="ime_language_norwegian_name" translatable="false">Norwegian</string>
+    <string name="ime_language_persian_name" translatable="false">Persian</string>
+    <string name="ime_language_polish_name" translatable="false">Polish</string>
+    <string name="ime_language_portuguese_brazil_name" translatable="false">Portuguese_Brazil</string>
+    <string name="ime_language_romanian_name" translatable="false">Romanian</string>
+    <string name="ime_language_russian_name" translatable="false">Russian</string>
+    <string name="ime_language_serbian_name" translatable="false">Serbian</string>
+    <string name="ime_language_slovak_name" translatable="false">Slovak</string>
+    <string name="ime_language_spanish_name" translatable="false">Spanish_ES</string>
+    <string name="ime_language_swedish_name" translatable="false">Swedish</string>
+    <string name="ime_language_thai_name" translatable="false">Thai</string>
+    <string name="ime_language_turkish_name" translatable="false">Turkish</string>
+    <string name="ime_language_portuguese_pt_name" translatable="false">Portuguese_PT</string>
+    <string name="ime_language_ukrainian_name" translatable="false">Ukrainian</string>
+    <string name="ime_language_handwriting_name" translatable="false">Handwriting</string>
+    <string name="ime_language_handwriting_tflite_name" translatable="false">Handwriting_TFLite</string>
+
+    <string name="ime_language_english_display_name" translatable="false">English</string>
+    <string name="ime_language_english_9key_display_name" translatable="false">English(9Key)</string>
+    <string name="ime_language_arabic_display_name" translatable="false">العربية</string>
+    <string name="ime_language_bulgarian_display_name" translatable="false">български</string>
+    <string name="ime_language_croatian_display_name" translatable="false">Hrvatski</string>
+    <string name="ime_language_czech_display_name" translatable="false">Čeština</string>
+    <string name="ime_language_chinese_pinyin_display_name" translatable="false">简体中文-拼音</string>
+    <string name="ime_language_chinese_pin_9key_display_name" translatable="false">简拼-九键</string>
+    <string name="ime_language_chinese_bihua_display_name" translatable="false">简体中文-笔画</string>
+    <string name="ime_language_chinese_cangjie_display_name" translatable="false">繁體中文-倉頡</string>
+    <string name="ime_language_chinese_sucheng_display_name" translatable="false">繁體中文-速成</string>
+    <string name="ime_language_chinese_zhuyin_display_name" translatable="false">繁體中文-注音</string>
+    <string name="ime_language_chinese_wuxiami_display_name" translatable="false">Wuxiami</string>
+    <string name="ime_language_danish_display_name" translatable="false">Dansk</string>
+    <string name="ime_language_dutch_display_name" translatable="false">Nederlands</string>
+    <string name="ime_language_estonian_display_name" translatable="false">Eesti</string>
+    <string name="ime_language_finnish_display_name" translatable="false">Suomi</string>
+    <string name="ime_language_french_display_name" translatable="false">Française</string>
+    <string name="ime_language_french_swiss_display_name" translatable="false">Française(Swiss)</string>
+    <string name="ime_language_german_display_name" translatable="false">Deutsch</string>
+    <string name="ime_language_greek_display_name" translatable="false">Ελληνικά</string>
+    <string name="ime_language_hebrew_display_name" translatable="false">עברית</string>
+    <string name="ime_language_hungarian_display_name" translatable="false">Magyar</string>
+    <string name="ime_language_indonesian_display_name" translatable="false">Bahasa Indonesia</string>
+    <string name="ime_language_italian_display_name" translatable="false">Italiano</string>
+    <string name="ime_language_japanese_display_name" translatable="false">日本語ローマ字</string>
+    <string name="ime_language_japanese_kana_display_name" translatable="false">日本語かな</string>
+    <string name="ime_language_kazakh_display_name" translatable="false">Қазақ тілі</string>
+    <string name="ime_language_korean_display_name" translatable="false">한국어</string>
+    <string name="ime_language_latvian_display_name" translatable="false">Latviešu</string>
+    <string name="ime_language_lithuanian_display_name" translatable="false">Lietuvių</string>
+    <string name="ime_language_norwegian_display_name" translatable="false">Norsk</string>
+    <string name="ime_language_persian_display_name" translatable="false">فارسی</string>
+    <string name="ime_language_polish_display_name" translatable="false">Polski</string>
+    <string name="ime_language_portuguese_brazil_display_name" translatable="false">Português(BR)</string>
+    <string name="ime_language_portuguese_pt_display_name" translatable="false">Português(PT)</string>
+    <string name="ime_language_romanian_display_name" translatable="false">Română</string>
+    <string name="ime_language_russian_display_name" translatable="false">Русский</string>
+    <string name="ime_language_serbian_display_name" translatable="false">Srpski</string>
+    <string name="ime_language_slovak_display_name" translatable="false">Slovenčina</string>
+    <string name="ime_language_spanish_display_name" translatable="false">Español</string>
+    <string name="ime_language_swedish_display_name" translatable="false">Svenska</string>
+    <string name="ime_language_thai_display_name" translatable="false">ภาษาไทย</string>
+    <string name="ime_language_turkish_display_name" translatable="false">Türkçe</string>
+    <string name="ime_language_ukrainian_display_name" translatable="false">Українська</string>
+    <string name="ime_language_handwriting_display_name" translatable="false">手寫輸入(NCNN)</string>
+    <string name="ime_language_handwriting_tflite_display_name" translatable="false">手寫輸入(TFLite)</string>
+    <string name="ime_voice_language_chinese_pinyin_display_name" translatable="false">简体中文</string>
+    <string name="ime_voice_language_chinese_bihua_display_name" translatable="false">简体中文</string>
+    <!--endregion Language Info-->
+
+    <!--Language Popup dialog-->
+    <string name="ime_language_category_handwrite" translatable="false">手寫輸入</string>
+    <string name="ime_language_category_chinese_traditional" translatable="false">繁體中文</string>
+    <string name="ime_language_category_chinese_simplified" translatable="false">简体中文</string>
+
+    <!--倉頡/速成 單鍵切換-->
+    <string name="ime_language_cangjie_switch_to_cangjie" translatable="false">倉</string>
+    <string name="ime_language_cangjie_switch_to_sucheng" translatable="false">速</string>
+</resources>

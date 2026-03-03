@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="utf-8"?>
+<input-method xmlns:android="http://schemas.android.com/apk/res/android"
+    android:isDefault="true"
+    android:settingsActivity="com.iqqijni.pad.imesettings.ImeMainPreferenceActivity">
+
+
+    <subtype
+        android:imeSubtypeLocale="en"
+        android:imeSubtypeMode="keyboard"
+        android:isAsciiCapable="true"
+        android:label="@string/ime_subtype_label"
+        android:overridesImplicitlyEnabledSubtype="true" />
+
+    <!-- 英文（美)_English_US-->
+    <subtype
+        android:imeSubtypeLocale="en_US"
+        android:imeSubtypeMode="keyboard"
+        android:isAsciiCapable="true"
+        android:label="@string/ime_language_english_display_name"
+        android:languageTag="en-US" />
+
+    <!-- 英文（美)_English_US_9Key-->
+    <subtype
+        android:imeSubtypeExtraValue="KeyboardLayoutSet=9Key"
+        android:imeSubtypeLocale="en_US"
+        android:imeSubtypeMode="keyboard"
+        android:isAsciiCapable="true"
+        android:label="@string/ime_language_english_9key_display_name"
+        android:languageTag="en-US-9key" />
+
+
+    <!-- 阿拉伯 ARABIC-->
+    <subtype
+        android:imeSubtypeLocale="ar_SA"
+        android:imeSubtypeMode="keyboard"
+        android:isAsciiCapable="true"
+        android:label="@string/ime_language_arabic_display_name"
+        android:languageTag="ar-SA" />
+
+    <!-- 德國 German-->
+    <subtype
+        android:imeSubtypeLocale="de_DE"
+        android:imeSubtypeMode="keyboard"
+        android:isAsciiCapable="true"
+        android:label="@string/ime_language_german_display_name"
+        android:languageTag="de-DE" />
+
+    <!-- 法國 French-->
+    <subtype
+        android:imeSubtypeLocale="fr_FR"
+        android:imeSubtypeMode="keyboard"
+        android:isAsciiCapable="true"
+        android:label="@string/ime_language_french_display_name"
+        android:languageTag="fr-FR" />
+    <!-- 西班牙 Spanish-->
+    <subtype
+        android:imeSubtypeLocale="es_ES"
+        android:imeSubtypeMode="keyboard"
+        android:isAsciiCapable="true"
+        android:label="@string/ime_language_spanish_display_name"
+        android:languageTag="es-ES" />
+    <!-- 義大利 Italy-->
+    <subtype
+        android:imeSubtypeLocale="it_IT"
+        android:imeSubtypeMode="keyboard"
+        android:isAsciiCapable="true"
+        android:label="@string/ime_language_italian_display_name"
+        android:languageTag="it-IT" />
+
+    <!-- 泰國 Thai-->
+    <subtype
+        android:imeSubtypeLocale="th_TH"
+        android:imeSubtypeMode="keyboard"
+        android:isAsciiCapable="true"
+        android:label="@string/ime_language_thai_display_name"
+        android:languageTag="th-TH" />
+
+    <!-- 中文（繁體）Chinese_TW-->
+    <subtype
+        android:imeSubtypeLocale="zh_TW"
+        android:imeSubtypeMode="keyboard"
+        android:isAsciiCapable="true"
+        android:label="@string/ime_language_chinese_zhuyin_display_name"
+        android:languageTag="zh-TW" />
+
+    <!-- 中文（簡體）Chinese_CN-->
+    <subtype
+        android:imeSubtypeLocale="zh_CN"
+        android:imeSubtypeMode="keyboard"
+        android:isAsciiCapable="true"
+        android:label="@string/ime_language_chinese_pinyin_display_name"
+        android:languageTag="zh-CN" />
+
+    <!-- 中文（簡體）Chinese_CN_9key-->
+    <subtype
+        android:imeSubtypeExtraValue="KeyboardLayoutSet=9Key"
+        android:imeSubtypeLocale="zh_CN"
+        android:imeSubtypeMode="keyboard"
+        android:isAsciiCapable="true"
+        android:label="@string/ime_language_chinese_pin_9key_display_name"
+        android:languageTag="zh-CN-9key" />
+
+    <!-- 中文（香港）Chinese_HK-->
+    <subtype
+        android:imeSubtypeLocale="zh_HK"
+        android:imeSubtypeMode="keyboard"
+        android:isAsciiCapable="true"
+        android:label="@string/ime_language_chinese_cangjie_display_name"
+        android:languageTag="zh-HK" />
+
+    <!-- 日文 Japanese -->
+    <subtype
+        android:imeSubtypeLocale="ja_JP"
+        android:imeSubtypeMode="keyboard"
+        android:isAsciiCapable="true"
+        android:label="@string/ime_language_japanese_display_name"
+        android:languageTag="ja-JP" />
+
+    <!-- 日文 Japanese 9key-->
+    <subtype
+        android:imeSubtypeExtraValue="KeyboardLayoutSet=9Key"
+        android:imeSubtypeLocale="ja_JP"
+        android:imeSubtypeMode="keyboard"
+        android:isAsciiCapable="true"
+        android:label="@string/ime_language_japanese_kana_display_name"
+        android:languageTag="ja-JP-9key" />
+
+</input-method>
