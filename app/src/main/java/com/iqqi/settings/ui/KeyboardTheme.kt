@@ -4,7 +4,10 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.graphics.Color
+import com.iqqi.ime.keyboard.model.KeyboardThemeSpec
+import com.iqqi.ime.keyboard.state.localKeyboardStyle
 import com.iqqi.settings.ThemeColor
 
 @Composable
@@ -97,8 +100,21 @@ fun KeyboardTheme(
         }
     }
 
+    val keyboardStyle = KeyboardThemeSpec(
+        backgroundColor = colorScheme.background,
+        keyBackgroundColor = colorScheme.surface,
+        keyPressedColor = colorScheme.primary.copy(alpha = 0.2f),
+        keyBorderColor = colorScheme.primary.copy(alpha = 0.3f),
+        keyTextColor = colorScheme.onSurface
+    )
+
     MaterialTheme(
         colorScheme = colorScheme,
-        content = content
-    )
+    ) {
+        CompositionLocalProvider(
+            localKeyboardStyle provides keyboardStyle
+        ) {
+            content()
+        }
+    }
 }

@@ -16,7 +16,7 @@ import com.iqqi.core.KeyboardType
 import com.iqqi.dictionary.CimDictionary
 import com.iqqi.engine.CIMReducer
 import com.iqqi.engine.ImeEngine
-import com.iqqi.ime.ui.ComposeKeyboardView
+import com.iqqi.ime.keyboard.ComposeKeyboardView
 
 class IMEService : LifecycleInputMethodService(), ViewModelStoreOwner, SavedStateRegistryOwner {
 
