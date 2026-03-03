@@ -1,6 +1,7 @@
 package com.iqqi.ime.keyboard.ui
 
 
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -36,6 +37,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.iqqi.ime.IMEService
@@ -52,21 +54,31 @@ fun KeyboardLayout(scale: Float) {
         mutableStateOf(KeyboardState())
     }
 
+    val context = LocalContext.current
+    val density = LocalDensity.current // 獲取目前的螢幕密度
+
     val layout = when (state.language) {
         KeyboardLanguage.ENGLISH -> englishLayout
 //        KeyboardLanguage.CHINESE -> chineseLayout
 //        KeyboardLanguage.JAPANESE -> japaneseLayout
         else -> englishLayout
     }
-    val screenHeight = LocalContext.current.resources.displayMetrics.heightPixels
-    val keyboardHeight = (screenHeight * scale).dp
-    val rowHeight = keyboardHeight / layout.size
+    val screenHeightPx = context.resources.displayMetrics.heightPixels
+//    val keyboardHeight = (screenHeight * scale).dp
+    val keyboardHeightDp = with(density) {
+        (screenHeightPx * scale).toDp()
+    }
+    val rowHeight = keyboardHeightDp / layout.size
 
+    Log.d(
+        "zxc",
+        "screenHeightPx: $screenHeightPx , scale = $scale , keyboardHeightDp = $keyboardHeightDp , rowHeight = $rowHeight"
+    )
     val style = localKeyboardStyle.current
     Column(
         modifier = Modifier
             .background(style.backgroundColor)
-            .height(keyboardHeight)
+            .height(keyboardHeightDp)
             .fillMaxWidth()
     ) {
         layout.forEach { row ->
