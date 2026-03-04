@@ -64,7 +64,6 @@ fun KeyboardLayout(scale: Float) {
         else -> englishLayout
     }
     val screenHeightPx = context.resources.displayMetrics.heightPixels
-//    val keyboardHeight = (screenHeight * scale).dp
     val keyboardHeightDp = with(density) {
         (screenHeightPx * scale).toDp()
     }
@@ -89,7 +88,12 @@ fun KeyboardLayout(scale: Float) {
             ) {
                 Row(Modifier.fillMaxSize()) {
                     row.forEach { key ->
-                        KeyboardKey(keyboardKey = key, modifier = Modifier.weight(1f))
+                        val keyWeight = when (key.type) {
+                            KeyType.SPACE -> 4f       // 佔 40% -> 比例 4
+                            KeyType.ENTER -> 2f     // 佔 20% -> 比例 2
+                            else -> 1f                 // 剩下鍵平均
+                        }
+                        KeyboardKey(keyboardKey = key, modifier = Modifier.weight(keyWeight))
                     }
                 }
             }
@@ -107,13 +111,13 @@ fun KeyboardKey(
     val ctx = LocalContext.current
     Box(
         modifier = modifier
-            .padding(2.dp)
+            .padding(4.dp)
             .background(
                 if (pressed.value) style.keyPressedColor else style.keyBackgroundColor,
                 RoundedCornerShape(style.keyCornerRadius)
             )
             .border(1.dp, style.keyBorderColor, RoundedCornerShape(style.keyCornerRadius))
-            .fillMaxHeight(), contentAlignment = Alignment.BottomCenter
+            .fillMaxHeight(), contentAlignment = Alignment.Center
     ) {
         when (keyboardKey.type) {
             KeyType.INPUT -> {

@@ -9,6 +9,7 @@ import androidx.compose.ui.platform.AbstractComposeView
 import androidx.compose.ui.platform.LocalContext
 import com.iqqi.data.SettingsRepository
 import com.iqqi.ime.keyboard.ui.KeyboardLayout
+import com.iqqi.settings.KeyboardHeight
 import com.iqqi.settings.ThemeColor
 import com.iqqi.settings.ui.KeyboardTheme
 
@@ -20,7 +21,7 @@ class ComposeKeyboardView(context: Context) : AbstractComposeView(context) {
         val repository = remember { SettingsRepository(context) }
 
         val themeColor by repository.themeColorFlow.collectAsState(initial = ThemeColor.BLUE)
-        val keyboardHeightScale by repository.keyboardHeightFlow.collectAsState(initial = 0.4f)
+        val keyboardHeightScale by repository.keyboardHeightFlow.collectAsState(initial = KeyboardHeight.MEDIUM.scale)
 
         KeyboardTheme(themeColor = themeColor) {
             KeyboardLayout(scale = keyboardHeightScale)
