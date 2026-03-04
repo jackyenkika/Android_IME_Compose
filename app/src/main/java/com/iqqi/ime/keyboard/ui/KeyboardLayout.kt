@@ -4,9 +4,7 @@ package com.iqqi.ime.keyboard.ui
 import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.interaction.collectIsPressedAsState
+import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
@@ -15,32 +13,29 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowDropDown
-import androidx.compose.material.icons.filled.Backspace
-import androidx.compose.material.icons.filled.DashboardCustomize
-import androidx.compose.material.icons.filled.KeyboardArrowUp
-import androidx.compose.material.icons.filled.KeyboardReturn
-import androidx.compose.material.icons.filled.Language
-import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material.icons.filled.SpaceBar
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import com.iqqi.ime.IMEService
 import com.iqqi.ime.keyboard.layout.englishLayout
 import com.iqqi.ime.keyboard.model.KeySpec
 import com.iqqi.ime.keyboard.model.KeyType
@@ -49,53 +44,120 @@ import com.iqqi.ime.keyboard.state.KeyboardState
 import com.iqqi.ime.keyboard.state.localKeyboardStyle
 
 @Composable
-fun KeyboardLayout(scale: Float) {
-    var state by remember {
-        mutableStateOf(KeyboardState())
-    }
-
-    val context = LocalContext.current
-    val density = LocalDensity.current // 獲取目前的螢幕密度
+fun KeyboardLayout(scale: Float, onKeyCommit: (KeySpec) -> Unit) {
+    var state by remember { mutableStateOf(KeyboardState()) }
 
     val layout = when (state.language) {
         KeyboardLanguage.ENGLISH -> englishLayout
 //        KeyboardLanguage.CHINESE -> chineseLayout
-//        KeyboardLanguage.JAPANESE -> japaneseLayout
         else -> englishLayout
     }
-    val screenHeightPx = context.resources.displayMetrics.heightPixels
-    val keyboardHeightDp = with(density) {
-        (screenHeightPx * scale).toDp()
+    val style = localKeyboardStyle.current
+
+    // 儲存每個按鍵相對於「鍵盤容器」的座標範圍
+    val keyBounds = remember { mutableStateMapOf<KeySpec, Rect>() }
+    var activeKey by remember { mutableStateOf<KeySpec?>(null) }
+
+    // 用於捕捉根容器座標的變數
+    var containerCoords by remember {
+        mutableStateOf<androidx.compose.ui.layout.LayoutCoordinates?>(
+            null
+        )
     }
+
+    // 獲取目前的螢幕密度與高度
+    val context = LocalContext.current
+    val density = LocalDensity.current
+    val screenHeightPx = context.resources.displayMetrics.heightPixels
+    val keyboardHeightDp = with(density) { (screenHeightPx * scale).toDp() }
     val rowHeight = keyboardHeightDp / layout.size
 
-    Log.d(
-        "zxc",
-        "screenHeightPx: $screenHeightPx , scale = $scale , keyboardHeightDp = $keyboardHeightDp , rowHeight = $rowHeight"
-    )
-    val style = localKeyboardStyle.current
-    Column(
+    Box(
         modifier = Modifier
-            .background(style.backgroundColor)
             .height(keyboardHeightDp)
             .fillMaxWidth()
-    ) {
-        layout.forEach { row ->
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(rowHeight)
-            ) {
-                Row(Modifier.fillMaxSize()) {
-                    row.forEach { key ->
-                        val keyWeight = when (key.type) {
-                            KeyType.SPACE -> 4f       // 佔 40% -> 比例 4
-                            KeyType.ENTER -> 2f     // 佔 20% -> 比例 2
-                            else -> 1f                 // 剩下鍵平均
+            .background(style.backgroundColor)
+            .graphicsLayer(clip = false)
+            .onGloballyPositioned { containerCoords = it } // 捕捉父容器座標
+            .pointerInput(Unit) {
+                awaitPointerEventScope {
+                    while (true) {
+                        val down = awaitFirstDown()
+                        val pointerId = down.id
+
+                        // 內部搜尋函式
+                        fun hitTest(position: Offset): KeySpec? {
+                            return keyBounds.entries.firstOrNull {
+                                it.value.contains(position)
+                            }?.key
                         }
-                        KeyboardKey(keyboardKey = key, modifier = Modifier.weight(keyWeight))
+
+                        activeKey = hitTest(down.position)
+                        down.consume()
+
+                        while (true) {
+                            val event = awaitPointerEvent()
+                            val change = event.changes.firstOrNull { it.id == pointerId }
+                                ?: break // 失去追蹤則跳出
+
+                            if (!change.pressed) {
+                                activeKey?.let { onKeyCommit(it) }
+                                activeKey = null
+                                change.consume()
+                                break
+                            }
+
+                            // 滑動過程中持續更新 activeKey (用於滑行輸入或校正)
+                            activeKey = hitTest(change.position)
+                            change.consume()
+                        }
                     }
                 }
+            }
+    ) {
+        // 渲染按鍵
+        Column {
+            layout.forEach { row ->
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(rowHeight)
+                ) {
+                    row.forEach { key ->
+                        KeyboardKey(
+                            keyboardKey = key,
+                            isActive = activeKey == key,
+                            modifier = Modifier
+                                .weight(key.weight)
+                                .padding(2.dp)
+                                .onGloballyPositioned { childCoords ->
+                                    // 關鍵 2: 計算 child 相對於 container 的位置
+                                    containerCoords?.let { parent ->
+                                        val localOffset =
+                                            parent.localPositionOf(childCoords, Offset.Zero)
+                                        keyBounds[key] = Rect(
+                                            offset = localOffset,
+                                            size = androidx.compose.ui.geometry.Size(
+                                                childCoords.size.width.toFloat(),
+                                                childCoords.size.height.toFloat()
+                                            )
+                                        )
+                                    }
+                                })
+                    }
+                }
+            }
+        }
+
+        // Preview Overlay (放在 Column 後面，確保在 Z 軸最上方)
+        activeKey?.takeIf { it.type == KeyType.INPUT }?.let { key ->
+            Log.d("zxc", "preview key = $key")
+            val bounds = keyBounds[key]
+            if (bounds != null) {
+                KeyPreviewOverlay(
+                    key = key,
+                    keyBounds = bounds
+                )
             }
         }
     }
@@ -103,119 +165,55 @@ fun KeyboardLayout(scale: Float) {
 
 @Composable
 fun KeyboardKey(
-    keyboardKey: KeySpec, modifier: Modifier
+    keyboardKey: KeySpec,
+    isActive: Boolean,
+    modifier: Modifier
 ) {
     val style = localKeyboardStyle.current
-    val interactionSource = remember { MutableInteractionSource() }
-    val pressed = interactionSource.collectIsPressedAsState()
-    val ctx = LocalContext.current
-    Box(
+    val density = LocalDensity.current
+
+    BoxWithConstraints(
         modifier = modifier
-            .padding(4.dp)
             .background(
-                if (pressed.value) style.keyPressedColor else style.keyBackgroundColor,
+                if (isActive) style.keyPressedColor
+                else style.keyBackgroundColor,
                 RoundedCornerShape(style.keyCornerRadius)
             )
-            .border(1.dp, style.keyBorderColor, RoundedCornerShape(style.keyCornerRadius))
-            .fillMaxHeight(), contentAlignment = Alignment.Center
+            .border(
+                1.dp,
+                style.keyBorderColor,
+                RoundedCornerShape(style.keyCornerRadius)
+            )
+            .fillMaxHeight(),
+        contentAlignment = Alignment.Center
     ) {
+        val shortSidePx = with(density) {
+            minOf(maxWidth.toPx(), maxHeight.toPx())
+        }
+
         when (keyboardKey.type) {
             KeyType.INPUT -> {
                 val label = keyboardKey.label ?: ""
 
-                BoxWithConstraints(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable(interactionSource = interactionSource, indication = null) {
-                            (ctx as IMEService).currentInputConnection
-                                .commitText(label, label.length)
-                        }
-                        .padding(4.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-
-                    var textSize by remember { mutableStateOf(24.sp) }
-
-                    Text(
-                        text = label,
-                        color = style.keyTextColor,
-                        maxLines = 1,
-                        fontSize = textSize,
-                        onTextLayout = { result ->
-
-                            if (result.didOverflowWidth || result.didOverflowHeight) {
-                                textSize *= 0.9f
-                            }
-                        }
-                    )
+                val fontSize = with(density) {
+                    (shortSidePx * 0.45f).toSp()
                 }
+
+                Text(
+                    text = label,
+                    color = style.keyTextColor,
+                    maxLines = 1,
+                    fontSize = fontSize,
+                )
             }
 
-            KeyType.SHIFT -> KeyIcon(
-                icon = Icons.Default.KeyboardArrowUp, onClick = {
-                    // 之後改成改 state
-                })
-
-            KeyType.DELETE -> {
-                KeyIcon(
-                    icon = Icons.Default.Backspace, onClick = {
-                        (ctx as IMEService).currentInputConnection.deleteSurroundingText(1, 0)
-                    })
-            }
-
-            KeyType.SPACE -> {
-                KeyIcon(
-                    icon = Icons.Default.SpaceBar, onClick = {
-                        (ctx as IMEService).currentInputConnection.commitText(" ", 1)
-                    })
-            }
-
-            KeyType.ENTER -> {
-                KeyIcon(
-                    icon = Icons.Default.KeyboardReturn, onClick = {
-                        (ctx as IMEService).currentInputConnection.sendKeyEvent(
-                            android.view.KeyEvent(
-                                android.view.KeyEvent.ACTION_DOWN,
-                                android.view.KeyEvent.KEYCODE_ENTER
-                            )
-                        )
-                    })
-            }
-
-            KeyType.SYMBOL -> {
-                KeyIcon(
-                    icon = Icons.Default.DashboardCustomize, onClick = {
-                        (ctx as IMEService).requestHideSelf(0)
-                    })
-            }
-
-            KeyType.LANGUAGE -> {
-                KeyIcon(
-                    icon = Icons.Default.Language, onClick = {
-                        // 如果你要切換整個 IME
-                        (ctx as IMEService).switchToNextInputMethod(false)
-
-                        // 如果是自己內部切語言
-                        // 改 state
-                    })
-            }
-
-            KeyType.SETTINGS -> {
-                KeyIcon(
-                    icon = Icons.Default.Settings, onClick = {
-                        val intent = android.content.Intent(
-                            ctx, com.iqqi.settings.SettingsActivity::class.java
-                        )
-                        intent.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
-                        ctx.startActivity(intent)
-                    })
-            }
-
-            KeyType.CANCEL -> {
-                KeyIcon(
-                    icon = Icons.Default.ArrowDropDown, onClick = {
-                        (ctx as IMEService).requestHideSelf(0)
-                    })
+            else -> {
+                Icon(
+                    imageVector = keyboardKey.icon!!,
+                    contentDescription = null,
+                    tint = style.keyTextColor,
+                    modifier = Modifier.fillMaxSize(0.6f)   // 只佔 60%
+                )
             }
         }
 
@@ -223,26 +221,46 @@ fun KeyboardKey(
 }
 
 @Composable
-private fun KeyIcon(
-    icon: ImageVector, onClick: () -> Unit
+fun KeyPreviewOverlay(
+    key: KeySpec,
+    keyBounds: Rect?
 ) {
-    val interactionSource = remember { MutableInteractionSource() }
+    if (keyBounds == null) return
+
     val style = localKeyboardStyle.current
+    val density = LocalDensity.current
+
+    val bubbleWidth = keyBounds.width * 1.2f
+    val bubbleHeight = keyBounds.height * 1.2f
+
+    val shortSidePx = minOf(bubbleWidth, bubbleHeight)
 
     Box(
         modifier = Modifier
-            .fillMaxSize()
-            .clickable(
-                interactionSource = interactionSource,
-                indication = null
-            ) { onClick() },
+            .offset {
+                IntOffset(
+                    (keyBounds.left - (keyBounds.width * 0.1f)).toInt(),
+                    (keyBounds.top - bubbleHeight - keyBounds.height * 0.1f).toInt()
+                )
+            }
+            .size(
+                with(LocalDensity.current) { bubbleWidth.toDp() },
+                with(LocalDensity.current) { bubbleHeight.toDp() }
+            )
+            .background(
+                style.keyPreviewedColor,
+                RoundedCornerShape(8.dp)
+            ),
         contentAlignment = Alignment.Center
     ) {
-        Icon(
-            imageVector = icon,
-            contentDescription = null,
-            tint = style.keyTextColor,
-            modifier = Modifier.fillMaxSize(0.6f)   // 只佔 60%
+        val fontSize = with(density) {
+            (shortSidePx * 0.6f).toSp()
+        }
+
+        Text(
+            text = key.label ?: "",
+            fontSize = fontSize,
+            color = style.keyPreviewTextColor
         )
     }
 }

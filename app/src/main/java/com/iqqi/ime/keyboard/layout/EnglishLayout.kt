@@ -1,5 +1,14 @@
 package com.iqqi.ime.keyboard.layout
 
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material.icons.filled.Backspace
+import androidx.compose.material.icons.filled.DashboardCustomize
+import androidx.compose.material.icons.filled.KeyboardArrowUp
+import androidx.compose.material.icons.filled.KeyboardReturn
+import androidx.compose.material.icons.filled.Language
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.SpaceBar
 import com.iqqi.ime.keyboard.model.KeySpec
 import com.iqqi.ime.keyboard.model.KeyType
 
@@ -29,7 +38,7 @@ val englishLayout = listOf(
         KeySpec(".", 46)
     ),
     listOf(
-        KeySpec(type = KeyType.SHIFT),
+        KeySpec(type = KeyType.SHIFT, icon = Icons.Default.KeyboardArrowUp),
         KeySpec("z", 122),
         KeySpec("x", 120),
         KeySpec("c", 99),
@@ -38,14 +47,14 @@ val englishLayout = listOf(
         KeySpec("n", 110),
         KeySpec("m", 109),
         KeySpec(",", 44),
-        KeySpec(type = KeyType.DELETE, isRepeatable = true)
+        KeySpec(type = KeyType.DELETE, icon = Icons.Default.Backspace, isRepeatable = true)
     ),
     listOf(
-        KeySpec(type = KeyType.CANCEL),
-        KeySpec(type = KeyType.SETTINGS),
-        KeySpec(type = KeyType.LANGUAGE),
-        KeySpec(" ", 32, KeyType.SPACE, weight = 5f),
-        KeySpec(type = KeyType.SYMBOL),
-        KeySpec(type = KeyType.ENTER)
+        KeySpec(type = KeyType.CANCEL, icon = Icons.Default.ArrowDropDown),
+        KeySpec(type = KeyType.SETTINGS, icon = Icons.Default.Settings),
+        KeySpec(type = KeyType.LANGUAGE, icon = Icons.Default.Language),
+        KeySpec(" ", 32, type = KeyType.SPACE, icon = Icons.Default.SpaceBar, weight = 5f),
+        KeySpec(type = KeyType.SYMBOL, icon = Icons.Default.DashboardCustomize),
+        KeySpec(type = KeyType.ENTER, icon = Icons.Default.KeyboardReturn)
     )
 )

@@ -105,7 +105,9 @@ fun KeyboardTheme(
         keyBackgroundColor = colorScheme.surface,
         keyPressedColor = colorScheme.primary.copy(alpha = 0.2f),
         keyBorderColor = colorScheme.primary.copy(alpha = 0.3f),
-        keyTextColor = colorScheme.onSurface
+        keyTextColor = colorScheme.onSurface,
+        keyPreviewedColor = colorScheme.primary.copy(alpha = 0.95f),
+        keyPreviewTextColor = colorScheme.onPrimary,
     )
 
     MaterialTheme(

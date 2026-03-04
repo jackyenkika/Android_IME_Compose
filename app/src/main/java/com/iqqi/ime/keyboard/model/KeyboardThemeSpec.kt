@@ -10,5 +10,7 @@ data class KeyboardThemeSpec(
     val keyPressedColor: Color,
     val keyBorderColor: Color,
     val keyTextColor: Color,
+    val keyPreviewedColor: Color,
+    val keyPreviewTextColor: Color,
     val keyCornerRadius: Dp = 8.dp
 )
