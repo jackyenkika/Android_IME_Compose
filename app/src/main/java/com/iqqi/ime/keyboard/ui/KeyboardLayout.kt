@@ -1,7 +1,6 @@
 package com.iqqi.ime.keyboard.ui
 
 import android.annotation.SuppressLint
-import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.gestures.awaitFirstDown
@@ -34,7 +33,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.toSize
 import androidx.compose.ui.window.Popup
 import com.iqqi.ime.keyboard.model.KeySpec
 import com.iqqi.ime.keyboard.model.KeyType
@@ -43,24 +41,47 @@ import com.iqqi.ime.keyboard.state.localKeyboardStyle
 @Composable
 fun KeyboardLayout(scale: Float, layout: List<List<KeySpec>>, onKeyCommit: (KeySpec) -> Unit) {
     val style = localKeyboardStyle.current
+    val context = LocalContext.current
+    val density = LocalDensity.current
 
-    // 儲存每個按鍵相對於「鍵盤容器」的座標範圍
-    val keyBounds = remember(layout) { mutableMapOf<KeySpec, Rect>() }
+    // 狀態管理
     var activeKey by remember { mutableStateOf<KeySpec?>(null) }
+    var containerSize by remember { mutableStateOf(androidx.compose.ui.unit.IntSize.Zero) }
 
-    // 用於捕捉根容器座標的變數
-    var containerCoords by remember {
-        mutableStateOf<androidx.compose.ui.layout.LayoutCoordinates?>(
-            null
-        )
+
+    // --- O(1) 關鍵：預計算每一行的 Weight 邊界比例 ---
+    // 這樣觸碰時，只需要知道 X 在哪一個百分比區間就能抓到按鍵
+    val rowSnapshots = remember(layout) {
+        layout.map { row ->
+            val totalWeight = row.sumOf { it.weight.toDouble() }.toFloat()
+            var cumulative = 0f
+            row.map {
+                cumulative += it.weight / totalWeight
+                cumulative // 存入累計比例，例如 [0.1, 0.2, 0.3...]
+            }
+        }
     }
 
     // 獲取目前的螢幕密度與高度
-    val context = LocalContext.current
-    val density = LocalDensity.current
     val screenHeightPx = context.resources.displayMetrics.heightPixels
     val keyboardHeightDp = with(density) { (screenHeightPx * scale).toDp() }
     val rowHeight = keyboardHeightDp / layout.size
+
+    // 核心 HitTest 函數
+    fun findKeyAt(offset: Offset): KeySpec? {
+        if (containerSize.height <= 0 || containerSize.width <= 0) return null
+
+        // 1. 算出落在第幾行 (O(1))
+        val rowIdx = (offset.y / containerSize.height * layout.size).toInt()
+            .coerceIn(0, layout.size - 1)
+
+        // 2. 算出落在該行第幾列 (O(k), k為單行按鍵數)
+        val xRatio = offset.x / containerSize.width
+        val colIdx = rowSnapshots[rowIdx].indexOfFirst { xRatio <= it }
+            .let { if (it == -1) rowSnapshots[rowIdx].lastIndex else it }
+
+        return layout[rowIdx][colIdx]
+    }
 
     Box(
         modifier = Modifier
@@ -68,37 +89,27 @@ fun KeyboardLayout(scale: Float, layout: List<List<KeySpec>>, onKeyCommit: (KeyS
             .fillMaxWidth()
             .background(style.backgroundColor)
             .graphicsLayer(clip = false)
-            .onGloballyPositioned { containerCoords = it } // 捕捉父容器座標
-            .pointerInput(layout) {
+            .onGloballyPositioned { containerSize = it.size } // 捕捉父容器座標
+            .pointerInput(layout, containerSize) {
                 awaitPointerEventScope {
                     while (true) {
                         val down = awaitFirstDown()
-                        val pointerId = down.id
-
-                        // 內部搜尋函式
-                        fun hitTest(position: Offset): KeySpec? {
-                            return keyBounds.entries.firstOrNull {
-                                it.value.contains(position)
-                            }?.key
-                        }
-
-                        activeKey = hitTest(down.position)
+                        activeKey = findKeyAt(down.position)
                         down.consume()
 
                         while (true) {
                             val event = awaitPointerEvent()
-                            val change = event.changes.firstOrNull { it.id == pointerId }
-                                ?: break // 失去追蹤則跳出
+                            val change =
+                                event.changes.firstOrNull { it.id == down.id } ?: break // 失去追蹤則跳出
 
                             if (!change.pressed) {
                                 activeKey?.let { onKeyCommit(it) }
                                 activeKey = null
-                                change.consume()
                                 break
                             }
 
                             // 滑動過程中持續更新 activeKey (用於滑行輸入或校正)
-                            activeKey = hitTest(change.position)
+                            activeKey = findKeyAt(change.position)
                             change.consume()
                         }
                     }
@@ -120,16 +131,7 @@ fun KeyboardLayout(scale: Float, layout: List<List<KeySpec>>, onKeyCommit: (KeyS
                             modifier = Modifier
                                 .weight(key.weight)
                                 .padding(2.dp)
-                                .onGloballyPositioned { childCoords ->
-                                    val parent = containerCoords ?: return@onGloballyPositioned
-                                    // 直接存入 MutableMap，不觸發狀態更新
-                                    val localOffset =
-                                        parent.localPositionOf(childCoords, Offset.Zero)
-                                    keyBounds[key] = Rect(
-                                        offset = localOffset,
-                                        size = childCoords.size.toSize()
-                                    )
-                                })
+                        )
                     }
                 }
             }
@@ -137,14 +139,26 @@ fun KeyboardLayout(scale: Float, layout: List<List<KeySpec>>, onKeyCommit: (KeyS
 
         // Preview Overlay (放在 Column 後面，確保在 Z 軸最上方)
         activeKey?.takeIf { it.type == KeyType.INPUT }?.let { key ->
-            Log.d("zxc", "preview key = $key")
-            val bounds = keyBounds[key]
-            if (bounds != null) {
-                KeyPreviewOverlay(
-                    key = key,
-                    keyBounds = bounds
+            // 由於沒有 keyBounds Map 了，我們直接計算 Overlay 應該出現的坐標
+            val rowIdx = layout.indexOfFirst { it.contains(key) }
+            val colIdx = layout[rowIdx].indexOf(key)
+            val prevWeightSum = layout[rowIdx].take(colIdx).sumOf { it.weight.toDouble() }.toFloat()
+            val totalWeight = layout[rowIdx].sumOf { it.weight.toDouble() }.toFloat()
+
+            // 計算該按鍵在 Box 內的 Rect
+            val keyWidth = containerSize.width * (key.weight / totalWeight)
+            val keyLeft = containerSize.width * (prevWeightSum / totalWeight)
+            val keyTop = (containerSize.height / layout.size) * rowIdx
+
+            KeyPreviewOverlay(
+                label = key.label ?: "",
+                keyBounds = Rect(
+                    keyLeft,
+                    keyTop.toFloat(),
+                    keyLeft + keyWidth,
+                    (keyTop + (containerSize.height / layout.size)).toFloat()
                 )
-            }
+            )
         }
     }
 }
@@ -212,7 +226,7 @@ fun KeyboardKey(
 
 @Composable
 fun KeyPreviewOverlay(
-    key: KeySpec,
+    label: String,
     keyBounds: Rect
 ) {
     val style = localKeyboardStyle.current
@@ -242,7 +256,7 @@ fun KeyPreviewOverlay(
             contentAlignment = Alignment.Center
         ) {
             Text(
-                text = key.label ?: "",
+                text = label,
                 fontSize = with(density) { (shortSidePx * 0.5f).toSp() },
                 color = style.keyPreviewTextColor
             )
