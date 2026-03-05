@@ -7,6 +7,7 @@ enum class KeyType {
     SPACE,
     ENTER,
     SYMBOL,
+    NEXT_SYMBOL,
     LANGUAGE,
     SETTINGS,
     CANCEL

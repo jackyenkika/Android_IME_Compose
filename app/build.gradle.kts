@@ -41,7 +41,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.iqqi.imeservice"
+        applicationId = "com.kika.imeservice"
         minSdk = 28
         targetSdk = 36
         versionCode = outputDate

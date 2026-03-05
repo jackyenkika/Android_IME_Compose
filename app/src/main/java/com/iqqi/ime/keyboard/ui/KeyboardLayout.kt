@@ -1,6 +1,5 @@
 package com.iqqi.ime.keyboard.ui
 
-
 import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -13,7 +12,6 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -36,22 +34,13 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
-import com.iqqi.ime.keyboard.layout.englishLayout
+import androidx.compose.ui.window.Popup
 import com.iqqi.ime.keyboard.model.KeySpec
 import com.iqqi.ime.keyboard.model.KeyType
-import com.iqqi.ime.keyboard.model.KeyboardLanguage
-import com.iqqi.ime.keyboard.state.KeyboardState
 import com.iqqi.ime.keyboard.state.localKeyboardStyle
 
 @Composable
-fun KeyboardLayout(scale: Float, onKeyCommit: (KeySpec) -> Unit) {
-    var state by remember { mutableStateOf(KeyboardState()) }
-
-    val layout = when (state.language) {
-        KeyboardLanguage.ENGLISH -> englishLayout
-//        KeyboardLanguage.CHINESE -> chineseLayout
-        else -> englishLayout
-    }
+fun KeyboardLayout(scale: Float, layout: List<List<KeySpec>>, onKeyCommit: (KeySpec) -> Unit) {
     val style = localKeyboardStyle.current
 
     // 儲存每個按鍵相對於「鍵盤容器」的座標範圍
@@ -187,17 +176,20 @@ fun KeyboardKey(
             .fillMaxHeight(),
         contentAlignment = Alignment.Center
     ) {
-        val shortSidePx = with(density) {
-            minOf(maxWidth.toPx(), maxHeight.toPx())
+        // 取得當前容器的最短邊
+        val shortSideDp = minOf(maxWidth, maxHeight)
+
+        // 根據類型決定比例
+        val multiplier = when (keyboardKey.type) {
+            KeyType.INPUT -> 0.45f
+            KeyType.SYMBOL, KeyType.NEXT_SYMBOL -> 0.35f
+            else -> 1.0f // Icon 類型
         }
 
         when (keyboardKey.type) {
-            KeyType.INPUT -> {
+            KeyType.INPUT, KeyType.SYMBOL, KeyType.NEXT_SYMBOL -> {
                 val label = keyboardKey.label ?: ""
-
-                val fontSize = with(density) {
-                    (shortSidePx * 0.45f).toSp()
-                }
+                val fontSize = with(density) { (shortSideDp.toPx() * multiplier).toSp() }
 
                 Text(
                     text = label,
@@ -223,44 +215,39 @@ fun KeyboardKey(
 @Composable
 fun KeyPreviewOverlay(
     key: KeySpec,
-    keyBounds: Rect?
+    keyBounds: Rect
 ) {
-    if (keyBounds == null) return
-
     val style = localKeyboardStyle.current
     val density = LocalDensity.current
 
     val bubbleWidth = keyBounds.width * 1.2f
     val bubbleHeight = keyBounds.height * 1.2f
-
     val shortSidePx = minOf(bubbleWidth, bubbleHeight)
 
-    Box(
-        modifier = Modifier
-            .offset {
-                IntOffset(
-                    (keyBounds.left - (keyBounds.width * 0.1f)).toInt(),
-                    (keyBounds.top - bubbleHeight - keyBounds.height * 0.1f).toInt()
-                )
-            }
-            .size(
-                with(LocalDensity.current) { bubbleWidth.toDp() },
-                with(LocalDensity.current) { bubbleHeight.toDp() }
-            )
-            .background(
-                style.keyPreviewedColor,
-                RoundedCornerShape(8.dp)
-            ),
-        contentAlignment = Alignment.Center
-    ) {
-        val fontSize = with(density) {
-            (shortSidePx * 0.6f).toSp()
-        }
-
-        Text(
-            text = key.label ?: "",
-            fontSize = fontSize,
-            color = style.keyPreviewTextColor
+    Popup(
+        offset = IntOffset(
+            (keyBounds.left + (keyBounds.width - shortSidePx) / 2).toInt(),
+            (keyBounds.top - shortSidePx * 1.1f).toInt()
         )
+    ) {
+
+        Box(
+            modifier = Modifier
+                .size(
+                    with(density) { shortSidePx.toDp() },
+                    with(density) { shortSidePx.toDp() }
+                )
+                .background(
+                    style.keyPreviewedColor,
+                    RoundedCornerShape(50.dp)
+                ),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = key.label ?: "",
+                fontSize = with(density) { (shortSidePx * 0.5f).toSp() },
+                color = style.keyPreviewTextColor
+            )
+        }
     }
 }

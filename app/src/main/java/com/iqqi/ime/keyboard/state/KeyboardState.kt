@@ -1,7 +1,9 @@
+//KeyboardState.kt
 package com.iqqi.ime.keyboard.state
 
 import androidx.compose.runtime.staticCompositionLocalOf
 import com.iqqi.ime.keyboard.model.KeyboardLanguage
+import com.iqqi.ime.keyboard.model.KeyboardMode
 import com.iqqi.ime.keyboard.model.KeyboardThemeSpec
 
 val localKeyboardStyle = staticCompositionLocalOf<KeyboardThemeSpec> {
@@ -10,6 +12,24 @@ val localKeyboardStyle = staticCompositionLocalOf<KeyboardThemeSpec> {
 
 data class KeyboardState(
     val language: KeyboardLanguage = KeyboardLanguage.ENGLISH,
-    val isShift: Boolean = false,
-    val isSymbol: Boolean = false
+    val layoutConfig: LayoutConfig = LayoutConfig()
 )
+
+data class LayoutConfig(
+    val mode: KeyboardMode = KeyboardMode.LETTERS,
+    val shiftState: ShiftState = ShiftState.OFF,
+    val pageState: PageState = PageState.First,
+    val showNumberRow: Boolean = false,
+    val hasShift: Boolean = true,
+)
+
+enum class ShiftState {
+    OFF,
+    ON,        // 一次性
+    CAPS_LOCK
+}
+
+enum class PageState {
+    First,
+    SECOND,
+}

@@ -14,14 +14,14 @@ import kotlinx.coroutines.flow.map
 
 class SettingsRepository(private val context: Context) {
 
-    val enableSoundFlow: Flow<Boolean> =
+    val enableDigitalFlow: Flow<Boolean> =
         context.dataStore.data.map {
-            it[PreferencesKeys.ENABLE_SOUND] ?: true
+            it[PreferencesKeys.ENABLE_Digital] ?: true
         }
 
-    suspend fun setEnableSound(enabled: Boolean) {
+    suspend fun setEnableDigital(enabled: Boolean) {
         context.dataStore.edit {
-            it[PreferencesKeys.ENABLE_SOUND] = enabled
+            it[PreferencesKeys.ENABLE_Digital] = enabled
         }
     }
 

@@ -8,5 +8,6 @@ data class KeySpec(
     val icon: ImageVector? = null,
     val type: KeyType = KeyType.INPUT,
     val weight: Float = 1f,
-    val isRepeatable: Boolean = false
+    val isRepeatable: Boolean = false,
+    val altChars: List<String> = emptyList()
 )

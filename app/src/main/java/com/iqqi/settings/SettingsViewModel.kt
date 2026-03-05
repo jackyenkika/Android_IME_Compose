@@ -12,16 +12,16 @@ class SettingsViewModel(
     private val repository: SettingsRepository
 ) : ViewModel() {
 
-    val enableSound = repository.enableSoundFlow
+    val enableDigital = repository.enableDigitalFlow
         .stateIn(
             viewModelScope,
             SharingStarted.WhileSubscribed(5000),
             true
         )
 
-    fun toggleSound(enabled: Boolean) {
+    fun toggleDigital(enabled: Boolean) {
         viewModelScope.launch {
-            repository.setEnableSound(enabled)
+            repository.setEnableDigital(enabled)
         }
     }
 

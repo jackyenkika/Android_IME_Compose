@@ -39,7 +39,7 @@ fun SettingsScreen() {
     var showCandidateHeightDialog by remember { mutableStateOf(false) }
     var showThemeDialog by remember { mutableStateOf(false) }
 
-    val enableSound by viewModel.enableSound.collectAsState()
+    val enableDigital by viewModel.enableDigital.collectAsState()
     val currentKeyboardHeight by viewModel.currentKeyboardHeight.collectAsState()
     val currentCandidateHeight by viewModel.currentCandidateHeight.collectAsState()
 
@@ -74,24 +74,18 @@ fun SettingsScreen() {
                     .fillMaxSize()
                     .padding(horizontal = 16.dp, vertical = 8.dp)
             ) {
-
                 item {
-                    SettingsCategoryCard(title = "Sound") {
+                    SettingsCategoryCard(title = "Layout") {
 
                         SettingSwitchItemModern(
-                            title = "Key Sound",
-                            summary = "Play sound when pressing keys",
-                            checked = enableSound,
+                            title = "Show digital keyboard",
+                            summary = "Show the digital keyboard",
+                            checked = enableDigital,
                             onCheckedChange = {
-                                viewModel.toggleSound(it)
+                                viewModel.toggleDigital(it)
                             }
                         )
                         HorizontalDivider()
-                    }
-                }
-
-                item {
-                    SettingsCategoryCard(title = "Layout") {
 
                         SettingListItemModern(
                             title = "Keyboard Height",
