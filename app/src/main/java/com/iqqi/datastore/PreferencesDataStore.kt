@@ -15,4 +15,7 @@ object PreferencesKeys {
 
 
     val THEME_COLOR = stringPreferencesKey("theme_color")
+
+    val KEYBOARD_BACKGROUND = stringPreferencesKey("keyboard_background")
+
 }

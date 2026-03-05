@@ -6,13 +6,17 @@ import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.res.painterResource
 import com.iqqi.ime.keyboard.model.KeyboardThemeSpec
 import com.iqqi.ime.keyboard.state.localKeyboardStyle
+import com.iqqi.settings.BackgroundImage
 import com.iqqi.settings.ThemeColor
 
 @Composable
 fun KeyboardTheme(
     themeColor: ThemeColor,
+    backgroundImage: BackgroundImage = BackgroundImage.NONE,
     content: @Composable () -> Unit
 ) {
     val isDark = androidx.compose.foundation.isSystemInDarkTheme()
@@ -100,14 +104,19 @@ fun KeyboardTheme(
         }
     }
 
+    val painter = backgroundImage.toPainterOrNull()
+
     val keyboardStyle = KeyboardThemeSpec(
-        backgroundColor = colorScheme.background,
-        keyBackgroundColor = colorScheme.surface,
+        backgroundColor =
+            if (painter == null) colorScheme.background else colorScheme.background.copy(alpha = 0.4f),
+        keyBackgroundColor =
+            if (painter == null) colorScheme.surface else colorScheme.surface.copy(alpha = 0.4f),
         keyPressedColor = colorScheme.primary.copy(alpha = 0.2f),
         keyBorderColor = colorScheme.primary.copy(alpha = 0.3f),
         keyTextColor = colorScheme.onSurface,
         keyPreviewedColor = colorScheme.primary.copy(alpha = 0.95f),
         keyPreviewTextColor = colorScheme.onPrimary,
+        backgroundImage = painter
     )
 
     MaterialTheme(
@@ -118,5 +127,12 @@ fun KeyboardTheme(
         ) {
             content()
         }
+    }
+}
+
+@Composable
+fun BackgroundImage.toPainterOrNull(): Painter? {
+    return resId?.let {
+        painterResource(it)
     }
 }

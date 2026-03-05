@@ -22,6 +22,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.iqqi.data.SettingsRepository
+import com.iqqi.settings.BackgroundImage
 import com.iqqi.settings.CandidateHeight
 import com.iqqi.settings.KeyboardHeight
 import com.iqqi.settings.SettingsViewModel
@@ -38,12 +39,14 @@ fun SettingsScreen() {
     var showKeyboardHeightDialog by remember { mutableStateOf(false) }
     var showCandidateHeightDialog by remember { mutableStateOf(false) }
     var showThemeDialog by remember { mutableStateOf(false) }
+    var showKeyboardBackgroundDialog by remember { mutableStateOf(false) }
 
     val enableDigital by viewModel.enableDigital.collectAsState()
     val currentKeyboardHeight by viewModel.currentKeyboardHeight.collectAsState()
     val currentCandidateHeight by viewModel.currentCandidateHeight.collectAsState()
 
     val themeColor by viewModel.themeColor.collectAsState()
+    val backgroundImage by viewModel.keyboardBackgroundImage.collectAsState()
 
     KeyboardTheme(themeColor = themeColor) {
 
@@ -116,6 +119,15 @@ fun SettingsScreen() {
                         )
 
                         HorizontalDivider()
+
+                        SettingListItemModern(
+                            title = "Background Image",
+                            summary = "Choose keyboard background",
+                            currentValue = backgroundImage.label,
+                            onClick = { showKeyboardBackgroundDialog = true }
+                        )
+
+                        HorizontalDivider()
                     }
                 }
             }
@@ -159,6 +171,19 @@ fun SettingsScreen() {
                         showThemeDialog = false
                     },
                     onDismiss = { showThemeDialog = false }
+                )
+            }
+
+            if (showKeyboardBackgroundDialog) {
+                SettingImageSelectionDialog(
+                    title = "Background Image",
+                    options = BackgroundImage.entries,
+                    current = backgroundImage,
+                    onSelect = {
+                        viewModel.setKeyboardBackgroundImage(it)
+                        showKeyboardBackgroundDialog = false
+                    },
+                    onDismiss = { showKeyboardBackgroundDialog = false }
                 )
             }
         }

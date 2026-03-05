@@ -1,5 +1,8 @@
 package com.iqqi.settings
 
+import androidx.annotation.DrawableRes
+import com.iqqi.ime.R
+
 enum class KeyboardHeight(val scale: Float) {
     SMALL(0.25f),
     MEDIUM(0.3f),
@@ -20,4 +23,11 @@ enum class ThemeColor {
     RED,
     BLACK,
     WHITE
+}
+
+enum class BackgroundImage(
+    val label: String, @DrawableRes val resId: Int?
+) {
+    NONE("None", null),
+    FIFA_GREEN("FIFA Green", R.drawable.bg_fifa_green),
 }

@@ -71,4 +71,17 @@ class SettingsViewModel(
             repository.setThemeColor(color)
         }
     }
+
+
+    val keyboardBackgroundImage = repository.keyboardBackgroundImageFlow.stateIn(
+        viewModelScope,
+        SharingStarted.WhileSubscribed(5000),
+        BackgroundImage.NONE
+    )
+
+    fun setKeyboardBackgroundImage(image: BackgroundImage) {
+        viewModelScope.launch {
+            repository.setKeyboardBackgroundImage(image)
+        }
+    }
 }

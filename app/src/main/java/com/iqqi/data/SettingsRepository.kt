@@ -6,6 +6,7 @@ import com.iqqi.datastore.PreferencesKeys
 import com.iqqi.datastore.PreferencesKeys.CANDIDATE_HEIGHT
 import com.iqqi.datastore.PreferencesKeys.KEYBOARD_HEIGHT
 import com.iqqi.datastore.dataStore
+import com.iqqi.settings.BackgroundImage
 import com.iqqi.settings.CandidateHeight
 import com.iqqi.settings.KeyboardHeight
 import com.iqqi.settings.ThemeColor
@@ -46,14 +47,28 @@ class SettingsRepository(private val context: Context) {
     }
 
     val themeColorFlow = context.dataStore.data.map {
-        ThemeColor.valueOf(
-            it[PreferencesKeys.THEME_COLOR] ?: ThemeColor.BLUE.name
-        )
+        val stored = it[PreferencesKeys.THEME_COLOR] ?: ThemeColor.BLUE.name
+        runCatching {
+            ThemeColor.valueOf(stored)
+        }.getOrDefault(ThemeColor.BLUE)
     }
 
     suspend fun setThemeColor(color: ThemeColor) {
         context.dataStore.edit {
             it[PreferencesKeys.THEME_COLOR] = color.name
+        }
+    }
+
+    val keyboardBackgroundImageFlow = context.dataStore.data.map {
+        val stored = it[PreferencesKeys.KEYBOARD_BACKGROUND] ?: BackgroundImage.NONE.name
+        runCatching {
+            BackgroundImage.valueOf(stored)
+        }.getOrDefault(BackgroundImage.NONE)
+    }
+
+    suspend fun setKeyboardBackgroundImage(image: BackgroundImage) {
+        context.dataStore.edit {
+            it[PreferencesKeys.KEYBOARD_BACKGROUND] = image.name
         }
     }
 }
