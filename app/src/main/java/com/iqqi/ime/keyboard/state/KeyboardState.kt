@@ -18,7 +18,7 @@ data class KeyboardState(
 data class LayoutConfig(
     val mode: KeyboardMode = KeyboardMode.LETTERS,
     val shiftState: ShiftState = ShiftState.OFF,
-    val pageState: PageState = PageState.First,
+    val pageIndex: Int = 0,
     val showNumberRow: Boolean = false,
     val hasShift: Boolean = true,
 )
@@ -27,9 +27,4 @@ enum class ShiftState {
     OFF,
     ON,        // 一次性
     CAPS_LOCK
-}
-
-enum class PageState {
-    First,
-    SECOND,
 }

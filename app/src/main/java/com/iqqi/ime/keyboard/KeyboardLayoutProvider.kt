@@ -14,7 +14,6 @@ import com.iqqi.ime.keyboard.model.KeySpec
 import com.iqqi.ime.keyboard.model.KeyType
 import com.iqqi.ime.keyboard.model.KeyboardMode
 import com.iqqi.ime.keyboard.state.LayoutConfig
-import com.iqqi.ime.keyboard.state.PageState
 import com.iqqi.ime.keyboard.state.ShiftState
 
 object KeyboardLayoutProvider {
@@ -24,18 +23,25 @@ object KeyboardLayoutProvider {
         "asdfghjkl.",
         "zxcvbnm,"
     )
-    private val symbolRowsBase = listOf(
-        "123~#@$%^&",
-        "456?!,._\"\'",
-        "789:;=-+*/",
-        "[0]{}<>\\"
-    )
 
-    private val symbolRowsSecond = listOf(
-        "123~#@$%^&",
-        "456?!,._\"\'",
-        "789:;=-+*/",
-        "[0]{}<>\\"
+    val symbolPageCount
+        get() = symbolPages.size
+    private val symbolPages = listOf(
+
+        listOf(
+            "123~#@$%^&",
+            "456?!,._\"\'",
+            "789:;=-+*/",
+            "[0]{}<>\\"
+        ),
+
+        listOf(
+            "¡¿€¢£¥",
+            "§©®™✓",
+            "←↑→↓",
+            "°•○●"
+        )
+
     )
 
     fun create(config: LayoutConfig): List<List<KeySpec>> {
@@ -57,8 +63,8 @@ object KeyboardLayoutProvider {
             }
 
             KeyboardMode.SYMBOLS -> {
-                val targetSymbol =
-                    if (config.pageState == PageState.First) symbolRowsBase else symbolRowsSecond
+                val page = config.pageIndex % symbolPages.size
+                val targetSymbol = symbolPages[page]
                 targetSymbol.forEach { row ->
                     rows += createCharRow(row, config, row == targetSymbol.last())
                 }
@@ -94,7 +100,7 @@ object KeyboardLayoutProvider {
             rowKeys.add(
                 KeySpec(
                     type = KeyType.NEXT_SYMBOL,
-                    label = if (config.pageState == PageState.First) "1/2" else "2/2"
+                    label = "${config.pageIndex + 1}/${symbolPages.size}"
                 ),
             )
         }

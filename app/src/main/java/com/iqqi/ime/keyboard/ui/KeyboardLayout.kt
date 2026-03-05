@@ -1,5 +1,6 @@
 package com.iqqi.ime.keyboard.ui
 
+import android.annotation.SuppressLint
 import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -19,7 +20,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -34,6 +34,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.toSize
 import androidx.compose.ui.window.Popup
 import com.iqqi.ime.keyboard.model.KeySpec
 import com.iqqi.ime.keyboard.model.KeyType
@@ -44,7 +45,7 @@ fun KeyboardLayout(scale: Float, layout: List<List<KeySpec>>, onKeyCommit: (KeyS
     val style = localKeyboardStyle.current
 
     // 儲存每個按鍵相對於「鍵盤容器」的座標範圍
-    val keyBounds = remember { mutableStateMapOf<KeySpec, Rect>() }
+    val keyBounds = remember(layout) { mutableMapOf<KeySpec, Rect>() }
     var activeKey by remember { mutableStateOf<KeySpec?>(null) }
 
     // 用於捕捉根容器座標的變數
@@ -68,7 +69,7 @@ fun KeyboardLayout(scale: Float, layout: List<List<KeySpec>>, onKeyCommit: (KeyS
             .background(style.backgroundColor)
             .graphicsLayer(clip = false)
             .onGloballyPositioned { containerCoords = it } // 捕捉父容器座標
-            .pointerInput(Unit) {
+            .pointerInput(layout) {
                 awaitPointerEventScope {
                     while (true) {
                         val down = awaitFirstDown()
@@ -120,18 +121,14 @@ fun KeyboardLayout(scale: Float, layout: List<List<KeySpec>>, onKeyCommit: (KeyS
                                 .weight(key.weight)
                                 .padding(2.dp)
                                 .onGloballyPositioned { childCoords ->
-                                    // 關鍵 2: 計算 child 相對於 container 的位置
-                                    containerCoords?.let { parent ->
-                                        val localOffset =
-                                            parent.localPositionOf(childCoords, Offset.Zero)
-                                        keyBounds[key] = Rect(
-                                            offset = localOffset,
-                                            size = androidx.compose.ui.geometry.Size(
-                                                childCoords.size.width.toFloat(),
-                                                childCoords.size.height.toFloat()
-                                            )
-                                        )
-                                    }
+                                    val parent = containerCoords ?: return@onGloballyPositioned
+                                    // 直接存入 MutableMap，不觸發狀態更新
+                                    val localOffset =
+                                        parent.localPositionOf(childCoords, Offset.Zero)
+                                    keyBounds[key] = Rect(
+                                        offset = localOffset,
+                                        size = childCoords.size.toSize()
+                                    )
                                 })
                     }
                 }
@@ -152,6 +149,7 @@ fun KeyboardLayout(scale: Float, layout: List<List<KeySpec>>, onKeyCommit: (KeyS
     }
 }
 
+@SuppressLint("UnusedBoxWithConstraintsScope")
 @Composable
 fun KeyboardKey(
     keyboardKey: KeySpec,

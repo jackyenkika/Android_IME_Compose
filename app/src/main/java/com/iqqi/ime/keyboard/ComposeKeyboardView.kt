@@ -15,7 +15,6 @@ import com.iqqi.ime.IMEService
 import com.iqqi.ime.keyboard.model.KeyType
 import com.iqqi.ime.keyboard.model.KeyboardMode
 import com.iqqi.ime.keyboard.state.KeyboardState
-import com.iqqi.ime.keyboard.state.PageState
 import com.iqqi.ime.keyboard.state.ShiftState
 import com.iqqi.ime.keyboard.ui.KeyboardLayout
 import com.iqqi.settings.KeyboardHeight
@@ -116,22 +115,18 @@ class ComposeKeyboardView(context: Context) : AbstractComposeView(context) {
                         state = state.copy(
                             layoutConfig = state.layoutConfig.copy(
                                 mode = newMode,
-                                pageState = PageState.First,
+                                pageIndex = 0,
                                 shiftState = ShiftState.OFF
                             )
                         )
                     }
 
                     KeyType.NEXT_SYMBOL -> {
-                        val newPage =
-                            if (state.layoutConfig.pageState == PageState.First)
-                                PageState.SECOND
-                            else
-                                PageState.First
+                        val totalPages = KeyboardLayoutProvider.symbolPageCount
 
                         state = state.copy(
                             layoutConfig = state.layoutConfig.copy(
-                                pageState = newPage,
+                                pageIndex = (state.layoutConfig.pageIndex + 1) % totalPages
                             )
                         )
                     }
