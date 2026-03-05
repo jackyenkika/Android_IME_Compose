@@ -373,59 +373,71 @@ fun AltCharsPreviewOverlay(
     keyBounds: Rect,
     selectedIndex: Int
 ) {
-
     val style = localKeyboardStyle.current
     val density = LocalDensity.current
     val altChars = key.altChars
+    if (altChars.isEmpty()) return
 
-    val cellSize = keyBounds.height * 0.9f
-    val radius = keyBounds.width * 0.8f
+    // 配置參數
+    val cellWidthDp = 48.dp // 每個候選字的基本寬度
+    val cellHeightDp = 56.dp // 每個候選字的高度，略高於一般按鍵
+    val verticalOffsetDp = 8.dp // 與原按鍵上緣的間距
+
+    // 計算總寬度
+    val totalWidthPx = with(density) { (cellWidthDp * altChars.size).toPx() }
+    val cellHeightPx = with(density) { cellHeightDp.toPx() }
+    val verticalOffsetPx = with(density) { verticalOffsetDp.toPx() }
+
+    // 計算 X 座標：盡量置中於按鍵，但避免超出螢幕 (0 到 screenWidth)
+    // 注意：這裡假設 keyBounds 是相對於鍵盤容器的
+    val preferredX = keyBounds.center.x - (totalWidthPx / 2)
+    val popupX = preferredX.coerceIn(0f, Float.MAX_VALUE) // 這裡可用 LocalConfiguration 取得寬度做更嚴謹限制
+
+    // 計算 Y 座標：按鍵頂部 - 選單高度 - 間距
+    val popupY = keyBounds.top - cellHeightPx - verticalOffsetPx
 
     Popup(
-        offset = IntOffset(
-            keyBounds.center.x.toInt(),
-            (keyBounds.top - radius).toInt()
+        offset = IntOffset(popupX.toInt(), popupY.toInt()),
+        properties = androidx.compose.ui.window.PopupProperties(
+            focusable = false,
+            dismissOnBackPress = true,
+            dismissOnClickOutside = true
         )
     ) {
-
-        Box(
-            modifier = Modifier.size(
-                with(density) { (radius * 2).toDp() },
-                with(density) { radius.toDp() }
-            )
+        // 使用 Row 建立一個連續的面板
+        Row(
+            modifier = Modifier
+                .background(
+                    color = style.keyPreviewedColor, // 面板背景色
+                    shape = RoundedCornerShape(8.dp)
+                )
+                .border(
+                    width = 0.5.dp,
+                    color = style.keyBorderColor.copy(alpha = 0.5f),
+                    shape = RoundedCornerShape(8.dp)
+                )
+                .padding(4.dp), // 內邊距讓選取的 Highlight 不會貼邊
+            verticalAlignment = Alignment.CenterVertically
         ) {
-
             altChars.forEachIndexed { index, label ->
-
-                val angle =
-                    (-90f + (index - (altChars.size - 1) / 2f) * 18f)
-
-                val rad = Math.toRadians(angle.toDouble())
-
-                val x = radius + (radius * kotlin.math.cos(rad)).toFloat()
-                val y = radius + (radius * kotlin.math.sin(rad)).toFloat()
+                val isSelected = index == selectedIndex
 
                 Box(
                     modifier = Modifier
-                        .graphicsLayer {
-                            translationX = x - cellSize / 2
-                            translationY = y - cellSize / 2
-                        }
-                        .size(with(density) { cellSize.toDp() })
+                        .size(cellWidthDp, cellHeightDp)
                         .background(
-                            if (index == selectedIndex)
-                                style.keyPressedColor
-                            else
-                                style.keyPreviewedColor,
-                            RoundedCornerShape(50)
+                            if (isSelected) style.keyPressedColor else androidx.compose.ui.graphics.Color.Transparent,
+                            RoundedCornerShape(6.dp)
                         ),
                     contentAlignment = Alignment.Center
                 ) {
-
                     Text(
                         text = label,
                         color = style.keyPreviewTextColor,
-                        fontSize = with(density) { (cellSize * 0.45f).toSp() }
+                        fontSize = with(density) { (cellHeightPx * 0.4f).toSp() },
+                        style = androidx.compose.ui.text.TextStyle(
+                            fontWeight = if (isSelected) androidx.compose.ui.text.font.FontWeight.ExtraBold else androidx.compose.ui.text.font.FontWeight.Normal
+                        )
                     )
                 }
             }
