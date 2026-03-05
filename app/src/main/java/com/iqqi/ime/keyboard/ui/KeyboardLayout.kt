@@ -24,6 +24,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -40,6 +41,8 @@ import androidx.compose.ui.window.Popup
 import com.iqqi.ime.keyboard.model.KeySpec
 import com.iqqi.ime.keyboard.model.KeyType
 import com.iqqi.ime.keyboard.state.localKeyboardStyle
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 @Composable
 fun KeyboardLayout(scale: Float, layout: List<List<KeySpec>>, onKeyCommit: (KeySpec) -> Unit) {
@@ -48,6 +51,7 @@ fun KeyboardLayout(scale: Float, layout: List<List<KeySpec>>, onKeyCommit: (KeyS
     val density = LocalDensity.current
 
     // 狀態管理
+    val scope = rememberCoroutineScope() // 1. 取得外部 Scope
     var activeKey by remember { mutableStateOf<KeySpec?>(null) }
     var containerSize by remember { mutableStateOf(androidx.compose.ui.unit.IntSize.Zero) }
     var longPressActive by remember { mutableStateOf(false) }
@@ -103,12 +107,29 @@ fun KeyboardLayout(scale: Float, layout: List<List<KeySpec>>, onKeyCommit: (KeyS
 
                     altKeyIndex = 0
                     longPressActive = false
+                    var repeatJob: kotlinx.coroutines.Job? = null
+                    var wasLongPressed = false
 
+                    // 1. 啟動 Repeat Job (如果是 repeatable)
+                    if (activeKey?.isRepeatable == true) {
+                        // 使用外部 scope 啟動，而不是直接呼叫 launch
+                        repeatJob = scope.launch {
+                            // 先執行第一次按下 (立即反應)
+                            onKeyCommit(activeKey!!)
+                            delay(400) // 第一次重複前的長延遲
+                            while (true) {
+                                activeKey?.let { onKeyCommit(it) }
+                                delay(60)
+                            }
+                        }
+                    }
+
+                    // 偵測長按
                     val longPress = awaitLongPressOrCancellation(down.id)
-
                     // 如果成功觸發長按
                     if (longPress != null && activeKey?.altChars?.isNotEmpty() == true) {
-
+                        wasLongPressed = true
+                        repeatJob?.cancel()
                         longPressActive = true
 
                         drag(longPress.id) { change ->
@@ -122,7 +143,8 @@ fun KeyboardLayout(scale: Float, layout: List<List<KeySpec>>, onKeyCommit: (KeyS
                             val colIdx = layout[rowIdx].indexOf(key)
 
                             val prevWeightSum =
-                                layout[rowIdx].take(colIdx).sumOf { it.weight.toDouble() }.toFloat()
+                                layout[rowIdx].take(colIdx).sumOf { it.weight.toDouble() }
+                                    .toFloat()
 
                             val totalWeight =
                                 layout[rowIdx].sumOf { it.weight.toDouble() }.toFloat()
@@ -139,32 +161,36 @@ fun KeyboardLayout(scale: Float, layout: List<List<KeySpec>>, onKeyCommit: (KeyS
                             change.consume()
                         }
 
-                        // 手指放開
-                        val selected = activeKey?.altChars?.getOrNull(altKeyIndex)
-
-                        if (selected != null) {
-                            onKeyCommit(activeKey!!.copy(label = selected))
-                        } else {
-                            activeKey?.let { onKeyCommit(it) }
+                        // 抬起後送出 AltChar
+                        activeKey?.altChars?.getOrNull(altKeyIndex)?.let {
+                            onKeyCommit(activeKey!!.copy(label = it))
                         }
-
-                        activeKey = null
-                        longPressActive = false
-
                     } else {
+                        // 如果不是 repeatable，我們就在這裡處理單次 tap 的 commit
+                        if (activeKey?.isRepeatable != true) {
+                            // 這裡暫時不送出，等抬起時確定沒滑走再送，或者按下立即送
+                        }
 
                         // 一般 tap / slide typing
                         drag(down.id) { change ->
-
-                            activeKey = findKeyAt(change.position)
-
+                            val currentKey = findKeyAt(change.position)
+                            // 如果滑出了原本的 repeatable 按鍵，取消 Job
+                            if (currentKey != activeKey) {
+                                repeatJob?.cancel()
+                                activeKey = currentKey
+                            }
                             change.consume()
                         }
-
-                        activeKey?.let { onKeyCommit(it) }
-
-                        activeKey = null
+                        // 抬起後的處理：如果不是長按，且不是 repeatable (因為 repeatable 已經在 Job 處理了)
+                        // 或者是 repeatable 但 Job 還沒跑過第一次延遲就放開了
+                        if (!wasLongPressed && activeKey?.isRepeatable != true) {
+                            activeKey?.let { onKeyCommit(it) }
+                        }
                     }
+                    // 最後一定要確保 Job 被取消，防止手指離開後還在噴字
+                    repeatJob?.cancel()
+                    activeKey = null
+                    longPressActive = false
                 }
             }
     ) {
@@ -319,42 +345,64 @@ fun KeyPreviewOverlay(
 }
 
 @Composable
-fun AltCharsPreviewOverlay(key: KeySpec, keyBounds: Rect, selectedIndex: Int) {
+fun AltCharsPreviewOverlay(
+    key: KeySpec,
+    keyBounds: Rect,
+    selectedIndex: Int
+) {
+
     val style = localKeyboardStyle.current
     val density = LocalDensity.current
     val altChars = key.altChars
-    val cellWidth = keyBounds.width / altChars.size
-    val cellHeight = keyBounds.height * 1.5f
+
+    val cellSize = keyBounds.height * 0.9f
+    val radius = keyBounds.width * 0.8f
 
     Popup(
         offset = IntOffset(
-            keyBounds.left.toInt(),
-            (keyBounds.top - cellHeight).toInt()
+            keyBounds.center.x.toInt(),
+            (keyBounds.top - radius).toInt()
         )
     ) {
-        Row(
-            modifier = Modifier
-                .size(
-                    width = with(density) { keyBounds.width.toDp() },
-                    height = with(density) { cellHeight.toDp() }
-                )
-                .background(style.keyPreviewedColor, RoundedCornerShape(8.dp))
+
+        Box(
+            modifier = Modifier.size(
+                with(density) { (radius * 2).toDp() },
+                with(density) { radius.toDp() }
+            )
         ) {
+
             altChars.forEachIndexed { index, label ->
+
+                val angle =
+                    (-90f + (index - (altChars.size - 1) / 2f) * 18f)
+
+                val rad = Math.toRadians(angle.toDouble())
+
+                val x = radius + (radius * kotlin.math.cos(rad)).toFloat()
+                val y = radius + (radius * kotlin.math.sin(rad)).toFloat()
+
                 Box(
                     modifier = Modifier
-                        .weight(1f)
-                        .fillMaxHeight()
+                        .graphicsLayer {
+                            translationX = x - cellSize / 2
+                            translationY = y - cellSize / 2
+                        }
+                        .size(with(density) { cellSize.toDp() })
                         .background(
-                            if (index == selectedIndex) style.keyPressedColor
-                            else style.keyPreviewedColor
+                            if (index == selectedIndex)
+                                style.keyPressedColor
+                            else
+                                style.keyPreviewedColor,
+                            RoundedCornerShape(50)
                         ),
                     contentAlignment = Alignment.Center
                 ) {
+
                     Text(
                         text = label,
-                        fontSize = with(density) { (cellHeight * 0.5f).toSp() },
-                        color = style.keyPreviewTextColor
+                        color = style.keyPreviewTextColor,
+                        fontSize = with(density) { (cellSize * 0.45f).toSp() }
                     )
                 }
             }
