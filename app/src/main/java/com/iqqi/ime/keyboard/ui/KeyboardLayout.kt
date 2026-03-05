@@ -3,7 +3,10 @@ package com.iqqi.ime.keyboard.ui
 import android.annotation.SuppressLint
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.gestures.awaitLongPressOrCancellation
+import androidx.compose.foundation.gestures.drag
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
@@ -47,7 +50,8 @@ fun KeyboardLayout(scale: Float, layout: List<List<KeySpec>>, onKeyCommit: (KeyS
     // 狀態管理
     var activeKey by remember { mutableStateOf<KeySpec?>(null) }
     var containerSize by remember { mutableStateOf(androidx.compose.ui.unit.IntSize.Zero) }
-
+    var longPressActive by remember { mutableStateOf(false) }
+    var altKeyIndex by remember { mutableStateOf(0) } // 選擇 altChars 索引
 
     // --- O(1) 關鍵：預計算每一行的 Weight 邊界比例 ---
     // 這樣觸碰時，只需要知道 X 在哪一個百分比區間就能抓到按鍵
@@ -91,27 +95,75 @@ fun KeyboardLayout(scale: Float, layout: List<List<KeySpec>>, onKeyCommit: (KeyS
             .graphicsLayer(clip = false)
             .onGloballyPositioned { containerSize = it.size } // 捕捉父容器座標
             .pointerInput(layout, containerSize) {
-                awaitPointerEventScope {
-                    while (true) {
-                        val down = awaitFirstDown()
-                        activeKey = findKeyAt(down.position)
-                        down.consume()
 
-                        while (true) {
-                            val event = awaitPointerEvent()
-                            val change =
-                                event.changes.firstOrNull { it.id == down.id } ?: break // 失去追蹤則跳出
+                awaitEachGesture {
 
-                            if (!change.pressed) {
-                                activeKey?.let { onKeyCommit(it) }
-                                activeKey = null
-                                break
-                            }
+                    val down = awaitFirstDown()
+                    activeKey = findKeyAt(down.position)
 
-                            // 滑動過程中持續更新 activeKey (用於滑行輸入或校正)
-                            activeKey = findKeyAt(change.position)
+                    altKeyIndex = 0
+                    longPressActive = false
+
+                    val longPress = awaitLongPressOrCancellation(down.id)
+
+                    // 如果成功觸發長按
+                    if (longPress != null && activeKey?.altChars?.isNotEmpty() == true) {
+
+                        longPressActive = true
+
+                        drag(longPress.id) { change ->
+
+                            val key = activeKey ?: return@drag
+                            val altChars = key.altChars
+
+                            if (altChars.isEmpty()) return@drag
+
+                            val rowIdx = layout.indexOfFirst { it.contains(key) }
+                            val colIdx = layout[rowIdx].indexOf(key)
+
+                            val prevWeightSum =
+                                layout[rowIdx].take(colIdx).sumOf { it.weight.toDouble() }.toFloat()
+
+                            val totalWeight =
+                                layout[rowIdx].sumOf { it.weight.toDouble() }.toFloat()
+
+                            val keyWidth = containerSize.width * (key.weight / totalWeight)
+                            val keyLeft = containerSize.width * (prevWeightSum / totalWeight)
+
+                            val localX = change.position.x - keyLeft
+                            val cellWidth = keyWidth / altChars.size
+
+                            altKeyIndex =
+                                (localX / cellWidth).toInt().coerceIn(0, altChars.lastIndex)
+
                             change.consume()
                         }
+
+                        // 手指放開
+                        val selected = activeKey?.altChars?.getOrNull(altKeyIndex)
+
+                        if (selected != null) {
+                            onKeyCommit(activeKey!!.copy(label = selected))
+                        } else {
+                            activeKey?.let { onKeyCommit(it) }
+                        }
+
+                        activeKey = null
+                        longPressActive = false
+
+                    } else {
+
+                        // 一般 tap / slide typing
+                        drag(down.id) { change ->
+
+                            activeKey = findKeyAt(change.position)
+
+                            change.consume()
+                        }
+
+                        activeKey?.let { onKeyCommit(it) }
+
+                        activeKey = null
                     }
                 }
             }
@@ -149,16 +201,18 @@ fun KeyboardLayout(scale: Float, layout: List<List<KeySpec>>, onKeyCommit: (KeyS
             val keyWidth = containerSize.width * (key.weight / totalWeight)
             val keyLeft = containerSize.width * (prevWeightSum / totalWeight)
             val keyTop = (containerSize.height / layout.size) * rowIdx
-
-            KeyPreviewOverlay(
-                label = key.label ?: "",
-                keyBounds = Rect(
-                    keyLeft,
-                    keyTop.toFloat(),
-                    keyLeft + keyWidth,
-                    (keyTop + (containerSize.height / layout.size)).toFloat()
-                )
+            val rect = Rect(
+                keyLeft,
+                keyTop.toFloat(),
+                keyLeft + keyWidth,
+                (keyTop + (containerSize.height / layout.size)).toFloat()
             )
+
+            if (longPressActive && key.altChars.isNotEmpty()) {
+                AltCharsPreviewOverlay(key, rect, altKeyIndex)
+            } else {
+                KeyPreviewOverlay(label = key.label ?: "", keyBounds = rect)
+            }
         }
     }
 }
@@ -260,6 +314,50 @@ fun KeyPreviewOverlay(
                 fontSize = with(density) { (shortSidePx * 0.5f).toSp() },
                 color = style.keyPreviewTextColor
             )
+        }
+    }
+}
+
+@Composable
+fun AltCharsPreviewOverlay(key: KeySpec, keyBounds: Rect, selectedIndex: Int) {
+    val style = localKeyboardStyle.current
+    val density = LocalDensity.current
+    val altChars = key.altChars
+    val cellWidth = keyBounds.width / altChars.size
+    val cellHeight = keyBounds.height * 1.5f
+
+    Popup(
+        offset = IntOffset(
+            keyBounds.left.toInt(),
+            (keyBounds.top - cellHeight).toInt()
+        )
+    ) {
+        Row(
+            modifier = Modifier
+                .size(
+                    width = with(density) { keyBounds.width.toDp() },
+                    height = with(density) { cellHeight.toDp() }
+                )
+                .background(style.keyPreviewedColor, RoundedCornerShape(8.dp))
+        ) {
+            altChars.forEachIndexed { index, label ->
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxHeight()
+                        .background(
+                            if (index == selectedIndex) style.keyPressedColor
+                            else style.keyPreviewedColor
+                        ),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = label,
+                        fontSize = with(density) { (cellHeight * 0.5f).toSp() },
+                        color = style.keyPreviewTextColor
+                    )
+                }
+            }
         }
     }
 }
