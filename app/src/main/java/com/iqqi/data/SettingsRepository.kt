@@ -12,10 +12,11 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
 class SettingsRepository(private val context: Context) {
+    val defaultSetting = DefaultSetting()
 
     val enableDigitalFlow: Flow<Boolean> =
         context.dataStore.data.map {
-            it[PreferencesKeys.ENABLE_Digital] ?: true
+            it[PreferencesKeys.ENABLE_Digital] ?: defaultSetting.enableDigital
         }
 
     suspend fun setEnableDigital(enabled: Boolean) {
@@ -25,10 +26,10 @@ class SettingsRepository(private val context: Context) {
     }
 
     val keyboardHeightFlow = context.dataStore.data.map {
-        val stored = it[PreferencesKeys.KEYBOARD_HEIGHT] ?: KeyboardHeight.MEDIUM.name
+        val stored = it[PreferencesKeys.KEYBOARD_HEIGHT] ?: defaultSetting.keyboardHeight.name
         runCatching {
             KeyboardHeight.valueOf(stored)
-        }.getOrDefault(KeyboardHeight.MEDIUM)
+        }.getOrDefault(defaultSetting.keyboardHeight)
     }
 
 
@@ -39,20 +40,23 @@ class SettingsRepository(private val context: Context) {
     }
 
     val candidateHeightFlow = context.dataStore.data.map {
-        it[PreferencesKeys.CANDIDATE_HEIGHT] ?: CandidateHeight.MEDIUM.scale
+        val stored = it[PreferencesKeys.CANDIDATE_HEIGHT] ?: defaultSetting.candidateHeight.name
+        runCatching {
+            CandidateHeight.valueOf(stored)
+        }.getOrDefault(defaultSetting.candidateHeight)
     }
 
     suspend fun setCandidateHeight(height: CandidateHeight) {
         context.dataStore.edit {
-            it[PreferencesKeys.CANDIDATE_HEIGHT] = height.scale
+            it[PreferencesKeys.CANDIDATE_HEIGHT] = height.name
         }
     }
 
     val themeColorFlow = context.dataStore.data.map {
-        val stored = it[PreferencesKeys.THEME_COLOR] ?: ThemeColor.WHITE.name
+        val stored = it[PreferencesKeys.THEME_COLOR] ?: defaultSetting.themeColor.name
         runCatching {
             ThemeColor.valueOf(stored)
-        }.getOrDefault(ThemeColor.WHITE)
+        }.getOrDefault(defaultSetting.themeColor)
     }
 
     suspend fun setThemeColor(color: ThemeColor) {
@@ -62,10 +66,10 @@ class SettingsRepository(private val context: Context) {
     }
 
     val keyboardBackgroundImageFlow = context.dataStore.data.map {
-        val stored = it[PreferencesKeys.KEYBOARD_BACKGROUND] ?: BackgroundImage.NONE.name
+        val stored = it[PreferencesKeys.KEYBOARD_BACKGROUND] ?: defaultSetting.backgroundImage.name
         runCatching {
             BackgroundImage.valueOf(stored)
-        }.getOrDefault(BackgroundImage.NONE)
+        }.getOrDefault(defaultSetting.backgroundImage)
     }
 
     suspend fun setKeyboardBackgroundImage(image: BackgroundImage) {
@@ -74,3 +78,13 @@ class SettingsRepository(private val context: Context) {
         }
     }
 }
+
+data class DefaultSetting(
+    val enableDigital: Boolean = true,
+
+    val keyboardHeight: KeyboardHeight = KeyboardHeight.MEDIUM,
+    val candidateHeight: CandidateHeight = CandidateHeight.MEDIUM,
+
+    val themeColor: ThemeColor = ThemeColor.WHITE,
+    val backgroundImage: BackgroundImage = BackgroundImage.FIFA_GREEN,
+)

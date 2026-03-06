@@ -16,7 +16,7 @@ import com.iqqi.settings.ThemeColor
 @Composable
 fun KeyboardTheme(
     themeColor: ThemeColor,
-    backgroundImage: BackgroundImage = BackgroundImage.NONE,
+    backgroundImage: BackgroundImage? = null,
     content: @Composable () -> Unit
 ) {
     //2026.03.06 暫時固定暗夜配色
@@ -106,7 +106,7 @@ fun KeyboardTheme(
         }
     }
 
-    val painter = backgroundImage.toPainterOrNull()
+    val painter = backgroundImage?.toPainterOrNull()
 
     val keyboardStyle = KeyboardThemeSpec(
         backgroundColor =

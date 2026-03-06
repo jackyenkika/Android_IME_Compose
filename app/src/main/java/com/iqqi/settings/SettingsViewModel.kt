@@ -4,7 +4,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.iqqi.data.SettingsRepository
 import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
@@ -16,7 +15,7 @@ class SettingsViewModel(
         .stateIn(
             viewModelScope,
             SharingStarted.WhileSubscribed(5000),
-            true
+            repository.defaultSetting.enableDigital
         )
 
     fun toggleDigital(enabled: Boolean) {
@@ -28,7 +27,7 @@ class SettingsViewModel(
     val currentKeyboardHeight = repository.keyboardHeightFlow.stateIn(
         viewModelScope,
         SharingStarted.WhileSubscribed(5000),
-        KeyboardHeight.MEDIUM
+        repository.defaultSetting.keyboardHeight
     )
 
     fun setKeyboardHeight(keyboardHeight: KeyboardHeight) {
@@ -37,16 +36,11 @@ class SettingsViewModel(
         }
     }
 
-    val currentCandidateHeight = repository.candidateHeightFlow
-        .map { scale ->
-            CandidateHeight.entries.find { it.scale == scale }
-                ?: CandidateHeight.MEDIUM
-        }
-        .stateIn(
-            viewModelScope,
-            SharingStarted.WhileSubscribed(5000),
-            CandidateHeight.MEDIUM
-        )
+    val currentCandidateHeight = repository.candidateHeightFlow.stateIn(
+        viewModelScope,
+        SharingStarted.WhileSubscribed(5000),
+        repository.defaultSetting.candidateHeight
+    )
 
     fun setCandidateHeight(candidateHeight: CandidateHeight) {
         viewModelScope.launch {
@@ -58,7 +52,7 @@ class SettingsViewModel(
     val themeColor = repository.themeColorFlow.stateIn(
         viewModelScope,
         SharingStarted.WhileSubscribed(5000),
-        ThemeColor.WHITE
+        repository.defaultSetting.themeColor
     )
 
     fun setThemeColor(color: ThemeColor) {
@@ -71,7 +65,7 @@ class SettingsViewModel(
     val keyboardBackgroundImage = repository.keyboardBackgroundImageFlow.stateIn(
         viewModelScope,
         SharingStarted.WhileSubscribed(5000),
-        BackgroundImage.NONE
+        repository.defaultSetting.backgroundImage
     )
 
     fun setKeyboardBackgroundImage(image: BackgroundImage) {

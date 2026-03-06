@@ -17,6 +17,8 @@ val outputDate =
 
 val projectName: String = "common"  // for 可指定項目專案名稱來做特別判斷
 
+val targetVersion: String = "" //如果非正式發版，可使用此更改最後的version。舉例:alpha01,beta01
+
 android {
     signingConfigs {
         create("kika") {
@@ -45,7 +47,12 @@ android {
         minSdk = 28
         targetSdk = 36
         versionCode = outputDate
-        versionName = "ime-${projectName}-${outputDate}" // 版本名稱會自動加上tool-前綴
+        versionName = // 版本名稱會自動加上前綴
+            if (targetVersion == "") {
+                "ime-${projectName}-${outputDate}"
+            } else {
+                "ime-${projectName}-${outputDate}-${targetVersion}"
+            }
     }
 
     buildTypes {

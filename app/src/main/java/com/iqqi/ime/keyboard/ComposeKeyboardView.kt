@@ -19,9 +19,6 @@ import com.iqqi.ime.keyboard.model.KeyboardMode
 import com.iqqi.ime.keyboard.state.KeyboardState
 import com.iqqi.ime.keyboard.state.ShiftState
 import com.iqqi.ime.keyboard.ui.KeyboardLayout
-import com.iqqi.settings.BackgroundImage
-import com.iqqi.settings.KeyboardHeight
-import com.iqqi.settings.ThemeColor
 import com.iqqi.settings.ui.KeyboardTheme
 
 class ComposeKeyboardView(context: Context) : AbstractComposeView(context) {
@@ -33,10 +30,10 @@ class ComposeKeyboardView(context: Context) : AbstractComposeView(context) {
 
         val repository = remember { SettingsRepository(context) }
 
-        val showDigital by repository.enableDigitalFlow.collectAsState(initial = true)
-        val themeColor by repository.themeColorFlow.collectAsState(initial = ThemeColor.BLUE)
-        val keyboardBackgroundImage by repository.keyboardBackgroundImageFlow.collectAsState(initial = BackgroundImage.NONE)
-        val keyboardHeight by repository.keyboardHeightFlow.collectAsState(initial = KeyboardHeight.MEDIUM)
+        val showDigital by repository.enableDigitalFlow.collectAsState(initial = repository.defaultSetting.enableDigital)
+        val keyboardHeight by repository.keyboardHeightFlow.collectAsState(initial = repository.defaultSetting.keyboardHeight)
+        val themeColor by repository.themeColorFlow.collectAsState(initial = repository.defaultSetting.themeColor)
+        val keyboardBackgroundImage by repository.keyboardBackgroundImageFlow.collectAsState(initial = repository.defaultSetting.backgroundImage)
 
         var lastShiftClickTime by remember { mutableLongStateOf(0L) }
 

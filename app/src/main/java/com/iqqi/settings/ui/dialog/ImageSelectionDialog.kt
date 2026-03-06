@@ -1,5 +1,6 @@
-package com.iqqi.settings.ui
+package com.iqqi.settings.ui.dialog
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -14,6 +15,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.iqqi.settings.BackgroundImage
@@ -44,8 +46,8 @@ fun SettingImageSelectionDialog(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         if (bg.resId != null) {
-                            androidx.compose.foundation.Image(
-                                painter = androidx.compose.ui.res.painterResource(bg.resId),
+                            Image(
+                                painter = painterResource(bg.resId),
                                 contentDescription = bg.label,
                                 modifier = Modifier
                                     .size(48.dp)

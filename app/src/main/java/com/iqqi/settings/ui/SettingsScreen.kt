@@ -28,6 +28,11 @@ import com.iqqi.settings.CandidateHeight
 import com.iqqi.settings.KeyboardHeight
 import com.iqqi.settings.SettingsViewModel
 import com.iqqi.settings.ThemeColor
+import com.iqqi.settings.ui.dialog.SettingImageSelectionDialog
+import com.iqqi.settings.ui.dialog.SettingsSelectionDialog
+import com.iqqi.settings.ui.item.AboutSection
+import com.iqqi.settings.ui.item.SettingListItemModern
+import com.iqqi.settings.ui.item.SettingSwitchItemModern
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -130,6 +135,15 @@ fun SettingsScreen() {
                             currentValue = backgroundImage.label,
                             onClick = { showKeyboardBackgroundDialog = true }
                         )
+
+                        HorizontalDivider()
+                    }
+                }
+
+                item {
+                    SettingsCategoryCard(title = "About") {
+
+                        AboutSection()
 
                         HorizontalDivider()
                     }
