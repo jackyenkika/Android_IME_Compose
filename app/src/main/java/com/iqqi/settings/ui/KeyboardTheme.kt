@@ -19,7 +19,9 @@ fun KeyboardTheme(
     backgroundImage: BackgroundImage = BackgroundImage.NONE,
     content: @Composable () -> Unit
 ) {
-    val isDark = androidx.compose.foundation.isSystemInDarkTheme()
+    //2026.03.06 暫時固定暗夜配色
+    val isDark = true
+//    val isDark = androidx.compose.foundation.isSystemInDarkTheme()
 
     val colorScheme = when (themeColor) {
 
@@ -108,9 +110,9 @@ fun KeyboardTheme(
 
     val keyboardStyle = KeyboardThemeSpec(
         backgroundColor =
-            if (painter == null) colorScheme.background else colorScheme.background.copy(alpha = 0.4f),
+            if (painter == null) colorScheme.background else colorScheme.background.copy(alpha = 0.0f),
         keyBackgroundColor =
-            if (painter == null) colorScheme.surface else colorScheme.surface.copy(alpha = 0.4f),
+            if (painter == null) colorScheme.surface else colorScheme.surface.copy(alpha = 0.2f),
         keyPressedColor = colorScheme.primary.copy(alpha = 0.2f),
         keyBorderColor = colorScheme.primary.copy(alpha = 0.3f),
         keyTextColor = colorScheme.onSurface,
