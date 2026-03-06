@@ -28,7 +28,7 @@ data class LayoutConfig(
 
 data class DeviceConfig(
     val keyboardHeight: Dp = 400.dp,
-    val isLandscape: Boolean = true,
+    val candidateHeight: Dp = 44.dp,
 )
 
 enum class ShiftState {

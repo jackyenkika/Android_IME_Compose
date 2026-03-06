@@ -36,19 +36,19 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Popup
 import com.iqqi.ime.keyboard.model.KeySpec
 import com.iqqi.ime.keyboard.model.KeyType
+import com.iqqi.ime.keyboard.state.DeviceConfig
 import com.iqqi.ime.keyboard.state.localKeyboardStyle
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 @Composable
 fun KeyboardLayout(
-    keyboardHeightDp: Dp,
+    deviceConfig: DeviceConfig,
     layout: List<List<KeySpec>>,
     candidates: List<String> = emptyList(),
     onCandidateClick: (String) -> Unit,
@@ -76,8 +76,8 @@ fun KeyboardLayout(
         }
     }
 
-    val candidateBarHeight = 48.dp
-    val rowHeight = (keyboardHeightDp - candidateBarHeight) / layout.size
+    val candidateBarHeight = deviceConfig.candidateHeight
+    val rowHeight = (deviceConfig.keyboardHeight - candidateBarHeight) / layout.size
 
     // 核心 HitTest 函數
     fun findKeyAt(offset: Offset): KeySpec? {
@@ -97,7 +97,7 @@ fun KeyboardLayout(
 
     Box(
         modifier = Modifier
-            .height(keyboardHeightDp)
+            .height(deviceConfig.keyboardHeight)
             .fillMaxWidth()
     ) {
         // 1️⃣ 背景圖片

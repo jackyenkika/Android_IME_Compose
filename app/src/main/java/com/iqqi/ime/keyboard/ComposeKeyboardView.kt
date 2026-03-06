@@ -15,7 +15,6 @@ import androidx.compose.ui.platform.LocalDensity
 import com.iqqi.data.SettingsRepository
 import com.iqqi.ime.IMEService
 import com.iqqi.ime.keyboard.controller.KeyboardController
-import com.iqqi.ime.keyboard.state.DeviceConfig
 import com.iqqi.ime.keyboard.state.KeyboardState
 import com.iqqi.ime.keyboard.state.LayoutConfig
 import com.iqqi.ime.keyboard.ui.KeyboardLayout
@@ -47,14 +46,11 @@ class ComposeKeyboardView(context: Context) : AbstractComposeView(context) {
                     layoutConfig = LayoutConfig(
                         showNumberRow = showDigital
                     ),
-                    deviceConfig = DeviceConfig(
-                        keyboardHeight = KeyboardSizeCalculator.getKeyboardTotalHeight(
-                            context,
-                            density,
-                            keyboardHeight,
-                            config.orientation == Configuration.ORIENTATION_LANDSCAPE
-                        ),
-                        isLandscape = config.orientation == Configuration.ORIENTATION_LANDSCAPE
+                    deviceConfig = KeyboardSizeCalculator.getDeviceConfig(
+                        context,
+                        density,
+                        keyboardHeight,
+                        config.orientation == Configuration.ORIENTATION_LANDSCAPE
                     )
                 )
             )
@@ -72,7 +68,7 @@ class ComposeKeyboardView(context: Context) : AbstractComposeView(context) {
             backgroundImage = keyboardBackgroundImage
         ) {
             KeyboardLayout(
-                keyboardHeightDp = keyboardState.deviceConfig.keyboardHeight,
+                deviceConfig = keyboardState.deviceConfig,
                 layout = layout,
                 candidates = emptyList(),
                 onCandidateClick = { },
