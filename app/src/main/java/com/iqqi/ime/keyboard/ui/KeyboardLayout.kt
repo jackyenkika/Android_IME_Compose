@@ -12,12 +12,17 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.systemBars
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -36,6 +41,7 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Popup
@@ -55,6 +61,7 @@ fun KeyboardLayout(
     onKeyCommit: (KeySpec) -> Unit
 ) {
     val style = localKeyboardStyle.current
+    val density = LocalDensity.current
 
     // 狀態管理
     val scope = rememberCoroutineScope() // 1. 取得外部 Scope
@@ -77,7 +84,12 @@ fun KeyboardLayout(
     }
 
     val candidateBarHeight = deviceConfig.candidateHeight
-    val rowHeight = (deviceConfig.keyboardHeight - candidateBarHeight) / layout.size
+    val navigationInsetPx = WindowInsets.systemBars.getBottom(density)
+    val visualKeyboardHeight =
+        deviceConfig.keyboardHeight - with(density) { navigationInsetPx.toDp() }
+
+    val rowHeight =
+        (visualKeyboardHeight - candidateBarHeight) / layout.size
 
     // 核心 HitTest 函數
     fun findKeyAt(offset: Offset): KeySpec? {
@@ -118,7 +130,13 @@ fun KeyboardLayout(
         )
 
         // 3️⃣ 內容層 (CandidateBar + 鍵盤按鍵)
-        Column(modifier = Modifier.fillMaxSize()) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .windowInsetsPadding(
+                    WindowInsets.systemBars.only(WindowInsetsSides.Bottom)
+                )
+        ) {
 
             // 候選字欄位
             CandidateBar(
@@ -298,7 +316,7 @@ fun KeyboardKey(
                 RoundedCornerShape(style.keyCornerRadius)
             )
             .border(
-                1.dp,
+                1.5.dp,
                 style.keyBorderColor,
                 RoundedCornerShape(style.keyCornerRadius)
             )
@@ -310,8 +328,8 @@ fun KeyboardKey(
 
         // 根據類型決定比例
         val multiplier = when (keyboardKey.type) {
-            KeyType.INPUT -> 0.45f
-            KeyType.SYMBOL, KeyType.NEXT_SYMBOL -> 0.35f
+            KeyType.INPUT -> 0.6f
+            KeyType.SYMBOL, KeyType.NEXT_SYMBOL -> 0.4f
             else -> 1.0f // Icon 類型
         }
 
@@ -324,6 +342,7 @@ fun KeyboardKey(
                     text = label,
                     color = style.keyTextColor,
                     maxLines = 1,
+                    fontWeight = FontWeight.Medium,
                     fontSize = fontSize,
                 )
             }

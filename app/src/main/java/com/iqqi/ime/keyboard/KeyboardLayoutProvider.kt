@@ -152,7 +152,7 @@ object KeyboardLayoutProvider {
             KeySpec(" ", 32, type = KeyType.SPACE, icon = Icons.Default.SpaceBar, weight = 5f),
             KeySpec(
                 type = KeyType.SYMBOL,
-                label = if (config.mode == KeyboardMode.LETTERS) "?123" else "ABC",
+                label = if (config.mode == KeyboardMode.LETTERS) "?12" else "ABC",
             ),
             KeySpec(type = KeyType.ENTER, icon = Icons.Default.KeyboardReturn)
         )
