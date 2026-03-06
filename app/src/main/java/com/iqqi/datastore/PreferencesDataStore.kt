@@ -10,7 +10,7 @@ val Context.dataStore by preferencesDataStore("ime_settings")
 
 object PreferencesKeys {
     val ENABLE_Digital = booleanPreferencesKey("enable_digital")
-    val KEYBOARD_HEIGHT = floatPreferencesKey("keyboard_height")
+    val KEYBOARD_HEIGHT = stringPreferencesKey("keyboard_height")
     val CANDIDATE_HEIGHT = floatPreferencesKey("candidate_height")
 
 

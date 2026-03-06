@@ -3,8 +3,6 @@ package com.iqqi.data
 import android.content.Context
 import androidx.datastore.preferences.core.edit
 import com.iqqi.datastore.PreferencesKeys
-import com.iqqi.datastore.PreferencesKeys.CANDIDATE_HEIGHT
-import com.iqqi.datastore.PreferencesKeys.KEYBOARD_HEIGHT
 import com.iqqi.datastore.dataStore
 import com.iqqi.settings.BackgroundImage
 import com.iqqi.settings.CandidateHeight
@@ -27,30 +25,34 @@ class SettingsRepository(private val context: Context) {
     }
 
     val keyboardHeightFlow = context.dataStore.data.map {
-        it[KEYBOARD_HEIGHT] ?: KeyboardHeight.MEDIUM.scale
+        val stored = it[PreferencesKeys.KEYBOARD_HEIGHT] ?: KeyboardHeight.MEDIUM.name
+        runCatching {
+            KeyboardHeight.valueOf(stored)
+        }.getOrDefault(KeyboardHeight.MEDIUM)
     }
+
 
     suspend fun setKeyboardHeight(height: KeyboardHeight) {
         context.dataStore.edit {
-            it[KEYBOARD_HEIGHT] = height.scale
+            it[PreferencesKeys.KEYBOARD_HEIGHT] = height.name
         }
     }
 
     val candidateHeightFlow = context.dataStore.data.map {
-        it[CANDIDATE_HEIGHT] ?: CandidateHeight.MEDIUM.scale
+        it[PreferencesKeys.CANDIDATE_HEIGHT] ?: CandidateHeight.MEDIUM.scale
     }
 
     suspend fun setCandidateHeight(height: CandidateHeight) {
         context.dataStore.edit {
-            it[CANDIDATE_HEIGHT] = height.scale
+            it[PreferencesKeys.CANDIDATE_HEIGHT] = height.scale
         }
     }
 
     val themeColorFlow = context.dataStore.data.map {
-        val stored = it[PreferencesKeys.THEME_COLOR] ?: ThemeColor.BLUE.name
+        val stored = it[PreferencesKeys.THEME_COLOR] ?: ThemeColor.WHITE.name
         runCatching {
             ThemeColor.valueOf(stored)
-        }.getOrDefault(ThemeColor.BLUE)
+        }.getOrDefault(ThemeColor.WHITE)
     }
 
     suspend fun setThemeColor(color: ThemeColor) {

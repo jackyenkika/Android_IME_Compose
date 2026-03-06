@@ -5,11 +5,13 @@ import android.view.KeyEvent
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.AbstractComposeView
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import com.iqqi.data.SettingsRepository
 import com.iqqi.ime.IMEService
 import com.iqqi.ime.keyboard.model.KeyType
@@ -27,14 +29,16 @@ class ComposeKeyboardView(context: Context) : AbstractComposeView(context) {
     @Composable
     override fun Content() {
         val context = LocalContext.current
+        val density = LocalDensity.current
+
         val repository = remember { SettingsRepository(context) }
 
         val showDigital by repository.enableDigitalFlow.collectAsState(initial = true)
         val themeColor by repository.themeColorFlow.collectAsState(initial = ThemeColor.BLUE)
         val keyboardBackgroundImage by repository.keyboardBackgroundImageFlow.collectAsState(initial = BackgroundImage.NONE)
+        val keyboardHeight by repository.keyboardHeightFlow.collectAsState(initial = KeyboardHeight.MEDIUM)
 
-        val keyboardHeightScale by repository.keyboardHeightFlow.collectAsState(initial = KeyboardHeight.MEDIUM.scale)
-        var lastShiftClickTime by remember { mutableStateOf(0L) }
+        var lastShiftClickTime by remember { mutableLongStateOf(0L) }
 
         var state by remember { mutableStateOf(KeyboardState()) }
         state = state.copy(
@@ -43,11 +47,19 @@ class ComposeKeyboardView(context: Context) : AbstractComposeView(context) {
             )
         )
         val layout = KeyboardLayoutProvider.create(state.layoutConfig)
+        val keyboardHeightDp =
+            KeyboardLayoutProvider.getKeyboardTotalHeight(context, density, keyboardHeight)
+
         KeyboardTheme(
             themeColor = themeColor,
             backgroundImage = keyboardBackgroundImage
         ) {
-            KeyboardLayout(scale = keyboardHeightScale, layout = layout) { key ->
+            KeyboardLayout(
+                keyboardHeightDp = keyboardHeightDp,
+                layout = layout,
+                candidates = emptyList(),
+                onCandidateClick = { },
+            ) { key ->
 
                 val ic = (context as IMEService).currentInputConnection
 

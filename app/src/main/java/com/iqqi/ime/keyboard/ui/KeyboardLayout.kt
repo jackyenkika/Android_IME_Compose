@@ -35,8 +35,8 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.onGloballyPositioned
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Popup
@@ -47,10 +47,14 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 @Composable
-fun KeyboardLayout(scale: Float, layout: List<List<KeySpec>>, onKeyCommit: (KeySpec) -> Unit) {
+fun KeyboardLayout(
+    keyboardHeightDp: Dp,
+    layout: List<List<KeySpec>>,
+    candidates: List<String> = emptyList(),
+    onCandidateClick: (String) -> Unit,
+    onKeyCommit: (KeySpec) -> Unit
+) {
     val style = localKeyboardStyle.current
-    val context = LocalContext.current
-    val density = LocalDensity.current
 
     // 狀態管理
     val scope = rememberCoroutineScope() // 1. 取得外部 Scope
@@ -72,10 +76,8 @@ fun KeyboardLayout(scale: Float, layout: List<List<KeySpec>>, onKeyCommit: (KeyS
         }
     }
 
-    // 獲取目前的螢幕密度與高度
-    val screenHeightPx = context.resources.displayMetrics.heightPixels
-    val keyboardHeightDp = with(density) { (screenHeightPx * scale).toDp() }
-    val rowHeight = keyboardHeightDp / layout.size
+    val candidateBarHeight = 48.dp
+    val rowHeight = (keyboardHeightDp - candidateBarHeight) / layout.size
 
     // 核心 HitTest 函數
     fun findKeyAt(offset: Offset): KeySpec? {
@@ -115,151 +117,163 @@ fun KeyboardLayout(scale: Float, layout: List<List<KeySpec>>, onKeyCommit: (KeyS
                 .background(style.backgroundColor)
         )
 
-        Box(
-            modifier = Modifier
-                .graphicsLayer(clip = false)
-                .onGloballyPositioned { containerSize = it.size } // 捕捉父容器座標
-                .pointerInput(layout, containerSize) {
+        // 3️⃣ 內容層 (CandidateBar + 鍵盤按鍵)
+        Column(modifier = Modifier.fillMaxSize()) {
 
-                    awaitEachGesture {
+            // 候選字欄位
+            CandidateBar(
+                candidates = candidates,
+                onCandidateClick = onCandidateClick,
+                modifier = Modifier.height(candidateBarHeight)
+            )
 
-                        val down = awaitFirstDown()
-                        activeKey = findKeyAt(down.position)
+            Box(
+                modifier = Modifier
+                    .graphicsLayer(clip = false)
+                    .onGloballyPositioned { containerSize = it.size } // 捕捉父容器座標
+                    .pointerInput(layout, containerSize) {
 
-                        altKeyIndex = 0
-                        longPressActive = false
-                        var repeatJob: kotlinx.coroutines.Job? = null
-                        var wasLongPressed = false
+                        awaitEachGesture {
 
-                        // 1. 啟動 Repeat Job (如果是 repeatable)
-                        if (activeKey?.isRepeatable == true) {
-                            // 使用外部 scope 啟動，而不是直接呼叫 launch
-                            repeatJob = scope.launch {
-                                // 先執行第一次按下 (立即反應)
-                                onKeyCommit(activeKey!!)
-                                delay(400) // 第一次重複前的長延遲
-                                while (true) {
+                            val down = awaitFirstDown()
+                            activeKey = findKeyAt(down.position)
+
+                            altKeyIndex = 0
+                            longPressActive = false
+                            var repeatJob: kotlinx.coroutines.Job? = null
+                            var wasLongPressed = false
+
+                            // 1. 啟動 Repeat Job (如果是 repeatable)
+                            if (activeKey?.isRepeatable == true) {
+                                // 使用外部 scope 啟動，而不是直接呼叫 launch
+                                repeatJob = scope.launch {
+                                    // 先執行第一次按下 (立即反應)
+                                    onKeyCommit(activeKey!!)
+                                    delay(400) // 第一次重複前的長延遲
+                                    while (true) {
+                                        activeKey?.let { onKeyCommit(it) }
+                                        delay(60)
+                                    }
+                                }
+                            }
+
+                            // 偵測長按
+                            val longPress = awaitLongPressOrCancellation(down.id)
+                            // 如果成功觸發長按
+                            if (longPress != null && activeKey?.altChars?.isNotEmpty() == true) {
+                                wasLongPressed = true
+                                repeatJob?.cancel()
+                                longPressActive = true
+
+                                drag(longPress.id) { change ->
+
+                                    val key = activeKey ?: return@drag
+                                    val altChars = key.altChars
+
+                                    if (altChars.isEmpty()) return@drag
+
+                                    val rowIdx = layout.indexOfFirst { it.contains(key) }
+                                    val colIdx = layout[rowIdx].indexOf(key)
+
+                                    val prevWeightSum =
+                                        layout[rowIdx].take(colIdx).sumOf { it.weight.toDouble() }
+                                            .toFloat()
+
+                                    val totalWeight =
+                                        layout[rowIdx].sumOf { it.weight.toDouble() }.toFloat()
+
+                                    val keyWidth = containerSize.width * (key.weight / totalWeight)
+                                    val keyLeft =
+                                        containerSize.width * (prevWeightSum / totalWeight)
+
+                                    val localX = change.position.x - keyLeft
+                                    val cellWidth = keyWidth / altChars.size
+
+                                    altKeyIndex =
+                                        (localX / cellWidth).toInt().coerceIn(0, altChars.lastIndex)
+
+                                    change.consume()
+                                }
+
+                                // 抬起後送出 AltChar
+                                activeKey?.altChars?.getOrNull(altKeyIndex)?.let {
+                                    onKeyCommit(activeKey!!.copy(label = it))
+                                }
+                            } else {
+                                // 如果不是 repeatable，我們就在這裡處理單次 tap 的 commit
+                                if (activeKey?.isRepeatable != true) {
+                                    // 這裡暫時不送出，等抬起時確定沒滑走再送，或者按下立即送
+                                }
+
+                                // 一般 tap / slide typing
+                                drag(down.id) { change ->
+                                    val currentKey = findKeyAt(change.position)
+                                    // 如果滑出了原本的 repeatable 按鍵，取消 Job
+                                    if (currentKey != activeKey) {
+                                        repeatJob?.cancel()
+                                        activeKey = currentKey
+                                    }
+                                    change.consume()
+                                }
+                                // 抬起後的處理：如果不是長按，且不是 repeatable (因為 repeatable 已經在 Job 處理了)
+                                // 或者是 repeatable 但 Job 還沒跑過第一次延遲就放開了
+                                if (!wasLongPressed && activeKey?.isRepeatable != true) {
                                     activeKey?.let { onKeyCommit(it) }
-                                    delay(60)
                                 }
                             }
-                        }
-
-                        // 偵測長按
-                        val longPress = awaitLongPressOrCancellation(down.id)
-                        // 如果成功觸發長按
-                        if (longPress != null && activeKey?.altChars?.isNotEmpty() == true) {
-                            wasLongPressed = true
+                            // 最後一定要確保 Job 被取消，防止手指離開後還在噴字
                             repeatJob?.cancel()
-                            longPressActive = true
-
-                            drag(longPress.id) { change ->
-
-                                val key = activeKey ?: return@drag
-                                val altChars = key.altChars
-
-                                if (altChars.isEmpty()) return@drag
-
-                                val rowIdx = layout.indexOfFirst { it.contains(key) }
-                                val colIdx = layout[rowIdx].indexOf(key)
-
-                                val prevWeightSum =
-                                    layout[rowIdx].take(colIdx).sumOf { it.weight.toDouble() }
-                                        .toFloat()
-
-                                val totalWeight =
-                                    layout[rowIdx].sumOf { it.weight.toDouble() }.toFloat()
-
-                                val keyWidth = containerSize.width * (key.weight / totalWeight)
-                                val keyLeft = containerSize.width * (prevWeightSum / totalWeight)
-
-                                val localX = change.position.x - keyLeft
-                                val cellWidth = keyWidth / altChars.size
-
-                                altKeyIndex =
-                                    (localX / cellWidth).toInt().coerceIn(0, altChars.lastIndex)
-
-                                change.consume()
-                            }
-
-                            // 抬起後送出 AltChar
-                            activeKey?.altChars?.getOrNull(altKeyIndex)?.let {
-                                onKeyCommit(activeKey!!.copy(label = it))
-                            }
-                        } else {
-                            // 如果不是 repeatable，我們就在這裡處理單次 tap 的 commit
-                            if (activeKey?.isRepeatable != true) {
-                                // 這裡暫時不送出，等抬起時確定沒滑走再送，或者按下立即送
-                            }
-
-                            // 一般 tap / slide typing
-                            drag(down.id) { change ->
-                                val currentKey = findKeyAt(change.position)
-                                // 如果滑出了原本的 repeatable 按鍵，取消 Job
-                                if (currentKey != activeKey) {
-                                    repeatJob?.cancel()
-                                    activeKey = currentKey
-                                }
-                                change.consume()
-                            }
-                            // 抬起後的處理：如果不是長按，且不是 repeatable (因為 repeatable 已經在 Job 處理了)
-                            // 或者是 repeatable 但 Job 還沒跑過第一次延遲就放開了
-                            if (!wasLongPressed && activeKey?.isRepeatable != true) {
-                                activeKey?.let { onKeyCommit(it) }
-                            }
+                            activeKey = null
+                            longPressActive = false
                         }
-                        // 最後一定要確保 Job 被取消，防止手指離開後還在噴字
-                        repeatJob?.cancel()
-                        activeKey = null
-                        longPressActive = false
                     }
-                }
-        ) {
-            // 渲染按鍵
-            Column {
-                layout.forEach { row ->
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(rowHeight)
-                    ) {
-                        row.forEach { key ->
-                            KeyboardKey(
-                                keyboardKey = key,
-                                isActive = activeKey == key,
-                                modifier = Modifier
-                                    .weight(key.weight)
-                                    .padding(2.dp)
-                            )
+            ) {
+                // 渲染按鍵
+                Column {
+                    layout.forEach { row ->
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(rowHeight)
+                        ) {
+                            row.forEach { key ->
+                                KeyboardKey(
+                                    keyboardKey = key,
+                                    isActive = activeKey == key,
+                                    modifier = Modifier
+                                        .weight(key.weight)
+                                        .padding(2.dp)
+                                )
+                            }
                         }
                     }
                 }
-            }
 
-            // Preview Overlay (放在 Column 後面，確保在 Z 軸最上方)
-            activeKey?.takeIf { it.type == KeyType.INPUT }?.let { key ->
-                // 由於沒有 keyBounds Map 了，我們直接計算 Overlay 應該出現的坐標
-                val rowIdx = layout.indexOfFirst { it.contains(key) }
-                val colIdx = layout[rowIdx].indexOf(key)
-                val prevWeightSum =
-                    layout[rowIdx].take(colIdx).sumOf { it.weight.toDouble() }.toFloat()
-                val totalWeight = layout[rowIdx].sumOf { it.weight.toDouble() }.toFloat()
+                // Preview Overlay (放在 Column 後面，確保在 Z 軸最上方)
+                activeKey?.takeIf { it.type == KeyType.INPUT }?.let { key ->
+                    // 由於沒有 keyBounds Map 了，我們直接計算 Overlay 應該出現的坐標
+                    val rowIdx = layout.indexOfFirst { it.contains(key) }
+                    val colIdx = layout[rowIdx].indexOf(key)
+                    val prevWeightSum =
+                        layout[rowIdx].take(colIdx).sumOf { it.weight.toDouble() }.toFloat()
+                    val totalWeight = layout[rowIdx].sumOf { it.weight.toDouble() }.toFloat()
 
-                // 計算該按鍵在 Box 內的 Rect
-                val keyWidth = containerSize.width * (key.weight / totalWeight)
-                val keyLeft = containerSize.width * (prevWeightSum / totalWeight)
-                val keyTop = (containerSize.height / layout.size) * rowIdx
-                val rect = Rect(
-                    keyLeft,
-                    keyTop.toFloat(),
-                    keyLeft + keyWidth,
-                    (keyTop + (containerSize.height / layout.size)).toFloat()
-                )
+                    // 計算該按鍵在 Box 內的 Rect
+                    val keyWidth = containerSize.width * (key.weight / totalWeight)
+                    val keyLeft = containerSize.width * (prevWeightSum / totalWeight)
+                    val keyTop = (containerSize.height / layout.size) * rowIdx
+                    val rect = Rect(
+                        keyLeft,
+                        keyTop.toFloat(),
+                        keyLeft + keyWidth,
+                        (keyTop + (containerSize.height / layout.size)).toFloat()
+                    )
 
-                if (longPressActive && key.altChars.isNotEmpty()) {
-                    AltCharsPreviewOverlay(key, rect, altKeyIndex)
-                } else {
-                    KeyPreviewOverlay(label = key.label ?: "", keyBounds = rect)
+                    if (longPressActive && key.altChars.isNotEmpty()) {
+                        AltCharsPreviewOverlay(key, rect, altKeyIndex)
+                    } else {
+                        KeyPreviewOverlay(label = key.label ?: "", keyBounds = rect)
+                    }
                 }
             }
         }

@@ -14,6 +14,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.iqqi.settings.BackgroundImage
 
@@ -51,10 +52,11 @@ fun SettingImageSelectionDialog(
                                     .padding(end = 12.dp)
                             )
                         }
+                        val isSelected = bg == current
                         Text(
                             text = bg.label,
-                            color = if (bg == current) MaterialTheme.colorScheme.primary
-                            else MaterialTheme.colorScheme.onSurface
+                            color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
+                            fontWeight = if (isSelected) FontWeight.ExtraBold else FontWeight.Normal
                         )
                     }
                 }

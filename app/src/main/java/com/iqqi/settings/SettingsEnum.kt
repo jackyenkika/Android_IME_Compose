@@ -3,11 +3,11 @@ package com.iqqi.settings
 import androidx.annotation.DrawableRes
 import com.iqqi.ime.R
 
-enum class KeyboardHeight(val scale: Float) {
-    SMALL(0.25f),
-    MEDIUM(0.3f),
-    LARGE(0.4f),
-    EXTRA_LARGE(0.5f)
+enum class KeyboardHeight(val horizontalScale: Float, val verticalScale: Float) {
+    SMALL(0.3f, 0.25f),
+    MEDIUM(0.4f, 0.3f),
+    LARGE(0.5f, 0.35f),
+    EXTRA_LARGE(0.6f, 0.4f)
 }
 
 enum class CandidateHeight(val scale: Float) {

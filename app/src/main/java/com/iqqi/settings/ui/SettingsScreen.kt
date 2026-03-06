@@ -22,6 +22,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.iqqi.data.SettingsRepository
+import com.iqqi.ime.keyboard.KeyboardLayoutProvider
 import com.iqqi.settings.BackgroundImage
 import com.iqqi.settings.CandidateHeight
 import com.iqqi.settings.KeyboardHeight
@@ -47,6 +48,9 @@ fun SettingsScreen() {
 
     val themeColor by viewModel.themeColor.collectAsState()
     val backgroundImage by viewModel.keyboardBackgroundImage.collectAsState()
+
+    val currentKeyboardHeightFloat =
+        KeyboardLayoutProvider.getKeyboardScale(context, currentKeyboardHeight)
 
     KeyboardTheme(themeColor = themeColor) {
 
@@ -93,7 +97,7 @@ fun SettingsScreen() {
                         SettingListItemModern(
                             title = "Keyboard Height",
                             summary = "Adjust the overall keyboard size",
-                            currentValue = "${(currentKeyboardHeight.scale * 100).toInt()}%",
+                            currentValue = "${(currentKeyboardHeightFloat * 100).toInt()}%",
                             onClick = { showKeyboardHeightDialog = true }
                         )
                         HorizontalDivider()
@@ -137,7 +141,11 @@ fun SettingsScreen() {
                     title = "Keyboard Height",
                     options = KeyboardHeight.entries,
                     current = currentKeyboardHeight,
-                    optionLabel = { "${(it.scale * 100).toInt()}%" },
+                    optionLabel = {
+                        "${
+                            (KeyboardLayoutProvider.getKeyboardScale(context, it) * 100).toInt()
+                        }%"
+                    },
                     onSelect = {
                         viewModel.setKeyboardHeight(it)
                         showKeyboardHeightDialog = false

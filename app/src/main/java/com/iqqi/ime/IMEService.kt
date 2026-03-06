@@ -40,6 +40,7 @@ class IMEService : LifecycleInputMethodService(), ViewModelStoreOwner, SavedStat
 
     override val savedStateRegistry: SavedStateRegistry get() = savedStateRegistryController.savedStateRegistry
 
+    override fun onEvaluateFullscreenMode(): Boolean = false
 
     override fun onCreate() {
         super.onCreate()

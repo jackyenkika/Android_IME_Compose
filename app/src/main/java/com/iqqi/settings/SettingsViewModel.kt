@@ -25,16 +25,11 @@ class SettingsViewModel(
         }
     }
 
-    val currentKeyboardHeight = repository.keyboardHeightFlow
-        .map { scale ->
-            KeyboardHeight.entries.find { it.scale == scale }
-                ?: KeyboardHeight.MEDIUM
-        }
-        .stateIn(
-            viewModelScope,
-            SharingStarted.WhileSubscribed(5000),
-            KeyboardHeight.MEDIUM
-        )
+    val currentKeyboardHeight = repository.keyboardHeightFlow.stateIn(
+        viewModelScope,
+        SharingStarted.WhileSubscribed(5000),
+        KeyboardHeight.MEDIUM
+    )
 
     fun setKeyboardHeight(keyboardHeight: KeyboardHeight) {
         viewModelScope.launch {
@@ -63,7 +58,7 @@ class SettingsViewModel(
     val themeColor = repository.themeColorFlow.stateIn(
         viewModelScope,
         SharingStarted.WhileSubscribed(5000),
-        ThemeColor.BLUE
+        ThemeColor.WHITE
     )
 
     fun setThemeColor(color: ThemeColor) {
