@@ -34,7 +34,7 @@ fun AboutSection() {
 
 
         Icon(
-            painter = painterResource(id = R.drawable.img_k),
+            painter = painterResource(id = R.drawable.img_app_icon),
             contentDescription = null,
             modifier = Modifier.size(32.dp),
             tint = Color.Unspecified

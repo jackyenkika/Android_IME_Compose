@@ -1,7 +1,5 @@
 package com.iqqi.ime.keyboard
 
-import android.content.Context
-import android.content.res.Configuration
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Backspace
@@ -12,14 +10,11 @@ import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.SpaceBar
 import androidx.compose.material.icons.filled.Upgrade
-import androidx.compose.ui.unit.Density
-import androidx.compose.ui.unit.Dp
 import com.iqqi.ime.keyboard.model.KeySpec
 import com.iqqi.ime.keyboard.model.KeyType
 import com.iqqi.ime.keyboard.model.KeyboardMode
 import com.iqqi.ime.keyboard.state.LayoutConfig
 import com.iqqi.ime.keyboard.state.ShiftState
-import com.iqqi.settings.KeyboardHeight
 
 object KeyboardLayoutProvider {
     private val numberRow = "1234567890"
@@ -46,27 +41,18 @@ object KeyboardLayoutProvider {
             "←↑→↓",
             "°•○●"
         )
-
     )
 
-    fun getKeyboardScale(context: Context, keyboardHeight: KeyboardHeight): Float {
-        val isLandscape =
-            context.resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
-        val scale =
-            if (isLandscape) keyboardHeight.horizontalScale else keyboardHeight.verticalScale
-        return scale
-    }
+    private val altMap = mapOf(
+        'a' to listOf("á", "à", "ä", "â", "ã"),
+        'e' to listOf("é", "è", "ë", "ê"),
+        'i' to listOf("í", "ì", "ï", "î"),
+        'o' to listOf("ó", "ò", "ö", "ô", "õ"),
+        'u' to listOf("ú", "ù", "ü", "û")
+    )
 
-    fun getKeyboardTotalHeight(
-        context: Context,
-        density: Density,
-        keyboardHeight: KeyboardHeight
-    ): Dp {
-        val scale = getKeyboardScale(context, keyboardHeight)
-        // 獲取目前的螢幕密度與高度
-        val screenHeightPx = context.resources.displayMetrics.heightPixels
-        val keyboardHeightDp = with(density) { (screenHeightPx * scale).toDp() }
-        return keyboardHeightDp
+    private fun getAltChars(c: Char): List<String> {
+        return altMap[c.lowercaseChar()] ?: emptyList()
     }
 
     fun create(config: LayoutConfig): List<List<KeySpec>> {
@@ -154,17 +140,6 @@ object KeyboardLayoutProvider {
 
         }
         return rowKeys
-    }
-
-    private fun getAltChars(c: Char): List<String> {
-        return when (c.lowercaseChar()) {
-            'a' -> listOf("á", "à", "ä", "â", "ã")
-            'e' -> listOf("é", "è", "ë", "ê")
-            'i' -> listOf("í", "ì", "ï", "î")
-            'o' -> listOf("ó", "ò", "ö", "ô", "õ")
-            'u' -> listOf("ú", "ù", "ü", "û")
-            else -> emptyList()
-        }
     }
 
     private fun createBottomRow(
