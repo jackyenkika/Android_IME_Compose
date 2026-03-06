@@ -21,15 +21,16 @@ import com.iqqi.ime.keyboard.ui.KeyboardLayout
 import com.iqqi.ime.keyboard.ui.KeyboardSizeCalculator
 import com.iqqi.settings.ui.KeyboardTheme
 
-class ComposeKeyboardView(context: Context) : AbstractComposeView(context) {
+class ComposeKeyboardView(
+    context: Context,
+    private val repository: SettingsRepository
+) : AbstractComposeView(context) {
 
     @Composable
     override fun Content() {
         val context = LocalContext.current
         val density = LocalDensity.current
         val config = LocalConfiguration.current
-
-        val repository = remember { SettingsRepository(context) }
 
         val showDigital by repository.enableDigitalFlow.collectAsState(initial = repository.defaultSetting.enableDigital)
         val keyboardHeight by repository.keyboardHeightFlow.collectAsState(initial = repository.defaultSetting.keyboardHeight)

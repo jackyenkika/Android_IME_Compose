@@ -12,6 +12,7 @@ import androidx.savedstate.SavedStateRegistry
 import androidx.savedstate.SavedStateRegistryController
 import androidx.savedstate.SavedStateRegistryOwner
 import androidx.savedstate.setViewTreeSavedStateRegistryOwner
+import com.iqqi.ImeApplication
 import com.iqqi.core.KeyboardType
 import com.iqqi.dictionary.CimDictionary
 import com.iqqi.engine.CIMReducer
@@ -27,6 +28,9 @@ class IMEService : LifecycleInputMethodService(), ViewModelStoreOwner, SavedStat
     private var currentLayout: KeyboardType = KeyboardType.QWERTY
 
     //ViewModelStore Methods
+
+    private val container
+        get() = (application as ImeApplication).container
     private val store = ViewModelStore()
 
     override val lifecycle: Lifecycle
@@ -52,7 +56,9 @@ class IMEService : LifecycleInputMethodService(), ViewModelStoreOwner, SavedStat
 
     override fun onCreateInputView(): View {
 
-        val view = ComposeKeyboardView(this)
+        val view = ComposeKeyboardView(
+            context = this, repository = container.settingsRepository
+        )
 
         window?.window?.decorView?.let { decorView ->
             decorView.setViewTreeLifecycleOwner(this)
