@@ -91,6 +91,20 @@ fun KeyboardLayout(
     val rowHeight =
         (visualKeyboardHeight - candidateBarHeight) / layout.size
 
+
+    val maxWeight = layout.maxOf { row ->
+        row.sumOf { it.weight.toDouble() }.toFloat()
+    }
+
+    val rowMetrics = remember(layout) {
+        layout.map { row ->
+            val rowWeight = row.sumOf { it.weight.toDouble() }.toFloat()
+            val widthRatio = rowWeight / maxWeight
+            val leftRatio = (1f - widthRatio) / 2f
+            RowMetrics(widthRatio, leftRatio)
+        }
+    }
+
     // 核心 HitTest 函數
     fun findKeyAt(offset: Offset): KeySpec? {
         if (containerSize.height <= 0 || containerSize.width <= 0) return null
@@ -100,7 +114,13 @@ fun KeyboardLayout(
             .coerceIn(0, layout.size - 1)
 
         // 2. 算出落在該行第幾列 (O(k), k為單行按鍵數)
-        val xRatio = offset.x / containerSize.width
+        val metrics = rowMetrics[rowIdx]
+
+        val xRatioGlobal = offset.x / containerSize.width
+
+        val xRatio = ((xRatioGlobal - metrics.leftRatio) / metrics.widthRatio)
+        if (xRatio !in 0f..1f) return null
+
         val colIdx = rowSnapshots[rowIdx].indexOfFirst { xRatio <= it }
             .let { if (it == -1) rowSnapshots[rowIdx].lastIndex else it }
 
@@ -248,10 +268,19 @@ fun KeyboardLayout(
             ) {
                 // 渲染按鍵
                 Column {
-                    layout.forEach { row ->
+                    layout.forEachIndexed { index, row ->
+                        val rowWeight = row.sumOf { it.weight.toDouble() }.toFloat()
+
+                        val widthRatio =
+                            if (index == layout.lastIndex)
+                                1f
+                            else
+                                rowWeight / maxWeight
+
                         Row(
                             modifier = Modifier
-                                .fillMaxWidth()
+                                .fillMaxWidth(widthRatio)
+                                .align(Alignment.CenterHorizontally)
                                 .height(rowHeight)
                         ) {
                             row.forEach { key ->
@@ -276,9 +305,14 @@ fun KeyboardLayout(
                         layout[rowIdx].take(colIdx).sumOf { it.weight.toDouble() }.toFloat()
                     val totalWeight = layout[rowIdx].sumOf { it.weight.toDouble() }.toFloat()
 
+                    val metrics = rowMetrics[rowIdx]
+
+                    val rowWidth = containerSize.width * metrics.widthRatio
+                    val rowLeft = containerSize.width * metrics.leftRatio
+
                     // 計算該按鍵在 Box 內的 Rect
-                    val keyWidth = containerSize.width * (key.weight / totalWeight)
-                    val keyLeft = containerSize.width * (prevWeightSum / totalWeight)
+                    val keyWidth = rowWidth * (key.weight / totalWeight)
+                    val keyLeft = rowLeft + rowWidth * (prevWeightSum / totalWeight)
                     val keyTop = (containerSize.height / layout.size) * rowIdx
                     val rect = Rect(
                         keyLeft,
@@ -297,6 +331,11 @@ fun KeyboardLayout(
         }
     }
 }
+
+data class RowMetrics(
+    val widthRatio: Float,
+    val leftRatio: Float
+)
 
 @SuppressLint("UnusedBoxWithConstraintsScope")
 @Composable

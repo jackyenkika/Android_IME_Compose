@@ -20,8 +20,8 @@ object KeyboardLayoutProvider {
     private val numberRow = "1234567890"
     private val letterRowsBase = listOf(
         "qwertyuiop",
-        "asdfghjkl.",
-        "zxcvbnm,"
+        "asdfghjkl",
+        "zxcvbnm"
     )
 
     val symbolPageCount
@@ -97,13 +97,13 @@ object KeyboardLayoutProvider {
         if (lastRow && config.hasShift && config.mode == KeyboardMode.LETTERS) {
             rowKeys.add(
                 KeySpec(
-                    type = KeyType.SHIFT, icon =
-                        if (config.shiftState == ShiftState.CAPS_LOCK)
-                            Icons.Default.KeyboardCapslock
-                        else if (config.shiftState == ShiftState.ON)
-                            Icons.Default.Upgrade
-                        else
-                            Icons.Default.KeyboardArrowUp
+                    type = KeyType.SHIFT,
+                    icon = when (config.shiftState) {
+                        ShiftState.CAPS_LOCK -> Icons.Default.KeyboardCapslock
+                        ShiftState.ON -> Icons.Default.Upgrade
+                        else -> Icons.Default.KeyboardArrowUp
+                    },
+                    weight = 1.5f
                 ),
             )
         }
@@ -134,7 +134,8 @@ object KeyboardLayoutProvider {
                 KeySpec(
                     type = KeyType.DELETE,
                     icon = Icons.Default.Backspace,
-                    isRepeatable = true
+                    isRepeatable = true,
+                    weight = if (config.mode == KeyboardMode.SYMBOLS) 1f else 1.5f
                 )
             )
 
