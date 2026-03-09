@@ -52,6 +52,11 @@ import com.iqqi.ime.keyboard.state.localKeyboardStyle
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
+data class RowMetrics(
+    val widthRatio: Float,
+    val leftRatio: Float
+)
+
 @Composable
 fun KeyboardLayout(
     deviceConfig: DeviceConfig,
@@ -332,11 +337,6 @@ fun KeyboardLayout(
     }
 }
 
-data class RowMetrics(
-    val widthRatio: Float,
-    val leftRatio: Float
-)
-
 @SuppressLint("UnusedBoxWithConstraintsScope")
 @Composable
 fun KeyboardKey(
@@ -347,11 +347,24 @@ fun KeyboardKey(
     val style = localKeyboardStyle.current
     val density = LocalDensity.current
 
+
+    val bgColor = when (keyboardKey.type) {
+        KeyType.INPUT, KeyType.SPACE -> style.keyBackgroundColor
+        KeyType.ENTER -> style.keyPrimaryBackgroundColor
+        else -> style.keyFunctionalBackgroundColor
+    }
+
+    val textColor = when (keyboardKey.type) {
+        KeyType.INPUT, KeyType.SPACE -> style.keyTextColor
+        KeyType.ENTER -> style.keyPrimaryTextColor
+        else -> style.keyFunctionalTextColor
+    }
+
     BoxWithConstraints(
         modifier = modifier
             .background(
                 if (isActive) style.keyPressedColor
-                else style.keyBackgroundColor,
+                else bgColor,
                 RoundedCornerShape(style.keyCornerRadius)
             )
             .border(
@@ -379,7 +392,7 @@ fun KeyboardKey(
 
                 Text(
                     text = label,
-                    color = style.keyTextColor,
+                    color = textColor,
                     maxLines = 1,
                     fontWeight = FontWeight.Medium,
                     fontSize = fontSize,
@@ -390,12 +403,11 @@ fun KeyboardKey(
                 Icon(
                     imageVector = keyboardKey.icon!!,
                     contentDescription = null,
-                    tint = style.keyTextColor,
+                    tint = textColor,
                     modifier = Modifier.fillMaxSize(0.6f)   // 只佔 60%
                 )
             }
         }
-
     }
 }
 

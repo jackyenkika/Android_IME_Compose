@@ -111,14 +111,28 @@ fun KeyboardTheme(
     val keyboardStyle = KeyboardThemeSpec(
         backgroundColor =
             if (painter == null) colorScheme.background else colorScheme.background.copy(alpha = 0.0f),
+        backgroundImage = painter,
+
         keyBackgroundColor =
             if (painter == null) colorScheme.surface else colorScheme.surface.copy(alpha = 0.2f),
-        keyPressedColor = colorScheme.primary.copy(alpha = 0.2f),
-        keyBorderColor = colorScheme.primary.copy(alpha = 0.3f),
         keyTextColor = colorScheme.onSurface,
+
+        keyFunctionalBackgroundColor =
+            if (painter == null) colorScheme.surfaceVariant else colorScheme.surfaceVariant.copy(
+                alpha = 0.5f
+            ),
+        keyFunctionalTextColor = colorScheme.onSurface,
+
+        keyPrimaryBackgroundColor =
+            if (painter == null) colorScheme.primary else colorScheme.primary.copy(alpha = 0.5f),
+        keyPrimaryTextColor = colorScheme.onPrimary,
+
         keyPreviewedColor = colorScheme.primary.copy(alpha = 0.95f),
         keyPreviewTextColor = colorScheme.onPrimary,
-        backgroundImage = painter
+
+        keyPressedColor = colorScheme.primary.copy(alpha = 0.2f),
+
+        keyBorderColor = colorScheme.primary.copy(alpha = 0.3f),
     )
 
     MaterialTheme(
