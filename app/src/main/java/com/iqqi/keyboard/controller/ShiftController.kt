@@ -1,6 +1,6 @@
-package com.iqqi.ime.keyboard.controller
+package com.iqqi.keyboard.controller
 
-import com.iqqi.ime.keyboard.state.ShiftState
+import com.iqqi.keyboard.state.ShiftState
 
 class ShiftController {
 

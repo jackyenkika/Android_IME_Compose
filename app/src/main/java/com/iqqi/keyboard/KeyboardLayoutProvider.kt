@@ -1,4 +1,4 @@
-package com.iqqi.ime.keyboard
+package com.iqqi.keyboard
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
@@ -10,11 +10,11 @@ import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.SpaceBar
 import androidx.compose.material.icons.filled.Upgrade
-import com.iqqi.ime.keyboard.model.KeySpec
-import com.iqqi.ime.keyboard.model.KeyType
-import com.iqqi.ime.keyboard.model.KeyboardMode
-import com.iqqi.ime.keyboard.state.LayoutConfig
-import com.iqqi.ime.keyboard.state.ShiftState
+import com.iqqi.keyboard.model.KeySpec
+import com.iqqi.keyboard.model.KeyType
+import com.iqqi.keyboard.model.KeyboardMode
+import com.iqqi.keyboard.state.LayoutConfig
+import com.iqqi.keyboard.state.ShiftState
 
 object KeyboardLayoutProvider {
     private val numberRow = "1234567890"

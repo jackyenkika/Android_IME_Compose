@@ -1,4 +1,4 @@
-package com.iqqi.core
+package com.iqqi
 
 import android.content.Context
 import com.iqqi.data.SettingsRepository

@@ -1,12 +1,12 @@
 //KeyboardState.kt
-package com.iqqi.ime.keyboard.state
+package com.iqqi.keyboard.state
 
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.iqqi.ime.keyboard.model.KeyboardLanguage
-import com.iqqi.ime.keyboard.model.KeyboardMode
-import com.iqqi.ime.keyboard.model.KeyboardThemeSpec
+import com.iqqi.keyboard.model.KeyboardLanguage
+import com.iqqi.keyboard.model.KeyboardMode
+import com.iqqi.keyboard.model.KeyboardThemeSpec
 
 val localKeyboardStyle = staticCompositionLocalOf<KeyboardThemeSpec> {
     error("No KeyboardStyle provided")

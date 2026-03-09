@@ -1,7 +1,7 @@
 package com.iqqi
 
 import android.app.Application
-import com.iqqi.core.AppContainer
+import com.iqqi.AppContainer
 
 class ImeApplication : Application() {
 

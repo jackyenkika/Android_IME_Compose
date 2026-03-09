@@ -1,4 +1,4 @@
-package com.iqqi.ime.keyboard
+package com.iqqi.keyboard
 
 import android.content.Context
 import android.content.res.Configuration
@@ -14,11 +14,11 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import com.iqqi.data.SettingsRepository
 import com.iqqi.ime.IMEService
-import com.iqqi.ime.keyboard.controller.KeyboardController
-import com.iqqi.ime.keyboard.state.KeyboardState
-import com.iqqi.ime.keyboard.state.LayoutConfig
-import com.iqqi.ime.keyboard.ui.KeyboardLayout
-import com.iqqi.ime.keyboard.ui.KeyboardSizeCalculator
+import com.iqqi.keyboard.controller.KeyboardController
+import com.iqqi.keyboard.state.KeyboardState
+import com.iqqi.keyboard.state.LayoutConfig
+import com.iqqi.keyboard.ui.KeyboardLayout
+import com.iqqi.keyboard.ui.KeyboardSizeCalculator
 import com.iqqi.settings.ui.KeyboardTheme
 
 class ComposeKeyboardView(

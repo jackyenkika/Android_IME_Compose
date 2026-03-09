@@ -1,4 +1,4 @@
-package com.iqqi.ime.keyboard.model
+package com.iqqi.keyboard.model
 
 import androidx.compose.ui.graphics.vector.ImageVector
 

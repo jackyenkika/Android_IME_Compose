@@ -8,8 +8,8 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.res.painterResource
-import com.iqqi.ime.keyboard.model.KeyboardThemeSpec
-import com.iqqi.ime.keyboard.state.localKeyboardStyle
+import com.iqqi.keyboard.model.KeyboardThemeSpec
+import com.iqqi.keyboard.state.localKeyboardStyle
 import com.iqqi.settings.BackgroundImage
 import com.iqqi.settings.ThemeColor
 

@@ -13,11 +13,11 @@ import androidx.savedstate.SavedStateRegistryController
 import androidx.savedstate.SavedStateRegistryOwner
 import androidx.savedstate.setViewTreeSavedStateRegistryOwner
 import com.iqqi.ImeApplication
-import com.iqqi.core.KeyboardType
+import com.iqqi.core.ImeAction
 import com.iqqi.dictionary.CimDictionary
 import com.iqqi.engine.CIMReducer
 import com.iqqi.engine.ImeEngine
-import com.iqqi.ime.keyboard.ComposeKeyboardView
+import com.iqqi.keyboard.ComposeKeyboardView
 
 class IMEService : LifecycleInputMethodService(), ViewModelStoreOwner, SavedStateRegistryOwner {
 
@@ -25,8 +25,7 @@ class IMEService : LifecycleInputMethodService(), ViewModelStoreOwner, SavedStat
     private lateinit var mapper: AndroidKeyMapper
     private lateinit var imeRender: ImeRenderer
 
-    private var currentLayout: KeyboardType = KeyboardType.QWERTY
-
+    private lateinit var inputDispatcher: InputDispatcher
     //ViewModelStore Methods
 
     private val container
@@ -50,7 +49,7 @@ class IMEService : LifecycleInputMethodService(), ViewModelStoreOwner, SavedStat
         super.onCreate()
         savedStateRegistryController.performRestore(null)
 
-        mapper = AndroidKeyMapper { currentLayout }
+        mapper = AndroidKeyMapper()
         imeRender = ImeRenderer(this@IMEService)
     }
 
@@ -74,13 +73,23 @@ class IMEService : LifecycleInputMethodService(), ViewModelStoreOwner, SavedStat
         engine = ImeEngine(
             reducer = CIMReducer(CimDictionary())
         )
+
+        inputDispatcher = InputDispatcher(
+            engine = engine,
+            renderer = imeRender
+        )
     }
 
     override fun onKeyDown(code: Int, event: KeyEvent): Boolean {
-        val imeAction = mapper.map(event) ?: return super.onKeyDown(code, event)
-        val output = engine.dispatch(imeAction)
-        imeRender.render(output)
+        val action = mapper.map(event)
+            ?: return super.onKeyDown(code, event)
+
+        dispatch(action)
+
         return true
     }
 
+    fun dispatch(action: ImeAction) {
+        inputDispatcher.dispatch(action)
+    }
 }

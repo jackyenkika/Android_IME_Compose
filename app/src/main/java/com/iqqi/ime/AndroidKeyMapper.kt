@@ -3,7 +3,8 @@ package com.iqqi.ime
 import android.view.KeyEvent
 import com.iqqi.core.ImeAction
 import com.iqqi.core.Key
-import com.iqqi.core.KeyboardType
+import com.iqqi.keyboard.model.KeySpec
+import com.iqqi.keyboard.model.KeyType
 
 /**
  * Android 世界 → Core 世界
@@ -15,34 +16,40 @@ import com.iqqi.core.KeyboardType
  * 	•	存 state
  * 	•	判斷拼音
  */
-class AndroidKeyMapper(
-    private val layoutProvider: () -> KeyboardType
-) {
+class AndroidKeyMapper() {
 
-    fun map(event: KeyEvent): ImeAction? {
-        return when (layoutProvider()) {
-            KeyboardType.QWERTY -> mapQwerty(event)
-            KeyboardType.T9 -> mapT9(event)
-        }
-    }
+    //軟體鍵盤
+    fun map(key: KeySpec): ImeAction? {
 
-    private fun mapQwerty(event: KeyEvent): ImeAction? {
-        return when (event.keyCode) {
-            KeyEvent.KEYCODE_DEL -> ImeAction.Delete
-            KeyEvent.KEYCODE_SPACE -> ImeAction.Input(Key.Space)
-            else -> {
-                event.unicodeChar
-                    .takeIf { it != 0 }
-                    ?.toChar()
-                    ?.let { ImeAction.Input(Key.Char(it)) }
+        return when (key.type) {
+
+            KeyType.INPUT -> {
+                val label = key.label ?: return null
+                ImeAction.Input(Key.Char(label.first()))
             }
+
+            KeyType.DELETE -> {
+                ImeAction.Delete
+            }
+
+            KeyType.SPACE -> {
+                ImeAction.Input(Key.Space)
+            }
+
+
+            KeyType.ENTER -> {
+                ImeAction.Input(Key.Enter)
+            }
+
+            else -> null
         }
+
     }
 
-    private fun mapT9(event: KeyEvent): ImeAction? {
+    //硬體鍵盤
+    fun map(event: KeyEvent): ImeAction? {
         return when (event.keyCode) {
             KeyEvent.KEYCODE_DEL -> ImeAction.Delete
-            KeyEvent.KEYCODE_SPACE -> ImeAction.Input(Key.Space)
             else -> {
                 event.unicodeChar
                     .takeIf { it != 0 }

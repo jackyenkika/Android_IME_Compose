@@ -1,8 +1,8 @@
-package com.iqqi.ime.keyboard.ui
+package com.iqqi.keyboard.ui
 
 import android.content.Context
 import androidx.compose.ui.unit.Density
-import com.iqqi.ime.keyboard.state.DeviceConfig
+import com.iqqi.keyboard.state.DeviceConfig
 import com.iqqi.settings.KeyboardHeight
 
 object KeyboardSizeCalculator {

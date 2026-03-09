@@ -3,7 +3,6 @@ package com.iqqi.engine
 import com.iqqi.core.EngineState
 import com.iqqi.core.ImeAction
 import com.iqqi.core.InputMode
-import com.iqqi.core.Key
 import com.iqqi.dictionary.Dictionary
 import junit.framework.TestCase.assertEquals
 import junit.framework.TestCase.assertNull

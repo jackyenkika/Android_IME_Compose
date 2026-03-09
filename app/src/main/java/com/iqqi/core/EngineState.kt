@@ -11,7 +11,6 @@ data class EngineState(
     val buffer: String = "",
     val composing: String = "",
     val candidates: List<String> = emptyList(),
-    val layout: KeyboardType = KeyboardType.QWERTY,
     var mode: InputMode = InputMode.Idle,
     val selectedIndex: Int = 0, // 選字索引，可在 Selecting mode 使用
     val commitText: String? = null,

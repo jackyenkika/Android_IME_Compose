@@ -1,4 +1,4 @@
-package com.iqqi.ime.keyboard.model
+package com.iqqi.keyboard.model
 
 enum class KeyboardMode {
     LETTERS,

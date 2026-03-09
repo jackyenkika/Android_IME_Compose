@@ -1,4 +1,4 @@
-package com.iqqi.ime.keyboard.ui
+package com.iqqi.keyboard.ui
 
 import android.annotation.SuppressLint
 import androidx.compose.foundation.Image
@@ -45,10 +45,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Popup
-import com.iqqi.ime.keyboard.model.KeySpec
-import com.iqqi.ime.keyboard.model.KeyType
-import com.iqqi.ime.keyboard.state.DeviceConfig
-import com.iqqi.ime.keyboard.state.localKeyboardStyle
+import com.iqqi.keyboard.model.KeySpec
+import com.iqqi.keyboard.model.KeyType
+import com.iqqi.keyboard.state.DeviceConfig
+import com.iqqi.keyboard.state.localKeyboardStyle
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
