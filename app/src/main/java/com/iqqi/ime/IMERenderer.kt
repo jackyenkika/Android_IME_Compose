@@ -21,14 +21,21 @@ class IMERenderer(
     fun render(output: EngineOutput) {
         val ic = ims.currentInputConnection ?: return
 
+        //delete
+        if (output.deleteBeforeCursor) {
+            ic.finishComposingText()   // ← 必須先清避免buffer殘留
+            DeleteObj.delete(ic)
+        }
+
         // commit
         output.commitText?.let {
             ic.commitText(it, 1)
         }
 
         // composing
-        if (output.composingText != null) {
-            ic.setComposingText(output.composingText, 1)
+        val composing = output.composingText
+        if (!composing.isNullOrEmpty()) {
+            ic.setComposingText(composing, 1)
         } else {
             ic.finishComposingText()
         }
@@ -40,11 +47,6 @@ class IMERenderer(
             IMEStore.updateCandidate(
                 output.candidates, output.selectedIndex
             )
-        }
-
-        //delete
-        if (output.deleteBeforeCursor) {
-            DeleteObj.delete(ic)
         }
     }
 }

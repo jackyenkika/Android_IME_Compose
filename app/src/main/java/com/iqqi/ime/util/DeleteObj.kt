@@ -6,13 +6,19 @@ import java.util.Locale
 
 object DeleteObj {
 
+    private const val LOOKBACK = 32
+
+    // ICU iterator (避免每次 new)
+    private val iterator =
+        BreakIterator.getCharacterInstance(Locale.getDefault())
+
+    // block macro
     private val BLOCK_REGEX =
         Regex("""(\[[^\[\]]+])$|(【[^【】]+】)$|(<[^<>]+>)$""")
 
+    // prefix macro
     private val PREFIX_REGEX =
         Regex("""(#\S+|\/:\S+)$""")
-
-    private const val LOOKBACK = 100
 
     fun delete(ic: InputConnection) {
 
@@ -23,32 +29,61 @@ object DeleteObj {
             return
         }
 
-        // 1 block macro
-        BLOCK_REGEX.find(before)?.let {
-            ic.deleteSurroundingText(it.value.length, 0)
+        val last = before.last()
+
+        // ------------------------------------------------
+        // 1️⃣ FAST PATH (ASCII)
+        // ------------------------------------------------
+
+        if (last.code < 128 && last.isLetterOrDigit()) {
+            ic.deleteSurroundingText(1, 0)
             return
         }
 
-        // 2 prefix macro
-        PREFIX_REGEX.find(before)?.let {
-            ic.deleteSurroundingText(it.value.length, 0)
-            return
+        // ------------------------------------------------
+        // 2️⃣ BLOCK MACRO
+        // ------------------------------------------------
+
+        if (last == ']' || last == '】' || last == '>') {
+
+            BLOCK_REGEX.find(before)?.let {
+                ic.deleteSurroundingText(it.value.length, 0)
+                return
+            }
         }
 
-        // 3 grapheme cluster (emoji / combined char)
+        // ------------------------------------------------
+        // 3️⃣ PREFIX MACRO
+        // ------------------------------------------------
+
+        if (last == ':' || last == ' ') {
+
+            PREFIX_REGEX.find(before)?.let {
+                ic.deleteSurroundingText(it.value.length, 0)
+                return
+            }
+        }
+
+        // ------------------------------------------------
+        // 4️⃣ EMOJI / GRAPHEME CLUSTER
+        // ------------------------------------------------
+
         val cluster = lastGrapheme(before)
-        if (cluster != null) {
+
+        if (cluster != null && cluster.length > 1) {
             ic.deleteSurroundingText(cluster.length, 0)
             return
         }
 
-        // fallback
+        // ------------------------------------------------
+        // 5️⃣ FALLBACK
+        // ------------------------------------------------
+
         ic.deleteSurroundingTextInCodePoints(1, 0)
     }
 
     private fun lastGrapheme(text: String): String? {
 
-        val iterator = BreakIterator.getCharacterInstance(Locale.getDefault())
         iterator.setText(text)
 
         val end = iterator.last()

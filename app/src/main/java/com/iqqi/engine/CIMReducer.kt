@@ -21,12 +21,15 @@ class CIMReducer(
     }
 
     override fun reduce(state: EngineState, action: ImeAction): EngineState {
-        return when (state.mode) {
+        LogObj.debug("reduce start state = $state , action = $action")
+        val endState = when (state.mode) {
             InputMode.Idle -> handleIdle(state, action)
             InputMode.Composing -> handleComposing(state, action)
             InputMode.Selecting -> handleSelecting(state, action)
             InputMode.Predicting -> handlePredicting(state, action)
         }
+        LogObj.debug("reduce end state = $endState , action = $action")
+        return endState
     }
 
     // ---------------- Idle ----------------
@@ -36,10 +39,18 @@ class CIMReducer(
 
             is ImeAction.Input -> when (val key = action.key) {
 
-                is Key.Char -> buildComposingState(
-                    state,
-                    state.buffer + key.c
-                )
+                is Key.Char -> {
+                    if (isPinyinChar(key.c)) {
+                        buildComposingState(
+                            state,
+                            state.buffer + key.c
+                        )
+                    } else {
+                        EngineState(
+                            commitText = key.c.toString()
+                        )
+                    }
+                }
 
                 Key.Space -> {
                     EngineState(
@@ -94,10 +105,25 @@ class CIMReducer(
         return when (val key = action.key) {
 
             is Key.Char -> {
-                buildComposingState(
-                    state,
-                    state.buffer + key.c
-                )
+
+                if (isPinyinChar(key.c)) {
+
+                    buildComposingState(
+                        state,
+                        state.buffer + key.c
+                    )
+
+                } else {
+
+                    // 先 commit 現有 composing
+                    val commit = state.candidates.getOrNull(state.selectedIndex)
+                        ?: state.composing
+
+                    EngineState(
+                        commitText = commit + key.c,
+                        mode = InputMode.Idle
+                    )
+                }
             }
 
             is Key.Space -> {
@@ -173,11 +199,18 @@ class CIMReducer(
             }
 
             is ImeAction.Input -> when (val key = action.key) {
-
-                is Key.Char -> buildComposingState(
-                    EngineState(),
-                    key.c.toString()
-                )
+                is Key.Char -> {
+                    if (isPinyinChar(key.c)) {
+                        buildComposingState(
+                            EngineState(),
+                            key.c.toString()
+                        )
+                    } else {
+                        EngineState(
+                            commitText = key.c.toString()
+                        )
+                    }
+                }
 
                 Key.Space -> {
                     val commit = state.predictingCandidates.firstOrNull()
@@ -201,6 +234,10 @@ class CIMReducer(
     }
 
     // ---------------- Shared helpers ----------------
+
+    private fun isPinyinChar(c: Char): Boolean {
+        return c in 'a'..'z'
+    }
 
     private fun buildComposingState(
         state: EngineState,
@@ -271,7 +308,9 @@ class CIMReducer(
             val newBuffer = state.buffer.dropLast(1)
 
             if (newBuffer.isEmpty()) {
-                return EngineState()
+                return EngineState(
+                    deleteBeforeCursor = true
+                )
             }
 
             val candidates = dict.query(newBuffer)
@@ -282,8 +321,7 @@ class CIMReducer(
                 composing = composing,
                 candidates = candidates,
                 selectedIndex = 0,
-                mode = InputMode.Composing,
-                deleteBeforeCursor = false
+                mode = InputMode.Composing
             )
         }
 
