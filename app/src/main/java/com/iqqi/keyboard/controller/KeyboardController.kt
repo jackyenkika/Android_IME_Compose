@@ -1,7 +1,7 @@
 package com.iqqi.keyboard.controller
 
 import android.content.Intent
-import com.iqqi.ime.AndroidKeyMapper
+import com.iqqi.ime.IMEKeyMapper
 import com.iqqi.ime.IMEService
 import com.iqqi.keyboard.KeyboardLayoutProvider
 import com.iqqi.keyboard.model.KeySpec
@@ -15,7 +15,7 @@ class KeyboardController(
     private val ime: IMEService
 ) {
 
-    private val mapper = AndroidKeyMapper()
+    private val mapper = IMEKeyMapper()
     private val shiftController = ShiftController()
 
     fun onKey(key: KeySpec, state: KeyboardState): KeyboardState {

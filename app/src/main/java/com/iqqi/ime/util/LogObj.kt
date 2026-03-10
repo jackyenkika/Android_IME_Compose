@@ -1,4 +1,4 @@
-package com.iqqi.util
+package com.iqqi.ime.util
 
 import android.util.Log
 import com.iqqi.ime.BuildConfig

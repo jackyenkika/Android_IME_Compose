@@ -1,7 +1,7 @@
 package com.iqqi.dictionary
 
 import com.iqqi.ime.BuildConfig
-import com.iqqi.util.LogObj
+import com.iqqi.ime.util.LogObj
 import com.lib.cimenginecoreso.CimEngineCore
 import com.lib.cimenginecoreso.JavaCandidateData
 import com.lib.cimenginecoreso.JavaCloudClientAgent

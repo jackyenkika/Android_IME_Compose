@@ -16,7 +16,7 @@ import com.iqqi.keyboard.model.KeyType
  * 	•	存 state
  * 	•	判斷拼音
  */
-class AndroidKeyMapper() {
+class IMEKeyMapper() {
 
     //軟體鍵盤
     fun map(key: KeySpec): ImeAction? {

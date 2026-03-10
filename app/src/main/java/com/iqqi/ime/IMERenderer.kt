@@ -2,6 +2,7 @@ package com.iqqi.ime
 
 import android.inputmethodservice.InputMethodService
 import com.iqqi.core.EngineOutput
+import com.iqqi.ime.util.DeleteObj
 
 /**
  * EngineOutput → Android API
@@ -14,10 +15,9 @@ import com.iqqi.core.EngineOutput
  * 	•	修改 state
  * 	•	推測下一步
  */
-class ImeRenderer(
+class IMERenderer(
     private val ims: InputMethodService
 ) {
-
     fun render(output: EngineOutput) {
         val ic = ims.currentInputConnection ?: return
 
@@ -38,14 +38,13 @@ class ImeRenderer(
             IMEStore.clearCandidate()
         } else {
             IMEStore.updateCandidate(
-                output.candidates,
-                output.selectedIndex
+                output.candidates, output.selectedIndex
             )
         }
 
         //delete
         if (output.deleteBeforeCursor) {
-            ic.deleteSurroundingText(1, 0)
+            DeleteObj.delete(ic)
         }
     }
 }

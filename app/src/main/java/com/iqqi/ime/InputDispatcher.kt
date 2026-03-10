@@ -5,7 +5,7 @@ import com.iqqi.engine.ImeEngine
 
 class InputDispatcher(
     private val engine: ImeEngine,
-    private val renderer: ImeRenderer
+    private val renderer: IMERenderer
 ) {
 
     fun dispatch(action: ImeAction) {

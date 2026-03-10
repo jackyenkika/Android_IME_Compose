@@ -22,8 +22,8 @@ import com.iqqi.keyboard.ComposeKeyboardView
 class IMEService : LifecycleInputMethodService(), ViewModelStoreOwner, SavedStateRegistryOwner {
 
     private lateinit var engine: ImeEngine
-    private lateinit var mapper: AndroidKeyMapper
-    private lateinit var imeRender: ImeRenderer
+    private lateinit var mapper: IMEKeyMapper
+    private lateinit var imeRender: IMERenderer
 
     private lateinit var inputDispatcher: InputDispatcher
     //ViewModelStore Methods
@@ -49,8 +49,8 @@ class IMEService : LifecycleInputMethodService(), ViewModelStoreOwner, SavedStat
         super.onCreate()
         savedStateRegistryController.performRestore(null)
 
-        mapper = AndroidKeyMapper()
-        imeRender = ImeRenderer(this@IMEService)
+        mapper = IMEKeyMapper()
+        imeRender = IMERenderer(this@IMEService)
     }
 
     override fun onCreateInputView(): View {

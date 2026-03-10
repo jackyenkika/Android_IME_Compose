@@ -7,7 +7,7 @@ import com.iqqi.core.InputMode
 import com.iqqi.core.Key
 import com.iqqi.core.Reducer
 import com.iqqi.dictionary.Dictionary
-import com.iqqi.util.LogObj
+import com.iqqi.ime.util.LogObj
 
 class CIMReducer(
     context: Context,
