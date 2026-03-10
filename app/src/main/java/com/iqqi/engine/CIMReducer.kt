@@ -41,9 +41,16 @@ class CIMReducer(
                     state.buffer + key.c
                 )
 
-                Key.Space, Key.Enter -> {
-                    //TODO 沒有空白或是enter
-                    state
+                Key.Space -> {
+                    EngineState(
+                        commitText = " "
+                    )
+                }
+
+                Key.Enter -> {
+                    EngineState(
+                        commitText = "\n"
+                    )
                 }
             }
 
@@ -98,7 +105,11 @@ class CIMReducer(
             }
 
             is Key.Enter -> {
-                commitDirect(state)
+                if (state.composing.isEmpty()) {
+                    EngineState(commitText = "\n")
+                } else {
+                    EngineState(commitText = state.composing.replace("'", ""))
+                }
             }
         }
     }
@@ -139,7 +150,15 @@ class CIMReducer(
 
             is ImeAction.SelectCandidate -> {
                 val commit = state.predictingCandidates.getOrNull(action.index)
-                EngineState(commitText = commit)
+                    ?: return EngineState()
+
+                val predict = dict.predict(commit)
+
+                EngineState(
+                    commitText = commit,
+                    predictingCandidates = predict,
+                    mode = if (predict.isEmpty()) InputMode.Idle else InputMode.Predicting
+                )
             }
 
             ImeAction.Commit -> {
@@ -148,9 +167,8 @@ class CIMReducer(
             }
 
             ImeAction.Delete -> {
-                state.copy(
-                    mode = InputMode.Idle,
-                    predictingCandidates = emptyList()
+                EngineState(
+                    deleteBeforeCursor = true
                 )
             }
 
@@ -161,7 +179,22 @@ class CIMReducer(
                     key.c.toString()
                 )
 
-                else -> state
+                Key.Space -> {
+                    val commit = state.predictingCandidates.firstOrNull()
+                        ?: return EngineState(commitText = " ")
+
+                    val predict = dict.predict(commit)
+
+                    EngineState(
+                        commitText = commit,
+                        predictingCandidates = predict,
+                        mode = if (predict.isEmpty()) InputMode.Idle else InputMode.Predicting
+                    )
+                }
+
+                Key.Enter -> {
+                    EngineState(commitText = "\n")
+                }
             }
 
         }
@@ -175,7 +208,12 @@ class CIMReducer(
     ): EngineState {
 
         if (buffer.isEmpty()) {
-            return EngineState()
+            return state.copy(
+                buffer = "",
+                composing = "",
+                candidates = emptyList(),
+                mode = InputMode.Idle
+            )
         }
 
         val candidates = dict.query(buffer)
@@ -244,7 +282,8 @@ class CIMReducer(
                 composing = composing,
                 candidates = candidates,
                 selectedIndex = 0,
-                mode = InputMode.Composing
+                mode = InputMode.Composing,
+                deleteBeforeCursor = false
             )
         }
 
@@ -253,6 +292,4 @@ class CIMReducer(
             deleteBeforeCursor = true
         )
     }
-    private fun String.dropLastOrNull(): String? =
-        if (isNotEmpty()) dropLast(1) else null
 }

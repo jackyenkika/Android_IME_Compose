@@ -13,7 +13,8 @@ class ImeEngine(private val reducer: Reducer) {
 
     fun dispatch(action: ImeAction): EngineOutput {
         state = reducer.reduce(state, action)
-        return EngineOutput(
+
+        val output = EngineOutput(
             composingText = state.composing.ifEmpty { null },
             candidates = if (state.mode == InputMode.Predicting) {
                 state.predictingCandidates
@@ -25,5 +26,13 @@ class ImeEngine(private val reducer: Reducer) {
             commitText = state.commitText,
             deleteBeforeCursor = state.deleteBeforeCursor
         )
+
+        // commit / delete 都是 event，回傳後清掉
+        state = state.copy(
+            commitText = null,
+            deleteBeforeCursor = false
+        )
+
+        return output
     }
 }
