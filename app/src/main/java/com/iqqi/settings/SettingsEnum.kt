@@ -11,9 +11,9 @@ enum class KeyboardHeight(val horizontalScale: Float, val verticalScale: Float) 
 }
 
 enum class CandidateHeight(val scale: Float) {
-    SMALL(0.7f),
-    MEDIUM(0.8f),
-    LARGE(0.9f),
+    SMALL(0.4f),
+    MEDIUM(0.45f),
+    LARGE(0.5f),
 }
 
 enum class ThemeColor {

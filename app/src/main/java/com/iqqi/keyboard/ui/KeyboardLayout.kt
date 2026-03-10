@@ -61,6 +61,7 @@ data class RowMetrics(
 data class DeviceConfig(
     val keyboardHeight: Dp = 400.dp,
     val candidateHeight: Dp = 44.dp,
+    val candidateFontScale: Float = 0.9f
 )
 
 val localKeyboardStyle = staticCompositionLocalOf<KeyboardThemeSpec> {
@@ -177,6 +178,7 @@ fun KeyboardLayout(
             // 候選字欄位
             CandidateBar(
                 modifier = Modifier.height(candidateBarHeight),
+                candidateFontScale = deviceConfig.candidateFontScale,
                 candidates = candidates,
                 onCandidateClick = onCandidateClick,
             )

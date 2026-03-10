@@ -106,7 +106,7 @@ fun SettingsScreen() {
                         SettingListItemModern(
                             title = "Candidate Height",
                             summary = "Adjust the overall candidate size",
-                            currentValue = "${(currentCandidateHeight.scale * 100).toInt()}%",
+                            currentValue = "$currentCandidateHeight",
                             onClick = { showCandidateHeightDialog = true }
                         )
                         HorizontalDivider()
@@ -165,7 +165,7 @@ fun SettingsScreen() {
                     title = "Candidate Height",
                     options = CandidateHeight.entries,
                     current = currentCandidateHeight,
-                    optionLabel = { "${(it.scale * 100).toInt()}%" },
+                    optionLabel = { "$it" },
                     onSelect = {
                         viewModel.setCandidateHeight(it)
                         showCandidateHeightDialog = false

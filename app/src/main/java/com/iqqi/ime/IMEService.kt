@@ -115,7 +115,9 @@ class IMEService : LifecycleInputMethodService(), ViewModelStoreOwner, SavedStat
 
         // 先判斷 EngineState buffer
         val bufferNotEmpty = engine.currentState.buffer.isNotEmpty() ||
-                engine.currentState.composing.isNotEmpty()
+                engine.currentState.composing.isNotEmpty() ||
+                engine.currentState.candidates.isNotEmpty() ||
+                engine.currentState.predictingCandidates.isNotEmpty()
 
         if (bufferNotEmpty) {
             // buffer 還有內容 → 走 Engine 刪除

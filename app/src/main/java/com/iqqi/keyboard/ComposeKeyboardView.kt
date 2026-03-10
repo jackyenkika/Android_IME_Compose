@@ -34,6 +34,7 @@ class ComposeKeyboardView(
 
         val showDigital by repository.enableDigitalFlow.collectAsState(initial = repository.defaultSetting.enableDigital)
         val keyboardHeight by repository.keyboardHeightFlow.collectAsState(initial = repository.defaultSetting.keyboardHeight)
+        val candidateHeight by repository.candidateHeightFlow.collectAsState(initial = repository.defaultSetting.candidateHeight)
         val themeColor by repository.themeColorFlow.collectAsState(initial = repository.defaultSetting.themeColor)
         val keyboardBackgroundImage by repository.keyboardBackgroundImageFlow.collectAsState(initial = repository.defaultSetting.backgroundImage)
 
@@ -52,13 +53,14 @@ class ComposeKeyboardView(
         }
 
         val deviceConfig = remember(
-            keyboardHeight, config.orientation
+            keyboardHeight, candidateHeight, config.orientation
         ) {
             KeyboardSizeCalculator.getDeviceConfig(
-                context,
-                density,
-                keyboardHeight,
-                config.orientation == Configuration.ORIENTATION_LANDSCAPE
+                context = context,
+                density = density,
+                keyboardHeight = keyboardHeight,
+                candidateHeight = candidateHeight,
+                isLandscape = config.orientation == Configuration.ORIENTATION_LANDSCAPE
             )
         }
 

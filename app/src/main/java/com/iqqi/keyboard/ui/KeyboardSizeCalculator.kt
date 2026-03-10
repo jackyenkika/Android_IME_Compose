@@ -2,6 +2,7 @@ package com.iqqi.keyboard.ui
 
 import android.content.Context
 import androidx.compose.ui.unit.Density
+import com.iqqi.settings.CandidateHeight
 import com.iqqi.settings.KeyboardHeight
 
 object KeyboardSizeCalculator {
@@ -10,6 +11,7 @@ object KeyboardSizeCalculator {
         context: Context,
         density: Density,
         keyboardHeight: KeyboardHeight,
+        candidateHeight: CandidateHeight,
         isLandscape: Boolean
     ): DeviceConfig {
         val keyboardScale =
@@ -19,6 +21,6 @@ object KeyboardSizeCalculator {
         val screenHeightPx = context.resources.displayMetrics.heightPixels
         val keyboardHeightDp = with(density) { (screenHeightPx * keyboardScale).toDp() }
         val candidateHeightDp = with(density) { (screenHeightPx * candidateScale).toDp() }
-        return DeviceConfig(keyboardHeightDp, candidateHeightDp)
+        return DeviceConfig(keyboardHeightDp, candidateHeightDp, candidateHeight.scale)
     }
 }
