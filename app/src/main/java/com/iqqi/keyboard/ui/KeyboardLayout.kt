@@ -72,6 +72,7 @@ fun KeyboardLayout(
     deviceConfig: DeviceConfig,
     layout: List<List<KeySpec>>,
     candidates: List<String> = emptyList(),
+    onDeleteUp: () -> Unit,
     onCandidateClick: (Int) -> Unit,
     onKeyCommit: (KeySpec) -> Unit
 ) {
@@ -276,6 +277,11 @@ fun KeyboardLayout(
                             }
                             // 最後一定要確保 Job 被取消，防止手指離開後還在噴字
                             repeatJob?.cancel()
+
+                            if (activeKey?.type == KeyType.DELETE) {
+                                onDeleteUp()
+                            }
+
                             activeKey = null
                             longPressActive = false
                         }

@@ -29,6 +29,7 @@ class IMEKeyMapper() {
             }
 
             KeyType.DELETE -> {
+                //會在上層compose 就行觸發
                 ImeAction.Delete
             }
 

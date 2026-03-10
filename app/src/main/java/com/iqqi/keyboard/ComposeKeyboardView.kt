@@ -16,14 +16,14 @@ import com.iqqi.data.SettingsRepository
 import com.iqqi.ime.IMEService
 import com.iqqi.ime.IMEStore
 import com.iqqi.keyboard.controller.KeyboardController
+import com.iqqi.keyboard.model.KeyType
 import com.iqqi.keyboard.state.LayoutConfig
 import com.iqqi.keyboard.ui.KeyboardLayout
 import com.iqqi.keyboard.ui.KeyboardSizeCalculator
 import com.iqqi.settings.ui.KeyboardTheme
 
 class ComposeKeyboardView(
-    context: Context,
-    private val repository: SettingsRepository
+    context: Context, private val repository: SettingsRepository
 ) : AbstractComposeView(context) {
 
     @Composable
@@ -52,8 +52,7 @@ class ComposeKeyboardView(
         }
 
         val deviceConfig = remember(
-            keyboardHeight,
-            config.orientation
+            keyboardHeight, config.orientation
         ) {
             KeyboardSizeCalculator.getDeviceConfig(
                 context,
@@ -67,19 +66,23 @@ class ComposeKeyboardView(
             KeyboardLayoutProvider.create(keyboardState.layoutConfig)
         }
         KeyboardTheme(
-            themeColor = themeColor,
-            backgroundImage = keyboardBackgroundImage
+            themeColor = themeColor, backgroundImage = keyboardBackgroundImage
         ) {
             KeyboardLayout(
                 deviceConfig = deviceConfig,
                 layout = layout,
                 candidates = candidateState.candidates,
+                onDeleteUp = { ime.onDeleteKeyUp() },
                 onCandidateClick = { index ->
                     ime.dispatch(ImeAction.SelectCandidate(index))
                 },
             ) { key ->
-                val newState = controller.onKey(key, keyboardState)
-                IMEStore.updateKeyboardState(newState)
+                if (key.type == KeyType.DELETE) {
+                    ime.onDeleteKeyDown()
+                } else {
+                    val newState = controller.onKey(key, keyboardState)
+                    IMEStore.updateKeyboardState(newState)
+                }
             }
         }
     }

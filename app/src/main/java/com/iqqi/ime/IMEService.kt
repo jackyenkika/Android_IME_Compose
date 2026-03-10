@@ -17,6 +17,7 @@ import com.iqqi.core.ImeAction
 import com.iqqi.dictionary.CimDictionary
 import com.iqqi.engine.CIMReducer
 import com.iqqi.engine.ImeEngine
+import com.iqqi.ime.util.DeleteRepeater
 import com.iqqi.keyboard.ComposeKeyboardView
 
 class IMEService : LifecycleInputMethodService(), ViewModelStoreOwner, SavedStateRegistryOwner {
@@ -24,6 +25,8 @@ class IMEService : LifecycleInputMethodService(), ViewModelStoreOwner, SavedStat
     private lateinit var engine: ImeEngine
     private lateinit var mapper: IMEKeyMapper
     private lateinit var imeRender: IMERenderer
+
+    private val deleteRepeater = DeleteRepeater()
 
     private lateinit var inputDispatcher: InputDispatcher
     //ViewModelStore Methods
@@ -84,12 +87,48 @@ class IMEService : LifecycleInputMethodService(), ViewModelStoreOwner, SavedStat
         val action = mapper.map(event)
             ?: return super.onKeyDown(code, event)
 
+        if (action is ImeAction.Delete) {
+            onDeleteKeyDown()  // 進入判斷 buffer 或長按刪除
+            return true
+        }
+
         dispatch(action)
 
         return true
     }
 
+    override fun onKeyUp(code: Int, event: KeyEvent): Boolean {
+        if (code == KeyEvent.KEYCODE_DEL) {
+            onDeleteKeyUp()  // 停止 DeleteRepeater
+            return true
+        }
+        return super.onKeyUp(code, event)
+    }
+    //=========================================================
+
     fun dispatch(action: ImeAction) {
         inputDispatcher.dispatch(action)
     }
+
+    fun onDeleteKeyDown() {
+        val ic = currentInputConnection ?: return
+
+        // 先判斷 EngineState buffer
+        val bufferNotEmpty = engine.currentState.buffer.isNotEmpty() ||
+                engine.currentState.composing.isNotEmpty()
+
+        if (bufferNotEmpty) {
+            // buffer 還有內容 → 走 Engine 刪除
+            dispatch(ImeAction.Delete)
+        } else {
+            // buffer 沒有 → 走長按刪除
+            deleteRepeater.singleDelete(ic)
+            deleteRepeater.start(ic)
+        }
+    }
+
+    fun onDeleteKeyUp() {
+        deleteRepeater.stop()
+    }
+    //=========================================================
 }
