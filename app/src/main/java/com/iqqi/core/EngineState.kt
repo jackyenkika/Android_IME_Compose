@@ -15,6 +15,8 @@ data class EngineState(
     val selectedIndex: Int = 0, // 選字索引，可在 Selecting mode 使用
     val commitText: String? = null,
     var predictingCandidates: List<String> = emptyList(), // 二元聯想候選
+
+    val deleteBeforeCursor: Boolean = false
 )
 
 /**

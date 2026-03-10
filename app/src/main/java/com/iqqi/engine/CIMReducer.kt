@@ -1,15 +1,24 @@
 package com.iqqi.engine
 
+import android.content.Context
 import com.iqqi.core.EngineState
 import com.iqqi.core.ImeAction
 import com.iqqi.core.InputMode
 import com.iqqi.core.Key
 import com.iqqi.core.Reducer
 import com.iqqi.dictionary.Dictionary
+import com.iqqi.util.LogObj
 
 class CIMReducer(
+    context: Context,
     private val dict: Dictionary
 ) : Reducer {
+
+    init {
+        val userDataDict = context.applicationInfo.dataDir
+        val engineInitStatus = dict.init(userDataDict)
+        LogObj.trace("userDataDict = $userDataDict , engineInitStatus = $engineInitStatus")
+    }
 
     override fun reduce(state: EngineState, action: ImeAction): EngineState {
         return when (state.mode) {
@@ -20,151 +29,230 @@ class CIMReducer(
         }
     }
 
+    // ---------------- Idle ----------------
+
     private fun handleIdle(state: EngineState, action: ImeAction): EngineState {
         return when (action) {
-            is ImeAction.Input -> {
-                when (val key = action.key) {
-                    is Key.Char -> {
-                        val buffer = state.buffer + key.c
-                        val candidates = dict.query(buffer)
-                        state.copy(
-                            buffer = buffer,
-                            composing = candidates.firstOrNull() ?: buffer,
-                            candidates = candidates,
-                            mode = InputMode.Composing,
-                            selectedIndex = 0
-                        )
-                    }
 
-                    Key.Space, Key.Enter -> state
+            is ImeAction.Input -> when (val key = action.key) {
+
+                is Key.Char -> buildComposingState(
+                    state,
+                    state.buffer + key.c
+                )
+
+                Key.Space, Key.Enter -> {
+                    //TODO 沒有空白或是enter
+                    state
                 }
             }
 
-            else -> state
+            is ImeAction.Delete -> {
+                handleDelete(state)
+            }
+
+            is ImeAction.Commit -> state
+            is ImeAction.SelectCandidate -> state
         }
     }
+
+    // ---------------- Composing ----------------
 
     private fun handleComposing(state: EngineState, action: ImeAction): EngineState {
+
         return when (action) {
+
+            is ImeAction.Input -> handleComposingInput(state, action)
+
             is ImeAction.SelectCandidate -> {
-                val commit = state.candidates.getOrNull(action.index) ?: state.composing
-                state.copy(
-                    buffer = "",
-                    composing = "",
-                    candidates = emptyList(),
-                    mode = if (commit.isEmpty()) InputMode.Idle else InputMode.Predicting,
-                    selectedIndex = 0,
-                    commitText = commit,
-                    predictingCandidates = dict.predict(commit)
+                commitAndPredict(state, action.index)
+            }
+
+            is ImeAction.Delete -> {
+                handleDelete(state)
+            }
+
+            is ImeAction.Commit -> {
+                commitAndPredict(state, state.selectedIndex)
+            }
+
+        }
+    }
+
+    private fun handleComposingInput(
+        state: EngineState,
+        action: ImeAction.Input
+    ): EngineState {
+
+        return when (val key = action.key) {
+
+            is Key.Char -> {
+                buildComposingState(
+                    state,
+                    state.buffer + key.c
                 )
             }
 
-            Key.Space -> {
-                val commit = state.candidates.getOrNull(0) ?: state.composing
-                state.copy(
-                    buffer = "",
-                    composing = "",
-                    candidates = emptyList(),
-                    mode = if (commit.isEmpty()) InputMode.Idle else InputMode.Predicting,
-                    selectedIndex = 0,
-                    commitText = commit,
-                    predictingCandidates = dict.predict(commit)
-                )
+            is Key.Space -> {
+                commitAndPredict(state, 0)
             }
 
-            Key.Space, Key.Enter, is ImeAction.Commit -> {
-                state.copy(
-                    buffer = "",
-                    composing = "",
-                    candidates = emptyList(),
-                    mode = InputMode.Idle,
-                    selectedIndex = 0,
-                    commitText = state.candidates.getOrNull(state.selectedIndex) ?: state.composing
-                )
+            is Key.Enter -> {
+                commitDirect(state)
+            }
+        }
+    }
+
+    // ---------------- Selecting ----------------
+
+    private fun handleSelecting(
+        state: EngineState,
+        action: ImeAction
+    ): EngineState {
+
+        return when (action) {
+
+            is ImeAction.SelectCandidate -> {
+                commitAndPredict(state, action.index)
             }
 
-
-            is ImeAction.Input -> {
-                when (val key = action.key) {
-                    is Key.Char -> {
-                        val buffer = state.buffer + key.c
-                        val candidates = dict.query(buffer)
-                        state.copy(
-                            buffer = buffer,
-                            composing = candidates.firstOrNull() ?: buffer,
-                            candidates = candidates,
-                            mode = InputMode.Composing,
-                            selectedIndex = 0
-                        )
-                    }
-
-                    Key.Space, Key.Enter -> EngineState() // commit 清空
-                }
+            is ImeAction.Delete -> {
+                handleDelete(state)
             }
 
-            ImeAction.Delete -> {
-                val newBuffer = state.buffer.dropLastOrNull() ?: ""
-                val candidates = if (newBuffer.isNotEmpty()) dict.query(newBuffer) else emptyList()
-                state.copy(
-                    buffer = newBuffer,
-                    composing = candidates.firstOrNull() ?: "",
-                    candidates = candidates,
-                    mode = if (newBuffer.isNotEmpty()) InputMode.Composing else InputMode.Idle,
-                    selectedIndex = 0
-                )
+            is ImeAction.Commit -> {
+                commitDirect(state)
             }
 
             else -> state
         }
     }
 
-    private fun handleSelecting(state: EngineState, action: ImeAction): EngineState {
-        return when (action) {
-            is ImeAction.SelectCandidate -> EngineState()
-            ImeAction.Delete -> {
-                val newBuffer = state.buffer.dropLastOrNull() ?: ""
-                val candidates = if (newBuffer.isNotEmpty()) dict.query(newBuffer) else emptyList()
-                state.copy(
-                    buffer = newBuffer,
-                    composing = candidates.firstOrNull() ?: "",
-                    candidates = candidates,
-                    mode = if (newBuffer.isNotEmpty()) InputMode.Composing else InputMode.Idle,
-                    selectedIndex = 0
-                )
-            }
+    // ---------------- Predicting ----------------
 
-            ImeAction.Commit -> EngineState()
-            else -> state
-        }
-    }
+    private fun handlePredicting(
+        state: EngineState,
+        action: ImeAction
+    ): EngineState {
 
-    private fun handlePredicting(state: EngineState, action: ImeAction): EngineState {
         return when (action) {
+
             is ImeAction.SelectCandidate -> {
-                // 選中二元聯想候選，commitText
-                val selected = state.predictingCandidates.getOrNull(action.index)
-                EngineState(commitText = selected)
-            }
-
-            ImeAction.Delete -> {
-                // 取消二元聯想，回到 Composing
-                state.copy(
-                    mode = InputMode.Composing,
-                    predictingCandidates = emptyList(),
-                    selectedIndex = 0
-                )
+                val commit = state.predictingCandidates.getOrNull(action.index)
+                EngineState(commitText = commit)
             }
 
             ImeAction.Commit -> {
-                // commit 第一個二元聯想候選
-                val selected = state.predictingCandidates.firstOrNull()
-                EngineState(commitText = selected)
+                val commit = state.predictingCandidates.firstOrNull()
+                EngineState(commitText = commit)
             }
 
-            else -> state
+            ImeAction.Delete -> {
+                state.copy(
+                    mode = InputMode.Idle,
+                    predictingCandidates = emptyList()
+                )
+            }
+
+            is ImeAction.Input -> when (val key = action.key) {
+
+                is Key.Char -> buildComposingState(
+                    EngineState(),
+                    key.c.toString()
+                )
+
+                else -> state
+            }
+
         }
     }
 
-    // 安全用法
-    private fun String.dropLastOrNull(): String? = if (isNotEmpty()) dropLast(1) else null
+    // ---------------- Shared helpers ----------------
+
+    private fun buildComposingState(
+        state: EngineState,
+        buffer: String
+    ): EngineState {
+
+        if (buffer.isEmpty()) {
+            return EngineState()
+        }
+
+        val candidates = dict.query(buffer)
+        val composing = dict.composing(buffer)
+
+        return state.copy(
+            buffer = buffer,
+            composing = composing,
+            candidates = candidates,
+            selectedIndex = 0,
+            mode = InputMode.Composing
+        )
+    }
+
+    private fun commitAndPredict(
+        state: EngineState,
+        index: Int
+    ): EngineState {
+
+        val commit = state.candidates.getOrNull(index)
+            ?: state.composing
+
+        if (commit.isEmpty()) {
+            return EngineState()
+        }
+
+        val predict = dict.predict(commit)
+
+        return EngineState(
+            commitText = commit,
+            predictingCandidates = predict,
+            mode = if (predict.isEmpty()) InputMode.Idle else InputMode.Predicting
+        )
+    }
+
+    private fun commitDirect(state: EngineState): EngineState {
+
+        val commit = state.candidates.getOrNull(state.selectedIndex)
+            ?: state.composing
+
+        if (commit.isEmpty()) {
+            return EngineState()
+        }
+
+        return EngineState(
+            commitText = commit
+        )
+    }
+
+    private fun handleDelete(state: EngineState): EngineState {
+
+        // 有 buffer -> 刪 buffer
+        if (state.buffer.isNotEmpty()) {
+
+            val newBuffer = state.buffer.dropLast(1)
+
+            if (newBuffer.isEmpty()) {
+                return EngineState()
+            }
+
+            val candidates = dict.query(newBuffer)
+            val composing = dict.composing(newBuffer)
+
+            return state.copy(
+                buffer = newBuffer,
+                composing = composing,
+                candidates = candidates,
+                selectedIndex = 0,
+                mode = InputMode.Composing
+            )
+        }
+
+        // 沒 buffer -> 刪 editor 字
+        return EngineState(
+            deleteBeforeCursor = true
+        )
+    }
+    private fun String.dropLastOrNull(): String? =
+        if (isNotEmpty()) dropLast(1) else null
 }

@@ -71,7 +71,7 @@ class IMEService : LifecycleInputMethodService(), ViewModelStoreOwner, SavedStat
     override fun onStartInput(attributes: EditorInfo, restarting: Boolean) {
         super.onStartInput(attributes, restarting)
         engine = ImeEngine(
-            reducer = CIMReducer(CimDictionary())
+            reducer = CIMReducer(this@IMEService, CimDictionary())
         )
 
         inputDispatcher = InputDispatcher(

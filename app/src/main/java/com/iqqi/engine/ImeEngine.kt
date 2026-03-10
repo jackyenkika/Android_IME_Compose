@@ -22,7 +22,8 @@ class ImeEngine(private val reducer: Reducer) {
             },
             selectedIndex = state.selectedIndex,
             mode = state.mode,
-            commitText = state.commitText
+            commitText = state.commitText,
+            deleteBeforeCursor = state.deleteBeforeCursor
         )
     }
 }

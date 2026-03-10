@@ -1,0 +1,17 @@
+{
+  "SubtypeImeData": [{
+    "asciiCapable": false,
+    "extraValue": "EmojiCapable,ShadowSubtype=en_ZH",
+    "isLatinSupport": true,
+    "layoutSet": "chinese",
+    "localeStr": "zh_CN",
+    "nameRes": "R.string.subtype_label"
+  }, {
+    "asciiCapable": false,
+    "extraValue": "AsciiCapable,EmojiCapable,isShadowSubtype,ShadowSubtype=zh_CN",
+    "isLatinSupport": true,
+    "layoutSet": "en_qwerty",
+    "localeStr": "en_ZH",
+    "nameRes": "R.string.subtype_label"
+  }]
+}

@@ -37,6 +37,7 @@ android {
         }
     }
 
+    buildFeatures.buildConfig = true
     namespace = "com.iqqi.ime"
     compileSdk {
         version = release(36)
@@ -53,6 +54,8 @@ android {
             } else {
                 "ime-${projectName}-${outputDate}-${targetVersion}"
             }
+
+        buildConfigField("String", "ProjectName", "\"$projectName\"")
     }
 
     buildTypes {

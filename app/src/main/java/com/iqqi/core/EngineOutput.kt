@@ -13,4 +13,5 @@ data class EngineOutput(
     val selectedIndex: Int = 0,
     val mode: InputMode,
     val commitText: String? = null,
+    val deleteBeforeCursor: Boolean,
 )

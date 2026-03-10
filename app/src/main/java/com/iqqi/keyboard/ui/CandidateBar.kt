@@ -15,13 +15,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.iqqi.keyboard.state.localKeyboardStyle
 
 @Composable
 fun CandidateBar(
+    modifier: Modifier = Modifier,
     candidates: List<String>,
-    onCandidateClick: (String) -> Unit,
-    modifier: Modifier = Modifier
+    onCandidateClick: (Int) -> Unit,
 ) {
     val style = localKeyboardStyle.current
 
@@ -42,7 +41,7 @@ fun CandidateBar(
                     .clickable(
                         interactionSource = remember { androidx.compose.foundation.interaction.MutableInteractionSource() },
                         indication = null // 移除預設漣漪，或自訂
-                    ) { onCandidateClick(word) },
+                    ) { onCandidateClick(index) },
                 contentAlignment = Alignment.Center
             ) {
                 Text(

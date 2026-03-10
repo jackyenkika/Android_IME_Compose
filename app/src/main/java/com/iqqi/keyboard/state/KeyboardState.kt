@@ -2,20 +2,13 @@
 package com.iqqi.keyboard.state
 
 import androidx.compose.runtime.staticCompositionLocalOf
-import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.dp
 import com.iqqi.keyboard.model.KeyboardLanguage
 import com.iqqi.keyboard.model.KeyboardMode
 import com.iqqi.keyboard.model.KeyboardThemeSpec
 
-val localKeyboardStyle = staticCompositionLocalOf<KeyboardThemeSpec> {
-    error("No KeyboardStyle provided")
-}
-
 data class KeyboardState(
     val language: KeyboardLanguage = KeyboardLanguage.ENGLISH,
     val layoutConfig: LayoutConfig = LayoutConfig(),
-    val deviceConfig: DeviceConfig = DeviceConfig()
 )
 
 data class LayoutConfig(
@@ -24,11 +17,6 @@ data class LayoutConfig(
     val pageIndex: Int = 0,
     val showNumberRow: Boolean = false,
     val hasShift: Boolean = true,
-)
-
-data class DeviceConfig(
-    val keyboardHeight: Dp = 400.dp,
-    val candidateHeight: Dp = 44.dp,
 )
 
 enum class ShiftState {

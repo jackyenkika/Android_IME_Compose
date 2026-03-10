@@ -9,7 +9,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.res.painterResource
 import com.iqqi.keyboard.model.KeyboardThemeSpec
-import com.iqqi.keyboard.state.localKeyboardStyle
+import com.iqqi.keyboard.ui.localKeyboardStyle
 import com.iqqi.settings.BackgroundImage
 import com.iqqi.settings.ThemeColor
 

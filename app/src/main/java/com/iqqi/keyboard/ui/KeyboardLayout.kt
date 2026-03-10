@@ -32,6 +32,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -42,13 +43,13 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Popup
 import com.iqqi.keyboard.model.KeySpec
 import com.iqqi.keyboard.model.KeyType
-import com.iqqi.keyboard.state.DeviceConfig
-import com.iqqi.keyboard.state.localKeyboardStyle
+import com.iqqi.keyboard.model.KeyboardThemeSpec
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -57,12 +58,21 @@ data class RowMetrics(
     val leftRatio: Float
 )
 
+data class DeviceConfig(
+    val keyboardHeight: Dp = 400.dp,
+    val candidateHeight: Dp = 44.dp,
+)
+
+val localKeyboardStyle = staticCompositionLocalOf<KeyboardThemeSpec> {
+    error("No KeyboardStyle provided")
+}
+
 @Composable
 fun KeyboardLayout(
     deviceConfig: DeviceConfig,
     layout: List<List<KeySpec>>,
     candidates: List<String> = emptyList(),
-    onCandidateClick: (String) -> Unit,
+    onCandidateClick: (Int) -> Unit,
     onKeyCommit: (KeySpec) -> Unit
 ) {
     val style = localKeyboardStyle.current
@@ -165,9 +175,9 @@ fun KeyboardLayout(
 
             // 候選字欄位
             CandidateBar(
+                modifier = Modifier.height(candidateBarHeight),
                 candidates = candidates,
                 onCandidateClick = onCandidateClick,
-                modifier = Modifier.height(candidateBarHeight)
             )
 
             Box(
