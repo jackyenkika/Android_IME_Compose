@@ -113,6 +113,10 @@ fun KeyboardTheme(
             if (painter == null) colorScheme.background else colorScheme.background.copy(alpha = 0.0f),
         backgroundImage = painter,
 
+        candidateBackgroundColor = if (painter == null) colorScheme.surfaceVariant
+        else colorScheme.surfaceVariant.copy(alpha = 0.2f),
+        candidateTextColor = colorScheme.onSurfaceVariant,
+
         keyBackgroundColor =
             if (painter == null) colorScheme.surface else colorScheme.surface.copy(alpha = 0.2f),
         keyTextColor = colorScheme.onSurface,

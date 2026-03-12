@@ -75,6 +75,9 @@ class IMEService : LifecycleInputMethodService(), ViewModelStoreOwner, SavedStat
     override fun onStartInput(attributes: EditorInfo, restarting: Boolean) {
         super.onStartInput(attributes, restarting)
 
+        //清除候選字
+        IMEStore.clearCandidate()
+
         // 取得目前鍵盤語言
         val currentLanguage = IMEStore.keyboardState.value.language
 

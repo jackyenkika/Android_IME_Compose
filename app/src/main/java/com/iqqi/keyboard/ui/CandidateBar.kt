@@ -37,7 +37,7 @@ fun CandidateBar(
         LazyRow(
             modifier = modifier
                 .fillMaxWidth()
-                .background(androidx.compose.ui.graphics.Color.Transparent), // 背景透明，顯示下層背景圖
+                .background(style.candidateBackgroundColor), // 背景透明，顯示下層背景圖
             verticalAlignment = Alignment.CenterVertically,
             contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 8.dp)
         ) {
@@ -54,7 +54,7 @@ fun CandidateBar(
                 ) {
                     Text(
                         text = word,
-                        color = style.keyTextColor, // 或者獨立的 candidateTextColor
+                        color = style.candidateTextColor,
                         fontSize = fontSize,
                         maxLines = 1
                     )

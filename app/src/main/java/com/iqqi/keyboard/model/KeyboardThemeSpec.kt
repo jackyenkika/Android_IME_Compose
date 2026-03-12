@@ -8,6 +8,11 @@ import androidx.compose.ui.unit.dp
 data class KeyboardThemeSpec(
     val backgroundColor: Color,
     val backgroundImage: Painter? = null,
+
+    //候選字區顏色
+    val candidateBackgroundColor: Color,
+    val candidateTextColor: Color,
+
     //普通按鍵
     val keyBackgroundColor: Color,
     val keyTextColor: Color,
