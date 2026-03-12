@@ -7,7 +7,6 @@ import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.KeyboardCapslock
 import androidx.compose.material.icons.filled.KeyboardReturn
 import androidx.compose.material.icons.filled.Language
-import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.SpaceBar
 import androidx.compose.material.icons.filled.Upgrade
 import com.iqqi.keyboard.model.KeySpec
@@ -148,7 +147,7 @@ object KeyboardLayoutProvider {
     ): List<KeySpec> {
         return listOf(
             KeySpec(type = KeyType.CANCEL, icon = Icons.Default.ArrowDropDown),
-            KeySpec(type = KeyType.SETTINGS, icon = Icons.Default.Settings),
+//            KeySpec(type = KeyType.SETTINGS, icon = Icons.Default.Settings),
             KeySpec(type = KeyType.LANGUAGE, icon = Icons.Default.Language),
             KeySpec(" ", 32, type = KeyType.SPACE, icon = Icons.Default.SpaceBar, weight = 5f),
             KeySpec(

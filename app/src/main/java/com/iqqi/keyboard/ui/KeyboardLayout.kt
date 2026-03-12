@@ -73,6 +73,7 @@ fun KeyboardLayout(
     deviceConfig: DeviceConfig,
     layout: List<List<KeySpec>>,
     candidates: List<String> = emptyList(),
+    candidateFunctions: List<KeySpec> = emptyList(),
     onDeleteUp: () -> Unit,
     onCandidateClick: (Int) -> Unit,
     onKeyCommit: (KeySpec) -> Unit
@@ -180,7 +181,9 @@ fun KeyboardLayout(
                 modifier = Modifier.height(candidateBarHeight),
                 candidateFontScale = deviceConfig.candidateFontScale,
                 candidates = candidates,
+                functions = candidateFunctions,
                 onCandidateClick = onCandidateClick,
+                onFunctionClick = onKeyCommit,
             )
 
             Box(

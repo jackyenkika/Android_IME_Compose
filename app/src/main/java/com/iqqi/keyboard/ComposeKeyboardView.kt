@@ -2,6 +2,8 @@ package com.iqqi.keyboard
 
 import android.content.Context
 import android.content.res.Configuration
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -16,6 +18,7 @@ import com.iqqi.data.SettingsRepository
 import com.iqqi.ime.IMEService
 import com.iqqi.ime.IMEStore
 import com.iqqi.keyboard.controller.KeyboardController
+import com.iqqi.keyboard.model.KeySpec
 import com.iqqi.keyboard.model.KeyType
 import com.iqqi.keyboard.state.LayoutConfig
 import com.iqqi.keyboard.ui.KeyboardLayout
@@ -74,6 +77,9 @@ class ComposeKeyboardView(
                 deviceConfig = deviceConfig,
                 layout = layout,
                 candidates = candidateState.candidates,
+                candidateFunctions = listOf(
+                    KeySpec(type = KeyType.SETTINGS, icon = Icons.Default.Settings),
+                ),
                 onDeleteUp = { ime.onDeleteKeyUp() },
                 onCandidateClick = { index ->
                     ime.dispatch(ImeAction.SelectCandidate(index))
