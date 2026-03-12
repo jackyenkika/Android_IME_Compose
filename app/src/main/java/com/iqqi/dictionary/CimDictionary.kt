@@ -40,7 +40,7 @@ class CimDictionary : Dictionary {
         CimEngineCore.CoreSwitchKeyboardMode(3)
     }
 
-    override fun init(userDataDict: String): Int {
+    override fun init(predictDict: String, userDataDict: String?): Int {
         val cloudAgent = JavaCloudClientAgent()
         CimEngineCore.CoreSetAppName(BuildConfig.APPLICATION_ID)
 
@@ -52,7 +52,7 @@ class CimDictionary : Dictionary {
             0,
             "",
             BuildConfig.APPLICATION_ID,
-            userDataDict
+            predictDict
         )
         if (!coreInitStatus) {
             return CimEngineCore.CoreGetLastError()

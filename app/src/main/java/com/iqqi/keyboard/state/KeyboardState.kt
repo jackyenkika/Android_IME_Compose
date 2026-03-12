@@ -1,10 +1,8 @@
 //KeyboardState.kt
 package com.iqqi.keyboard.state
 
-import androidx.compose.runtime.staticCompositionLocalOf
 import com.iqqi.keyboard.model.KeyboardLanguage
 import com.iqqi.keyboard.model.KeyboardMode
-import com.iqqi.keyboard.model.KeyboardThemeSpec
 
 data class KeyboardState(
     val language: KeyboardLanguage = KeyboardLanguage.ENGLISH,

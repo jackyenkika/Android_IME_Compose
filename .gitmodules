@@ -1,0 +1,4 @@
+[submodule "Android_Kika_T9_Engine_Library"]
+	path = Android_Kika_T9_Engine_Library
+	url = https://github.com/KikaTech/Android_Kika_T9_Engine_Library.git
+	branch = APSI_pinyin_shared_Standard_Android35

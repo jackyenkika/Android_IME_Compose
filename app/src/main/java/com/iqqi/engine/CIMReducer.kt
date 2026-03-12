@@ -7,7 +7,9 @@ import com.iqqi.core.InputMode
 import com.iqqi.core.Key
 import com.iqqi.core.Reducer
 import com.iqqi.dictionary.Dictionary
+import com.iqqi.dictionary.KikaDictionary
 import com.iqqi.ime.util.LogObj
+import java.io.File
 
 class CIMReducer(
     context: Context,
@@ -15,9 +17,34 @@ class CIMReducer(
 ) : Reducer {
 
     init {
-        val userDataDict = context.applicationInfo.dataDir
-        val engineInitStatus = dict.init(userDataDict)
-        LogObj.trace("userDataDict = $userDataDict , engineInitStatus = $engineInitStatus")
+        val predictDict = if (dict is KikaDictionary) {
+            getResourcePath(context)
+        } else {
+            //CIMDictionary
+            context.applicationInfo.dataDir
+        }
+
+        val userDataDict = if (dict is KikaDictionary) {
+            context.applicationInfo.dataDir
+        } else {
+            //CIMDictionary
+            null
+        }
+
+        val engineInitStatus = dict.init(predictDict = predictDict, userDataDict = userDataDict)
+        LogObj.trace("predictDict = $predictDict , userDataDict = $userDataDict , engineInitStatus = $engineInitStatus")
+    }
+
+    private fun getResourcePath(context: Context): String {
+        val libraryPaths = System.getProperty("java.library.path")
+            ?.split(":")
+            ?: emptyList()
+
+        val path = libraryPaths.firstOrNull {
+            File("$it/libIQQILib.so").exists()
+        }
+
+        return path ?: context.applicationInfo.nativeLibraryDir
     }
 
     override fun reduce(state: EngineState, action: ImeAction): EngineState {

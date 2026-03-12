@@ -9,6 +9,7 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.compose.compiler)
+//    alias(libs.plugins.ksp)
 }
 
 val outputDate =
@@ -54,8 +55,12 @@ android {
             } else {
                 "ime-${projectName}-${outputDate}-${targetVersion}"
             }
-
         buildConfigField("String", "ProjectName", "\"$projectName\"")
+
+        ndk {
+            abiFilters.add("arm64-v8a")
+//            abiFilters.add("armeabi-v7a")
+        }
     }
 
     buildTypes {
@@ -112,7 +117,6 @@ dependencies {
     implementation(libs.androidx.savedstate.ktx)
     implementation(libs.androidx.lifecycle.service)
 
-    testImplementation(libs.junit)
-    androidTestImplementation(libs.androidx.junit)
-    androidTestImplementation(libs.androidx.espresso.core)
+    implementation(project(":kika-t9-engine-library"))
+    implementation(project(":kika-pinyin-engine-library"))
 }

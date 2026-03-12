@@ -15,6 +15,7 @@ import androidx.savedstate.setViewTreeSavedStateRegistryOwner
 import com.iqqi.ImeApplication
 import com.iqqi.core.ImeAction
 import com.iqqi.dictionary.CimDictionary
+import com.iqqi.dictionary.KikaDictionary
 import com.iqqi.engine.CIMReducer
 import com.iqqi.engine.ImeEngine
 import com.iqqi.ime.util.DeleteRepeater
@@ -73,8 +74,17 @@ class IMEService : LifecycleInputMethodService(), ViewModelStoreOwner, SavedStat
 
     override fun onStartInput(attributes: EditorInfo, restarting: Boolean) {
         super.onStartInput(attributes, restarting)
+
+        // 取得目前鍵盤語言
+        val currentLanguage = IMEStore.keyboardState.value.language
+
+        val dictionary = when (currentLanguage) {
+            com.iqqi.keyboard.model.KeyboardLanguage.CHINESE -> CimDictionary()
+            else -> KikaDictionary(engineId = 1) // 這裡 engineId 可以改成你需要的值
+        }
+
         engine = ImeEngine(
-            reducer = CIMReducer(this@IMEService, CimDictionary())
+            reducer = CIMReducer(this@IMEService, dictionary)
         )
 
         inputDispatcher = InputDispatcher(
