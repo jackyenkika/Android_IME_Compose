@@ -79,8 +79,9 @@ class KeyboardController(
             }
 
             KeyType.LANGUAGE -> {
-                ime.switchToNextInputMethod(false)
-                state
+                state.copy(
+                    showLanguageMenu = !state.showLanguageMenu
+                )
             }
 
             KeyType.SETTINGS -> {

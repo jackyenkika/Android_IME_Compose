@@ -39,7 +39,7 @@ fun SettingsScreen() {
 
     val context = LocalContext.current
     val repository = remember { SettingsRepository(context) }
-    val viewModel = remember { SettingsViewModel(repository) }
+    val viewModel = remember { SettingsViewModel(repository, context) }
 
     var showKeyboardHeightDialog by remember { mutableStateOf(false) }
     var showCandidateHeightDialog by remember { mutableStateOf(false) }
@@ -133,6 +133,23 @@ fun SettingsScreen() {
                         )
 
                         HorizontalDivider()
+                    }
+                }
+
+                item {
+                    SettingsCategoryCard(title = "Languages") {
+                        val languages by viewModel.availableLanguages.collectAsState()
+                        languages.forEach { lang ->
+                            SettingSwitchItemModern(
+                                title = lang.locale ?: lang.name.name,
+                                summary = "Enable this language",
+                                checked = lang.enabled,
+                                onCheckedChange = { enabled ->
+                                    viewModel.toggleLanguage(lang, enabled)
+                                }
+                            )
+                            HorizontalDivider()
+                        }
                     }
                 }
 

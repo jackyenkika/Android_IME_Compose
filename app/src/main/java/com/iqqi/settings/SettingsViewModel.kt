@@ -1,15 +1,60 @@
 package com.iqqi.settings
 
+import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.iqqi.data.SettingsRepository
+import com.iqqi.ime.IMEService
+import com.iqqi.ime.util.LogObj
+import com.iqqi.keyboard.model.ImeLanguage
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 class SettingsViewModel(
-    private val repository: SettingsRepository
+    private val repository: SettingsRepository,
+    private val context: Context
 ) : ViewModel() {
+
+    private val _availableLanguages = MutableStateFlow<List<ImeLanguage>>(emptyList())
+    val availableLanguages: StateFlow<List<ImeLanguage>> = _availableLanguages
+
+    init {
+        viewModelScope.launch {
+            // 讀取目前已啟用語言
+            val enabledLocales = repository.enabledLanguagesFlow.first()
+
+            // 第一次安裝，沒有任何語言時
+            val allLanguages = IMEService.getAvailableLanguages(context)
+            val defaultLocales = allLanguages.mapNotNull { it.locale }.toSet()
+
+            LogObj.trace("allLanguages = $allLanguages , defaultLocales= $defaultLocales , enabledLocales = $enabledLocales")
+            if (enabledLocales.isEmpty()) {
+                repository.setEnabledLanguages(defaultLocales)
+                // 直接更新 _availableLanguages
+                _availableLanguages.value = allLanguages.map { lang ->
+                    lang.copy(enabled = lang.locale in defaultLocales)
+                }
+            } else {
+                _availableLanguages.value = allLanguages.map { lang ->
+                    lang.copy(enabled = lang.locale in enabledLocales)
+                }
+            }
+        }
+
+        // 監聽 DataStore 的變化
+        viewModelScope.launch {
+            repository.enabledLanguagesFlow.collect { enabledLocales ->
+                val allLanguages = IMEService.getAvailableLanguages(context)
+                _availableLanguages.value = allLanguages.map { lang ->
+                    lang.copy(enabled = lang.locale in enabledLocales)
+                }
+            }
+        }
+    }
 
     val enableDigital = repository.enableDigitalFlow
         .stateIn(
@@ -71,6 +116,16 @@ class SettingsViewModel(
     fun setKeyboardBackgroundImage(image: BackgroundImage) {
         viewModelScope.launch {
             repository.setKeyboardBackgroundImage(image)
+        }
+    }
+
+
+    // 切換啟用狀態
+    fun toggleLanguage(language: ImeLanguage, enabled: Boolean) {
+        viewModelScope.launch {
+            // 更新 DataStore
+            repository.toggleLanguage(language.locale ?: return@launch, enabled)
+            // _availableLanguages 會自動在 collect repository.enabledLanguagesFlow 中刷新
         }
     }
 }

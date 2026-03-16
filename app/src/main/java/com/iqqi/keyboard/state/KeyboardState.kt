@@ -1,12 +1,13 @@
 //KeyboardState.kt
 package com.iqqi.keyboard.state
 
-import com.iqqi.keyboard.model.KeyboardLanguage
+import com.iqqi.keyboard.model.ImeLanguage
 import com.iqqi.keyboard.model.KeyboardMode
 
 data class KeyboardState(
-    val language: KeyboardLanguage = KeyboardLanguage.ENGLISH,
+    val language: ImeLanguage = ImeLanguage(),
     val layoutConfig: LayoutConfig = LayoutConfig(),
+    val showLanguageMenu: Boolean = false
 )
 
 data class LayoutConfig(

@@ -17,4 +17,5 @@ object PreferencesKeys {
 
     val KEYBOARD_BACKGROUND = stringPreferencesKey("keyboard_background")
 
+    val ENABLED_LANGUAGES = stringPreferencesKey("enabled_languages")
 }

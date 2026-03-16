@@ -17,12 +17,14 @@ import com.iqqi.core.ImeAction
 import com.iqqi.data.SettingsRepository
 import com.iqqi.ime.IMEService
 import com.iqqi.ime.IMEStore
+import com.iqqi.ime.util.LogObj
 import com.iqqi.keyboard.controller.KeyboardController
 import com.iqqi.keyboard.model.KeySpec
 import com.iqqi.keyboard.model.KeyType
 import com.iqqi.keyboard.state.LayoutConfig
 import com.iqqi.keyboard.ui.KeyboardLayout
 import com.iqqi.keyboard.ui.KeyboardSizeCalculator
+import com.iqqi.keyboard.ui.LanguageMenu
 import com.iqqi.settings.ui.KeyboardTheme
 
 class ComposeKeyboardView(
@@ -42,10 +44,23 @@ class ComposeKeyboardView(
         val keyboardBackgroundImage by repository.keyboardBackgroundImageFlow.collectAsState(initial = repository.defaultSetting.backgroundImage)
 
         val ime = context as IMEService
-        val controller = remember { KeyboardController(ime) }
-
         val candidateState by IMEStore.candidateState.collectAsState()
         val keyboardState by IMEStore.keyboardState.collectAsState()
+
+        val controller = remember { KeyboardController(ime) }
+
+        // 1️⃣ 取得所有語言
+        val allLanguages = remember { IMEService.getAvailableLanguages(context) }
+
+        // 2️⃣ 取得 DataStore 儲存的已啟用語言 locale
+        val enabledLocales by repository.enabledLanguagesFlow.collectAsState(initial = emptySet())
+
+        // 3️⃣ 將所有語言標記 enabled 狀態
+        val languages = allLanguages.map { lang ->
+            lang.copy(enabled = enabledLocales.contains(lang.locale))
+        }
+        val currentLanguage = keyboardState.language
+
         LaunchedEffect(showDigital) {
             val newState = keyboardState.copy(
                 layoutConfig = LayoutConfig(
@@ -91,6 +106,21 @@ class ComposeKeyboardView(
                     val newState = controller.onKey(key, keyboardState)
                     IMEStore.updateKeyboardState(newState)
                 }
+            }
+
+            if (keyboardState.showLanguageMenu) {
+                LogObj.trace("languages = $languages")
+                LanguageMenu(
+                    languages = languages.filter { it.enabled },
+                    current = currentLanguage,
+                    onSelect = { lang ->
+                        ime.switchLanguage(lang)
+                    },
+                    onDismiss = {
+                        val newState = keyboardState.copy(showLanguageMenu = false)
+                        IMEStore.updateKeyboardState(newState)
+                    }
+                )
             }
         }
     }

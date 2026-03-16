@@ -1,8 +1,11 @@
 package com.iqqi.ime
 
+import android.content.Context
 import android.view.KeyEvent
 import android.view.View
 import android.view.inputmethod.EditorInfo
+import android.view.inputmethod.InputMethodManager
+import android.view.inputmethod.InputMethodSubtype
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.ViewModelStore
 import androidx.lifecycle.ViewModelStoreOwner
@@ -20,6 +23,8 @@ import com.iqqi.engine.CIMReducer
 import com.iqqi.engine.ImeEngine
 import com.iqqi.ime.util.DeleteRepeater
 import com.iqqi.keyboard.ComposeKeyboardView
+import com.iqqi.keyboard.model.ImeLanguage
+import com.iqqi.keyboard.model.KeyboardLanguage
 
 class IMEService : LifecycleInputMethodService(), ViewModelStoreOwner, SavedStateRegistryOwner {
 
@@ -81,8 +86,9 @@ class IMEService : LifecycleInputMethodService(), ViewModelStoreOwner, SavedStat
         // 取得目前鍵盤語言
         val currentLanguage = IMEStore.keyboardState.value.language
 
-        val dictionary = when (currentLanguage) {
-            com.iqqi.keyboard.model.KeyboardLanguage.CHINESE -> CimDictionary()
+        val dictionary = when (currentLanguage.name) {
+            KeyboardLanguage.CHINESE -> CimDictionary()
+            KeyboardLanguage.ENGLISH -> KikaDictionary(engineId = 1)
             else -> KikaDictionary(engineId = 1) // 這裡 engineId 可以改成你需要的值
         }
 
@@ -144,6 +150,69 @@ class IMEService : LifecycleInputMethodService(), ViewModelStoreOwner, SavedStat
 
     fun onDeleteKeyUp() {
         deleteRepeater.stop()
+    }
+
+    //=========================================================
+    fun switchLanguage(lang: ImeLanguage) {
+
+        val imm = getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager
+
+        val imi = imm.enabledInputMethodList
+            .firstOrNull { it.packageName == packageName }
+            ?: return
+
+        lang.subtype?.let {
+            window?.window?.attributes?.token?.let { token ->
+                imm.setInputMethodAndSubtype(
+                    token,
+                    imi.id,
+                    it
+                )
+            }
+        }
+
+        // 更新 keyboardState
+        val newState = IMEStore.keyboardState.value.copy(
+            language = lang,
+            showLanguageMenu = false
+        )
+
+        IMEStore.updateKeyboardState(newState)
+    }
+
+    companion object {
+        fun getAvailableLanguages(context: Context): List<ImeLanguage> {
+            val imm = context.getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager
+            val imi =
+                imm.enabledInputMethodList.firstOrNull { it.packageName == context.packageName }
+                    ?: return emptyList()
+
+            val subtypes = mutableListOf<InputMethodSubtype>()
+            imm.inputMethodList.forEach { imiInfo ->
+                if (imiInfo.packageName == context.packageName) {
+                    val count = imiInfo.subtypeCount
+                    for (i in 0 until count) {
+                        subtypes.add(imiInfo.getSubtypeAt(i))
+                    }
+                }
+            }
+
+            return subtypes.map { subtype ->
+                val locale = subtype.locale
+                val language = when {
+                    locale.startsWith("zh") -> KeyboardLanguage.CHINESE
+                    locale.startsWith("ja") -> KeyboardLanguage.JAPANESE
+                    else -> KeyboardLanguage.ENGLISH
+                }
+                ImeLanguage(
+                    name = language,
+                    locale = locale,
+                    subtype = subtype,
+                    enabled = imm.getEnabledInputMethodSubtypeList(imi, true)
+                        .any { it.locale == locale }
+                )
+            }
+        }
     }
     //=========================================================
 }

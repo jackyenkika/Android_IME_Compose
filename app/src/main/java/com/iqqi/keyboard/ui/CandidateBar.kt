@@ -34,7 +34,12 @@ fun CandidateBar(
     onCandidateClick: (Int) -> Unit,
     onFunctionClick: (KeySpec) -> Unit
 ) {
-    BoxWithConstraints(modifier = modifier.fillMaxWidth()) {
+    val style = localKeyboardStyle.current
+    BoxWithConstraints(
+        modifier = modifier
+            .fillMaxWidth()
+            .background(style.candidateBackgroundColor)
+    ) {
         if (candidates.isEmpty()) {
             FunctionRow(functions, onFunctionClick)
         } else {
