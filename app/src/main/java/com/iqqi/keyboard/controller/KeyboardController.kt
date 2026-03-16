@@ -3,6 +3,7 @@ package com.iqqi.keyboard.controller
 import android.content.Intent
 import com.iqqi.ime.IMEKeyMapper
 import com.iqqi.ime.IMEService
+import com.iqqi.ime.IMEStore
 import com.iqqi.keyboard.KeyboardLayoutProvider
 import com.iqqi.keyboard.model.KeySpec
 import com.iqqi.keyboard.model.KeyType
@@ -96,6 +97,18 @@ class KeyboardController(
 
             KeyType.CANCEL -> {
                 ime.requestHideSelf(0)
+                state
+            }
+
+            KeyType.STICKER -> {
+                if (ime.canCommitSticker()) {
+                    IMEStore.updateStickerState(true)
+                }
+                state
+            }
+
+            KeyType.BACK -> {
+                IMEStore.updateStickerState(false)
                 state
             }
 

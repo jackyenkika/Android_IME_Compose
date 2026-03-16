@@ -2,7 +2,10 @@ package com.iqqi.keyboard
 
 import android.content.Context
 import android.content.res.Configuration
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBackIosNew
+import androidx.compose.material.icons.filled.Gif
 import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.runtime.Composable
@@ -10,12 +13,14 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.AbstractComposeView
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import com.iqqi.core.ImeAction
 import com.iqqi.data.SettingsRepository
+import com.iqqi.data.StickerRepository
 import com.iqqi.ime.IMEService
 import com.iqqi.ime.IMEStore
 import com.iqqi.ime.util.LogObj
@@ -26,10 +31,13 @@ import com.iqqi.keyboard.state.LayoutConfig
 import com.iqqi.keyboard.ui.KeyboardLayout
 import com.iqqi.keyboard.ui.KeyboardSizeCalculator
 import com.iqqi.keyboard.ui.LanguageMenu
+import com.iqqi.keyboard.ui.StickerPanel
 import com.iqqi.settings.ui.KeyboardTheme
 
 class ComposeKeyboardView(
-    context: Context, private val repository: SettingsRepository
+    context: Context,
+    private val repository: SettingsRepository,
+    private val stickerRepository: StickerRepository
 ) : AbstractComposeView(context) {
 
     @Composable
@@ -47,8 +55,11 @@ class ComposeKeyboardView(
         val ime = context as IMEService
         val candidateState by IMEStore.candidateState.collectAsState()
         val keyboardState by IMEStore.keyboardState.collectAsState()
+        val stickerState by IMEStore.stickerState.collectAsState()
 
         val controller = remember { KeyboardController(ime) }
+
+        val canUseSticker = ime.canCommitSticker()
 
         // 1️⃣ 取得所有語言
         val allLanguages = remember { IMEService.getAvailableLanguages(context) }
@@ -93,10 +104,33 @@ class ComposeKeyboardView(
                 deviceConfig = deviceConfig,
                 layout = layout,
                 candidates = candidateState.candidates,
-                candidateFunctions = listOf(
-                    KeySpec(type = KeyType.SETTINGS, icon = Icons.Default.Settings),
-                    KeySpec(type = KeyType.LANGUAGE, icon = Icons.Default.Language),
-                ),
+                candidateFunctions = if (stickerState.visible) {
+                    listOf(
+                        KeySpec(type = KeyType.BACK, icon = Icons.Default.ArrowBackIosNew)
+                    )
+                } else {
+                    listOf(
+                        KeySpec(type = KeyType.SETTINGS, icon = Icons.Default.Settings),
+                        KeySpec(type = KeyType.LANGUAGE, icon = Icons.Default.Language),
+                        KeySpec(
+                            type = KeyType.STICKER,
+                            icon = Icons.Default.Gif,
+                            isEnable = canUseSticker
+                        )
+                    )
+                },
+                overlay = if (stickerState.visible) {
+                    {
+                        StickerPanel(
+                            packs = stickerRepository.getStickerPacks(),
+                            onStickerClick = { sticker ->
+                                ime.commitSticker(sticker)
+                                stickerRepository.addRecent(sticker)
+                            },
+                            modifier = Modifier.fillMaxSize()
+                        )
+                    }
+                } else null,
                 onDeleteUp = { ime.onDeleteKeyUp() },
                 onCandidateClick = { index ->
                     ime.dispatch(ImeAction.SelectCandidate(index))

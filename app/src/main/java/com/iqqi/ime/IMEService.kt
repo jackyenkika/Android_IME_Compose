@@ -6,6 +6,7 @@ import android.view.View
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
 import android.view.inputmethod.InputMethodSubtype
+import androidx.core.view.inputmethod.EditorInfoCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.ViewModelStore
 import androidx.lifecycle.ViewModelStoreOwner
@@ -23,11 +24,14 @@ import com.iqqi.dictionary.KikaDictionary
 import com.iqqi.engine.CIMReducer
 import com.iqqi.engine.ImeEngine
 import com.iqqi.ime.util.DeleteRepeater
+import com.iqqi.ime.util.LogObj
 import com.iqqi.keyboard.ComposeKeyboardView
 import com.iqqi.keyboard.model.ImeLanguage
 import com.iqqi.keyboard.model.KeyboardLanguage
+import com.iqqi.keyboard.model.Sticker
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
+import java.io.File
 
 class IMEService : LifecycleInputMethodService(), ViewModelStoreOwner, SavedStateRegistryOwner {
 
@@ -70,7 +74,9 @@ class IMEService : LifecycleInputMethodService(), ViewModelStoreOwner, SavedStat
     override fun onCreateInputView(): View {
 
         val view = ComposeKeyboardView(
-            context = this, repository = container.settingsRepository
+            context = this,
+            repository = container.settingsRepository,
+            stickerRepository = container.stickerRepository
         )
 
         window?.window?.decorView?.let { decorView ->
@@ -93,7 +99,15 @@ class IMEService : LifecycleInputMethodService(), ViewModelStoreOwner, SavedStat
         val lang = allLanguages.firstOrNull { it.locale == lastLocale } ?: allLanguages.first()
 
         createEngine(lang)
-        IMEStore.updateKeyboardState(IMEStore.keyboardState.value.copy(language = lang))
+        IMEStore.updateKeyboardState(
+            IMEStore.keyboardState.value.copy(
+                language = lang,
+                inputType = attributes.inputType
+            )
+        )
+
+        // 3️⃣ 清掉貼圖面板可見性
+        IMEStore.updateStickerState(false)
     }
 
     override fun onKeyDown(code: Int, event: KeyEvent): Boolean {
@@ -207,6 +221,56 @@ class IMEService : LifecycleInputMethodService(), ViewModelStoreOwner, SavedStat
             container.settingsRepository.setLastUsedLanguage(lang.locale ?: lang.name.name)
         }
     }
+
+    //=========================================================
+
+
+    fun canCommitSticker(): Boolean {
+
+        val info = currentInputEditorInfo ?: return false
+
+        val mimeTypes = EditorInfoCompat.getContentMimeTypes(info)
+
+        LogObj.trace("mimeTypes: ${mimeTypes.joinToString()}")
+        return mimeTypes.any { it.startsWith("image/") }
+    }
+
+    fun commitSticker(sticker: Sticker) {
+        val ic = currentInputConnection ?: return
+        val info = currentInputEditorInfo ?: return
+
+        // 🔥 取得 Application 已複製的檔案
+        val app = application as ImeApplication
+        val stickerFile = File(app.filesDir, "stickers/${sticker.id}")
+
+        if (!stickerFile.exists()) {
+            LogObj.trace("Sticker file not found: ${stickerFile.absolutePath}")
+            return
+        }
+
+        // 🔥 生成 content:// URI
+        val contentUri = androidx.core.content.FileProvider.getUriForFile(
+            this,
+            "${packageName}.stickerprovider",
+            stickerFile
+        )
+
+        val contentInfo = androidx.core.view.inputmethod.InputContentInfoCompat(
+            contentUri,
+            android.content.ClipDescription("sticker", arrayOf(sticker.mimeType)),
+            null
+        )
+
+        // 🔥 commitContent 加授權 flag
+        androidx.core.view.inputmethod.InputConnectionCompat.commitContent(
+            ic,
+            info,
+            contentInfo,
+            androidx.core.view.inputmethod.InputConnectionCompat.INPUT_CONTENT_GRANT_READ_URI_PERMISSION,
+            null
+        )
+    }
+    //=========================================================
 
     companion object {
         fun getAvailableLanguages(context: Context): List<ImeLanguage> {

@@ -7,6 +7,7 @@ import com.iqqi.keyboard.model.KeyboardMode
 data class KeyboardState(
     val language: ImeLanguage = ImeLanguage(),
     val layoutConfig: LayoutConfig = LayoutConfig(),
+    val inputType: Int = 0,
     val showLanguageMenu: Boolean = false
 )
 

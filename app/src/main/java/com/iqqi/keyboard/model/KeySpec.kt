@@ -9,5 +9,6 @@ data class KeySpec(
     val type: KeyType = KeyType.INPUT,
     val weight: Float = 1f,
     val isRepeatable: Boolean = false,
-    val altChars: List<String> = emptyList()
+    val altChars: List<String> = emptyList(),
+    val isEnable: Boolean = true,
 )

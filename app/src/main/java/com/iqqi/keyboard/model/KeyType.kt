@@ -12,4 +12,6 @@ enum class KeyType {
     SETTINGS,
     CANCEL,
     EMOJI,
+    STICKER,
+    BACK,
 }

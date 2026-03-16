@@ -117,7 +117,7 @@ private fun FunctionRow(
                 Icon(
                     imageVector = func.icon!!,
                     contentDescription = null,
-                    tint = style.keyTextColor,
+                    tint = if (func.isEnable) style.keyTextColor else style.keyTextColor.copy(alpha = 0.3f),
                     modifier = Modifier.fillMaxSize(0.6f)   // 只佔 60%
                 )
             }

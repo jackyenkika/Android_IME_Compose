@@ -54,8 +54,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 data class RowMetrics(
-    val widthRatio: Float,
-    val leftRatio: Float
+    val widthRatio: Float, val leftRatio: Float
 )
 
 data class DeviceConfig(
@@ -74,6 +73,7 @@ fun KeyboardLayout(
     layout: List<List<KeySpec>>,
     candidates: List<String> = emptyList(),
     candidateFunctions: List<KeySpec> = emptyList(),
+    overlay: (@Composable () -> Unit)? = null,
     onDeleteUp: () -> Unit,
     onCandidateClick: (Int) -> Unit,
     onKeyCommit: (KeySpec) -> Unit
@@ -106,8 +106,7 @@ fun KeyboardLayout(
     val visualKeyboardHeight =
         deviceConfig.keyboardHeight - with(density) { navigationInsetPx.toDp() }
 
-    val rowHeight =
-        (visualKeyboardHeight - candidateBarHeight) / layout.size
+    val rowHeight = (visualKeyboardHeight - candidateBarHeight) / layout.size
 
 
     val maxWeight = layout.maxOf { row ->
@@ -128,8 +127,8 @@ fun KeyboardLayout(
         if (containerSize.height <= 0 || containerSize.width <= 0) return null
 
         // 1. 算出落在第幾行 (O(1))
-        val rowIdx = (offset.y / containerSize.height * layout.size).toInt()
-            .coerceIn(0, layout.size - 1)
+        val rowIdx =
+            (offset.y / containerSize.height * layout.size).toInt().coerceIn(0, layout.size - 1)
 
         // 2. 算出落在該行第幾列 (O(k), k為單行按鍵數)
         val metrics = rowMetrics[rowIdx]
@@ -290,18 +289,14 @@ fun KeyboardLayout(
                             activeKey = null
                             longPressActive = false
                         }
-                    }
-            ) {
+                    }) {
                 // 渲染按鍵
                 Column {
                     layout.forEachIndexed { index, row ->
                         val rowWeight = row.sumOf { it.weight.toDouble() }.toFloat()
 
-                        val widthRatio =
-                            if (index == layout.lastIndex)
-                                1f
-                            else
-                                rowWeight / maxWeight
+                        val widthRatio = if (index == layout.lastIndex) 1f
+                        else rowWeight / maxWeight
 
                         Row(
                             modifier = Modifier
@@ -353,6 +348,28 @@ fun KeyboardLayout(
                         KeyPreviewOverlay(label = key.label ?: "", keyBounds = rect)
                     }
                 }
+
+                overlay?.let {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(style.backgroundColor.copy(alpha = 1.0f)) // 可視暗背景
+                            .pointerInput(Unit) {
+                                awaitEachGesture {
+                                    val down = awaitFirstDown()
+                                    // 只 consume down
+                                    down.consume()
+
+                                    // 允許 drag / move 向下傳遞
+                                    drag(down.id) { change ->
+                                        // 不 consume change
+                                    }
+                                }
+                            }
+                    ) {
+                        it()
+                    }
+                }
             }
         }
     }
@@ -361,9 +378,7 @@ fun KeyboardLayout(
 @SuppressLint("UnusedBoxWithConstraintsScope")
 @Composable
 fun KeyboardKey(
-    keyboardKey: KeySpec,
-    isActive: Boolean,
-    modifier: Modifier
+    keyboardKey: KeySpec, isActive: Boolean, modifier: Modifier
 ) {
     val style = localKeyboardStyle.current
     val density = LocalDensity.current
@@ -385,16 +400,12 @@ fun KeyboardKey(
         modifier = modifier
             .background(
                 if (isActive) style.keyPressedColor
-                else bgColor,
-                RoundedCornerShape(style.keyCornerRadius)
+                else bgColor, RoundedCornerShape(style.keyCornerRadius)
             )
             .border(
-                1.5.dp,
-                style.keyBorderColor,
-                RoundedCornerShape(style.keyCornerRadius)
+                1.5.dp, style.keyBorderColor, RoundedCornerShape(style.keyCornerRadius)
             )
-            .fillMaxHeight(),
-        contentAlignment = Alignment.Center
+            .fillMaxHeight(), contentAlignment = Alignment.Center
     ) {
         // 取得當前容器的最短邊
         val shortSideDp = minOf(maxWidth, maxHeight)
@@ -434,8 +445,7 @@ fun KeyboardKey(
 
 @Composable
 fun KeyPreviewOverlay(
-    label: String,
-    keyBounds: Rect
+    label: String, keyBounds: Rect
 ) {
     val style = localKeyboardStyle.current
     val density = LocalDensity.current
@@ -453,15 +463,10 @@ fun KeyPreviewOverlay(
 
         Box(
             modifier = Modifier
-                .size(
-                    with(density) { shortSidePx.toDp() },
-                    with(density) { shortSidePx.toDp() }
-                )
+                .size(with(density) { shortSidePx.toDp() }, with(density) { shortSidePx.toDp() })
                 .background(
-                    style.keyPreviewedColor,
-                    RoundedCornerShape(50.dp)
-                ),
-            contentAlignment = Alignment.Center
+                    style.keyPreviewedColor, RoundedCornerShape(50.dp)
+                ), contentAlignment = Alignment.Center
         ) {
             Text(
                 text = label,
@@ -474,9 +479,7 @@ fun KeyPreviewOverlay(
 
 @Composable
 fun AltCharsPreviewOverlay(
-    key: KeySpec,
-    keyBounds: Rect,
-    selectedIndex: Int
+    key: KeySpec, keyBounds: Rect, selectedIndex: Int
 ) {
     val style = localKeyboardStyle.current
     val density = LocalDensity.current
@@ -504,9 +507,7 @@ fun AltCharsPreviewOverlay(
     Popup(
         offset = IntOffset(popupX.toInt(), popupY.toInt()),
         properties = androidx.compose.ui.window.PopupProperties(
-            focusable = false,
-            dismissOnBackPress = true,
-            dismissOnClickOutside = true
+            focusable = false, dismissOnBackPress = true, dismissOnClickOutside = true
         )
     ) {
         // 使用 Row 建立一個連續的面板
@@ -533,8 +534,7 @@ fun AltCharsPreviewOverlay(
                         .background(
                             if (isSelected) style.keyPressedColor else androidx.compose.ui.graphics.Color.Transparent,
                             RoundedCornerShape(6.dp)
-                        ),
-                    contentAlignment = Alignment.Center
+                        ), contentAlignment = Alignment.Center
                 ) {
                     Text(
                         text = label,
