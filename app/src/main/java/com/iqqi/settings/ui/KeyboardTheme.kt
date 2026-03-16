@@ -20,8 +20,8 @@ fun KeyboardTheme(
     content: @Composable () -> Unit
 ) {
     //2026.03.06 暫時固定暗夜配色
-    val isDark = true
-//    val isDark = androidx.compose.foundation.isSystemInDarkTheme()
+//    val isDark = true
+    val isDark = androidx.compose.foundation.isSystemInDarkTheme()
 
     val colorScheme = when (themeColor) {
 

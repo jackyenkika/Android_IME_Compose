@@ -208,7 +208,7 @@ fun SettingsScreen() {
             if (showKeyboardBackgroundDialog) {
                 SettingImageSelectionDialog(
                     title = "Background Image",
-                    options = BackgroundImage.entries,
+                    options = BackgroundImage.availableEntries(),
                     current = backgroundImage,
                     onSelect = {
                         viewModel.setKeyboardBackgroundImage(it)

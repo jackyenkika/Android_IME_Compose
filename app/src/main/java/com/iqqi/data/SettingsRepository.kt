@@ -69,14 +69,25 @@ class SettingsRepository(private val context: Context) {
 
     val keyboardBackgroundImageFlow = context.dataStore.data.map {
         val stored = it[PreferencesKeys.KEYBOARD_BACKGROUND] ?: defaultSetting.backgroundImage.name
-        runCatching {
+        val image = runCatching {
             BackgroundImage.valueOf(stored)
         }.getOrDefault(defaultSetting.backgroundImage)
+
+        // ⭐ 若過期 → fallback
+        if (image.isExpired()) {
+            BackgroundImage.fallback()
+        } else {
+            image
+        }
     }
 
     suspend fun setKeyboardBackgroundImage(image: BackgroundImage) {
+        val validImage =
+            if (image.isExpired()) BackgroundImage.fallback()
+            else image
+
         context.dataStore.edit {
-            it[PreferencesKeys.KEYBOARD_BACKGROUND] = image.name
+            it[PreferencesKeys.KEYBOARD_BACKGROUND] = validImage.name
         }
     }
 

@@ -3,10 +3,10 @@ package com.iqqi.keyboard
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Backspace
+import androidx.compose.material.icons.filled.EmojiEmotions
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.KeyboardCapslock
 import androidx.compose.material.icons.filled.KeyboardReturn
-import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.SpaceBar
 import androidx.compose.material.icons.filled.Upgrade
 import com.iqqi.keyboard.model.KeySpec
@@ -34,12 +34,12 @@ object KeyboardLayoutProvider {
             "0[]{}<>\\"
         ),
 
-        listOf(
-            "¡¿€¢£¥",
-            "§©®™✓",
-            "←↑→↓",
-            "°•○●"
-        )
+//        listOf(
+//            "¡¿€¢£¥",
+//            "§©®™✓",
+//            "←↑→↓",
+//            "°•○●"
+//        )
     )
 
     private val altMap = mapOf(
@@ -148,7 +148,8 @@ object KeyboardLayoutProvider {
         return listOf(
             KeySpec(type = KeyType.CANCEL, icon = Icons.Default.ArrowDropDown),
 //            KeySpec(type = KeyType.SETTINGS, icon = Icons.Default.Settings),
-            KeySpec(type = KeyType.LANGUAGE, icon = Icons.Default.Language),
+//            KeySpec(type = KeyType.LANGUAGE, icon = Icons.Default.Language),
+            KeySpec(type = KeyType.EMOJI, icon = Icons.Default.EmojiEmotions),
             KeySpec(" ", 32, type = KeyType.SPACE, icon = Icons.Default.SpaceBar, weight = 5f),
             KeySpec(
                 type = KeyType.SYMBOL,

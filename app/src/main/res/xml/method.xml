@@ -29,59 +29,59 @@
     <!--        android:languageTag="en-US-9key" />-->
 
 
-    <!-- 阿拉伯 ARABIC-->
-    <subtype
-        android:imeSubtypeLocale="ar_SA"
-        android:imeSubtypeMode="keyboard"
-        android:isAsciiCapable="true"
-        android:label="@string/ime_language_arabic_display_name"
-        android:languageTag="ar-SA" />
+<!--    &lt;!&ndash; 阿拉伯 ARABIC&ndash;&gt;-->
+<!--    <subtype-->
+<!--        android:imeSubtypeLocale="ar_SA"-->
+<!--        android:imeSubtypeMode="keyboard"-->
+<!--        android:isAsciiCapable="true"-->
+<!--        android:label="@string/ime_language_arabic_display_name"-->
+<!--        android:languageTag="ar-SA" />-->
 
-    <!-- 德國 German-->
-    <subtype
-        android:imeSubtypeLocale="de_DE"
-        android:imeSubtypeMode="keyboard"
-        android:isAsciiCapable="true"
-        android:label="@string/ime_language_german_display_name"
-        android:languageTag="de-DE" />
+<!--    &lt;!&ndash; 德國 German&ndash;&gt;-->
+<!--    <subtype-->
+<!--        android:imeSubtypeLocale="de_DE"-->
+<!--        android:imeSubtypeMode="keyboard"-->
+<!--        android:isAsciiCapable="true"-->
+<!--        android:label="@string/ime_language_german_display_name"-->
+<!--        android:languageTag="de-DE" />-->
 
-    <!-- 法國 French-->
-    <subtype
-        android:imeSubtypeLocale="fr_FR"
-        android:imeSubtypeMode="keyboard"
-        android:isAsciiCapable="true"
-        android:label="@string/ime_language_french_display_name"
-        android:languageTag="fr-FR" />
-    <!-- 西班牙 Spanish-->
-    <subtype
-        android:imeSubtypeLocale="es_ES"
-        android:imeSubtypeMode="keyboard"
-        android:isAsciiCapable="true"
-        android:label="@string/ime_language_spanish_display_name"
-        android:languageTag="es-ES" />
-    <!-- 義大利 Italy-->
-    <subtype
-        android:imeSubtypeLocale="it_IT"
-        android:imeSubtypeMode="keyboard"
-        android:isAsciiCapable="true"
-        android:label="@string/ime_language_italian_display_name"
-        android:languageTag="it-IT" />
+<!--    &lt;!&ndash; 法國 French&ndash;&gt;-->
+<!--    <subtype-->
+<!--        android:imeSubtypeLocale="fr_FR"-->
+<!--        android:imeSubtypeMode="keyboard"-->
+<!--        android:isAsciiCapable="true"-->
+<!--        android:label="@string/ime_language_french_display_name"-->
+<!--        android:languageTag="fr-FR" />-->
+<!--    &lt;!&ndash; 西班牙 Spanish&ndash;&gt;-->
+<!--    <subtype-->
+<!--        android:imeSubtypeLocale="es_ES"-->
+<!--        android:imeSubtypeMode="keyboard"-->
+<!--        android:isAsciiCapable="true"-->
+<!--        android:label="@string/ime_language_spanish_display_name"-->
+<!--        android:languageTag="es-ES" />-->
+<!--    &lt;!&ndash; 義大利 Italy&ndash;&gt;-->
+<!--    <subtype-->
+<!--        android:imeSubtypeLocale="it_IT"-->
+<!--        android:imeSubtypeMode="keyboard"-->
+<!--        android:isAsciiCapable="true"-->
+<!--        android:label="@string/ime_language_italian_display_name"-->
+<!--        android:languageTag="it-IT" />-->
 
-    <!-- 泰國 Thai-->
-    <subtype
-        android:imeSubtypeLocale="th_TH"
-        android:imeSubtypeMode="keyboard"
-        android:isAsciiCapable="true"
-        android:label="@string/ime_language_thai_display_name"
-        android:languageTag="th-TH" />
+<!--    &lt;!&ndash; 泰國 Thai&ndash;&gt;-->
+<!--    <subtype-->
+<!--        android:imeSubtypeLocale="th_TH"-->
+<!--        android:imeSubtypeMode="keyboard"-->
+<!--        android:isAsciiCapable="true"-->
+<!--        android:label="@string/ime_language_thai_display_name"-->
+<!--        android:languageTag="th-TH" />-->
 
-    <!-- 中文（繁體）Chinese_TW-->
-    <subtype
-        android:imeSubtypeLocale="zh_TW"
-        android:imeSubtypeMode="keyboard"
-        android:isAsciiCapable="true"
-        android:label="@string/ime_language_chinese_zhuyin_display_name"
-        android:languageTag="zh-TW" />
+<!--    &lt;!&ndash; 中文（繁體）Chinese_TW&ndash;&gt;-->
+<!--    <subtype-->
+<!--        android:imeSubtypeLocale="zh_TW"-->
+<!--        android:imeSubtypeMode="keyboard"-->
+<!--        android:isAsciiCapable="true"-->
+<!--        android:label="@string/ime_language_chinese_zhuyin_display_name"-->
+<!--        android:languageTag="zh-TW" />-->
 
     <!-- 中文（簡體）Chinese_CN-->
     <subtype
@@ -91,30 +91,30 @@
         android:label="@string/ime_language_chinese_pinyin_display_name"
         android:languageTag="zh-CN" />
 
-    <!-- 中文（簡體）Chinese_CN_9key-->
-    <!--    <subtype-->
-    <!--        android:imeSubtypeExtraValue="KeyboardLayoutSet=9Key"-->
-    <!--        android:imeSubtypeLocale="zh_CN"-->
-    <!--        android:imeSubtypeMode="keyboard"-->
-    <!--        android:isAsciiCapable="true"-->
-    <!--        android:label="@string/ime_language_chinese_pin_9key_display_name"-->
-    <!--        android:languageTag="zh-CN-9key" />-->
+<!--    &lt;!&ndash; 中文（簡體）Chinese_CN_9key&ndash;&gt;-->
+<!--    &lt;!&ndash;    <subtype&ndash;&gt;-->
+<!--    &lt;!&ndash;        android:imeSubtypeExtraValue="KeyboardLayoutSet=9Key"&ndash;&gt;-->
+<!--    &lt;!&ndash;        android:imeSubtypeLocale="zh_CN"&ndash;&gt;-->
+<!--    &lt;!&ndash;        android:imeSubtypeMode="keyboard"&ndash;&gt;-->
+<!--    &lt;!&ndash;        android:isAsciiCapable="true"&ndash;&gt;-->
+<!--    &lt;!&ndash;        android:label="@string/ime_language_chinese_pin_9key_display_name"&ndash;&gt;-->
+<!--    &lt;!&ndash;        android:languageTag="zh-CN-9key" />&ndash;&gt;-->
 
-    <!-- 中文（香港）Chinese_HK-->
-    <subtype
-        android:imeSubtypeLocale="zh_HK"
-        android:imeSubtypeMode="keyboard"
-        android:isAsciiCapable="true"
-        android:label="@string/ime_language_chinese_cangjie_display_name"
-        android:languageTag="zh-HK" />
+<!--    &lt;!&ndash; 中文（香港）Chinese_HK&ndash;&gt;-->
+<!--    <subtype-->
+<!--        android:imeSubtypeLocale="zh_HK"-->
+<!--        android:imeSubtypeMode="keyboard"-->
+<!--        android:isAsciiCapable="true"-->
+<!--        android:label="@string/ime_language_chinese_cangjie_display_name"-->
+<!--        android:languageTag="zh-HK" />-->
 
-    <!-- 日文 Japanese -->
-    <subtype
-        android:imeSubtypeLocale="ja_JP"
-        android:imeSubtypeMode="keyboard"
-        android:isAsciiCapable="true"
-        android:label="@string/ime_language_japanese_display_name"
-        android:languageTag="ja-JP" />
+<!--    &lt;!&ndash; 日文 Japanese &ndash;&gt;-->
+<!--    <subtype-->
+<!--        android:imeSubtypeLocale="ja_JP"-->
+<!--        android:imeSubtypeMode="keyboard"-->
+<!--        android:isAsciiCapable="true"-->
+<!--        android:label="@string/ime_language_japanese_display_name"-->
+<!--        android:languageTag="ja-JP" />-->
 
     <!-- 日文 Japanese 9key-->
     <!--    <subtype-->

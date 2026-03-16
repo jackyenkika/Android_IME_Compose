@@ -1,7 +1,10 @@
 package com.iqqi.settings
 
 import androidx.annotation.DrawableRes
+import com.iqqi.ime.BuildConfig
 import com.iqqi.ime.R
+import java.text.SimpleDateFormat
+import java.util.Locale
 
 enum class KeyboardHeight(val horizontalScale: Float, val verticalScale: Float) {
     SMALL(0.55f, 0.25f),
@@ -26,8 +29,51 @@ enum class ThemeColor {
 }
 
 enum class BackgroundImage(
-    val label: String, @DrawableRes val resId: Int?
+    val label: String, @DrawableRes val resId: Int?, val expireDateStr: String? = null
 ) {
-    NONE("None", null),
-    FIFA_GREEN("FIFA Green", R.drawable.bg_fifa_green),
+    NONE("None", null, null),
+    FIFA_GREEN(
+        "FIFA Green",
+        R.drawable.bg_fifa2026_country_colours_gn,
+        BuildConfig.Fifa2026ExpireDate
+    ),
+    FIFA_BLUE(
+        "FIFA Blue",
+        R.drawable.bg_fifa2026_country_colours_bl,
+        BuildConfig.Fifa2026ExpireDate
+    ),
+    FIFA_RED("FIFA Red", R.drawable.bg_fifa2026_country_colours_rd, BuildConfig.Fifa2026ExpireDate),
+    FIFA_TOURNAMENT(
+        "FIFA Tournament",
+        R.drawable.bg_fifa2026_tournament_colours,
+        BuildConfig.Fifa2026ExpireDate
+    ),
+    FIFA_ACCESSIBILITY(
+        "FIFA Accessibility",
+        R.drawable.bg_fifa2026_accessibility_colours,
+        BuildConfig.Fifa2026ExpireDate
+    ),
+    ;
+
+    fun isExpired(now: Long = System.currentTimeMillis()): Boolean {
+        val expire = expireDateStr ?: return false
+
+        return try {
+            val sdf = SimpleDateFormat("yyyyMMddHHmmss", Locale.US)
+            val date = sdf.parse(expire) ?: return false
+            now > date.time
+        } catch (e: Exception) {
+            false
+        }
+    }
+
+    fun isAvailable(): Boolean = !isExpired()
+
+    companion object {
+
+        fun availableEntries(): List<BackgroundImage> =
+            entries.filter { it.isAvailable() }
+
+        fun fallback(): BackgroundImage = NONE
+    }
 }

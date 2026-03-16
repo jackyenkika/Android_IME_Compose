@@ -10,5 +10,6 @@ enum class KeyType {
     NEXT_SYMBOL,
     LANGUAGE,
     SETTINGS,
-    CANCEL
+    CANCEL,
+    EMOJI,
 }

@@ -3,6 +3,7 @@ package com.iqqi.keyboard
 import android.content.Context
 import android.content.res.Configuration
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -94,6 +95,7 @@ class ComposeKeyboardView(
                 candidates = candidateState.candidates,
                 candidateFunctions = listOf(
                     KeySpec(type = KeyType.SETTINGS, icon = Icons.Default.Settings),
+                    KeySpec(type = KeyType.LANGUAGE, icon = Icons.Default.Language),
                 ),
                 onDeleteUp = { ime.onDeleteKeyUp() },
                 onCandidateClick = { index ->
