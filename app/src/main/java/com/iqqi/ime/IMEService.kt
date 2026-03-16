@@ -18,6 +18,7 @@ import androidx.savedstate.setViewTreeSavedStateRegistryOwner
 import com.iqqi.ImeApplication
 import com.iqqi.core.ImeAction
 import com.iqqi.dictionary.CimDictionary
+import com.iqqi.dictionary.Dictionary
 import com.iqqi.dictionary.KikaDictionary
 import com.iqqi.engine.CIMReducer
 import com.iqqi.engine.ImeEngine
@@ -25,6 +26,8 @@ import com.iqqi.ime.util.DeleteRepeater
 import com.iqqi.keyboard.ComposeKeyboardView
 import com.iqqi.keyboard.model.ImeLanguage
 import com.iqqi.keyboard.model.KeyboardLanguage
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.runBlocking
 
 class IMEService : LifecycleInputMethodService(), ViewModelStoreOwner, SavedStateRegistryOwner {
 
@@ -35,6 +38,8 @@ class IMEService : LifecycleInputMethodService(), ViewModelStoreOwner, SavedStat
     private val deleteRepeater = DeleteRepeater()
 
     private lateinit var inputDispatcher: InputDispatcher
+
+    private val dictionaryCache = mutableMapOf<KeyboardLanguage, Dictionary>()
     //ViewModelStore Methods
 
     private val container
@@ -83,23 +88,12 @@ class IMEService : LifecycleInputMethodService(), ViewModelStoreOwner, SavedStat
         //清除候選字
         IMEStore.clearCandidate()
 
-        // 取得目前鍵盤語言
-        val currentLanguage = IMEStore.keyboardState.value.language
+        val lastLocale = runBlocking { container.settingsRepository.lastUsedLanguageFlow.first() }
+        val allLanguages = getAvailableLanguages(this)
+        val lang = allLanguages.firstOrNull { it.locale == lastLocale } ?: allLanguages.first()
 
-        val dictionary = when (currentLanguage.name) {
-            KeyboardLanguage.CHINESE -> CimDictionary()
-            KeyboardLanguage.ENGLISH -> KikaDictionary(engineId = 1)
-            else -> KikaDictionary(engineId = 1) // 這裡 engineId 可以改成你需要的值
-        }
-
-        engine = ImeEngine(
-            reducer = CIMReducer(this@IMEService, dictionary)
-        )
-
-        inputDispatcher = InputDispatcher(
-            engine = engine,
-            renderer = imeRender
-        )
+        createEngine(lang)
+        IMEStore.updateKeyboardState(IMEStore.keyboardState.value.copy(language = lang))
     }
 
     override fun onKeyDown(code: Int, event: KeyEvent): Boolean {
@@ -153,6 +147,31 @@ class IMEService : LifecycleInputMethodService(), ViewModelStoreOwner, SavedStat
     }
 
     //=========================================================
+
+    private fun getDictionary(language: KeyboardLanguage): Dictionary {
+
+        return dictionaryCache.getOrPut(language) {
+            when (language) {
+                KeyboardLanguage.CHINESE -> CimDictionary()
+                KeyboardLanguage.ENGLISH -> KikaDictionary(engineId = 1)
+            }
+        }
+    }
+
+    private fun createEngine(language: ImeLanguage) {
+
+        val dictionary = getDictionary(language.name)
+
+        engine = ImeEngine(
+            reducer = CIMReducer(this@IMEService, dictionary)
+        )
+
+        inputDispatcher = InputDispatcher(
+            engine = engine,
+            renderer = imeRender
+        )
+    }
+
     fun switchLanguage(lang: ImeLanguage) {
 
         val imm = getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager
@@ -171,6 +190,12 @@ class IMEService : LifecycleInputMethodService(), ViewModelStoreOwner, SavedStat
             }
         }
 
+        // ⭐ 1. 重建 Engine（核心）
+        createEngine(lang)
+
+        // ⭐ 2. 清候選字
+        IMEStore.clearCandidate()
+
         // 更新 keyboardState
         val newState = IMEStore.keyboardState.value.copy(
             language = lang,
@@ -178,6 +203,9 @@ class IMEService : LifecycleInputMethodService(), ViewModelStoreOwner, SavedStat
         )
 
         IMEStore.updateKeyboardState(newState)
+        runBlocking {
+            container.settingsRepository.setLastUsedLanguage(lang.locale ?: lang.name.name)
+        }
     }
 
     companion object {
@@ -201,7 +229,6 @@ class IMEService : LifecycleInputMethodService(), ViewModelStoreOwner, SavedStat
                 val locale = subtype.locale
                 val language = when {
                     locale.startsWith("zh") -> KeyboardLanguage.CHINESE
-                    locale.startsWith("ja") -> KeyboardLanguage.JAPANESE
                     else -> KeyboardLanguage.ENGLISH
                 }
                 ImeLanguage(

@@ -12,5 +12,4 @@ data class ImeLanguage(
 enum class KeyboardLanguage {
     ENGLISH,
     CHINESE,
-    JAPANESE
 }

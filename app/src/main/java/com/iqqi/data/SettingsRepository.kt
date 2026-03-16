@@ -116,6 +116,16 @@ class SettingsRepository(private val context: Context) {
         val updated = if (enabled) current + locale else current - locale
         setEnabledLanguages(updated)
     }
+
+    val lastUsedLanguageFlow: Flow<String?> = context.dataStore.data.map { prefs ->
+        prefs[PreferencesKeys.LAST_USED_LANGUAGE]
+    }
+
+    suspend fun setLastUsedLanguage(locale: String) {
+        context.dataStore.edit { prefs ->
+            prefs[PreferencesKeys.LAST_USED_LANGUAGE] = locale
+        }
+    }
 }
 
 data class DefaultSetting(

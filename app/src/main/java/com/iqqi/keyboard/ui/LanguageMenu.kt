@@ -64,7 +64,7 @@ fun LanguageMenu(
                                 text = lang.name.name,
                                 modifier = Modifier.weight(1f)
                             )
-                            if (lang == current) {
+                            if (lang.locale == current?.locale) {
                                 Text("✓")
                             }
                         }
