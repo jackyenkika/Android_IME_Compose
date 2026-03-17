@@ -38,10 +38,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
@@ -321,7 +324,10 @@ fun KeyboardLayout(
                 activeKey?.takeIf { it.type == KeyType.INPUT }?.let { key ->
                     // 由於沒有 keyBounds Map 了，我們直接計算 Overlay 應該出現的坐標
                     val rowIdx = layout.indexOfFirst { it.contains(key) }
+                    if (rowIdx == -1) return@let   // 或 return
                     val colIdx = layout[rowIdx].indexOf(key)
+                    if (colIdx == -1) return@let
+
                     val prevWeightSum =
                         layout[rowIdx].take(colIdx).sumOf { it.weight.toDouble() }.toFloat()
                     val totalWeight = layout[rowIdx].sumOf { it.weight.toDouble() }.toFloat()
@@ -432,15 +438,33 @@ fun KeyboardKey(
             }
 
             else -> {
-                Icon(
-                    imageVector = keyboardKey.icon!!,
-                    contentDescription = null,
-                    tint = textColor,
-                    modifier = Modifier.fillMaxSize(0.6f)   // 只佔 60%
-                )
+                val painter = rememberPainterForKey(keyboardKey)
+
+                if (painter != null) {
+                    Icon(
+                        painter = painter,
+                        contentDescription = null,
+                        tint = textColor,
+                        modifier = Modifier.fillMaxSize(0.6f)
+                    )
+                }
             }
         }
     }
+}
+
+@Composable
+private fun rememberPainterForKey(key: KeySpec): Painter? {
+
+    // 優先使用 drawable（且未過期）
+    key.iconDrawable
+        ?.takeIf { it.resId != null && !it.isExpired() }
+        ?.let { return painterResource(it.resId!!) }
+
+    // fallback 到 ImageVector
+    key.icon?.let { return rememberVectorPainter(it) }
+
+    return null
 }
 
 @Composable

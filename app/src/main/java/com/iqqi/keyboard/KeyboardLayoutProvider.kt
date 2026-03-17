@@ -4,11 +4,11 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Backspace
 import androidx.compose.material.icons.filled.EmojiEmotions
-import androidx.compose.material.icons.filled.KeyboardArrowUp
-import androidx.compose.material.icons.filled.KeyboardCapslock
 import androidx.compose.material.icons.filled.KeyboardReturn
 import androidx.compose.material.icons.filled.SpaceBar
-import androidx.compose.material.icons.filled.Upgrade
+import com.iqqi.ime.BuildConfig
+import com.iqqi.ime.R
+import com.iqqi.keyboard.model.IconImage
 import com.iqqi.keyboard.model.KeySpec
 import com.iqqi.keyboard.model.KeyType
 import com.iqqi.keyboard.model.KeyboardMode
@@ -97,11 +97,15 @@ object KeyboardLayoutProvider {
             rowKeys.add(
                 KeySpec(
                     type = KeyType.SHIFT,
-                    icon = when (config.shiftState) {
-                        ShiftState.CAPS_LOCK -> Icons.Default.KeyboardCapslock
-                        ShiftState.ON -> Icons.Default.Upgrade
-                        else -> Icons.Default.KeyboardArrowUp
-                    },
+                    iconDrawable = IconImage(
+                        "shift",
+                        when (config.shiftState) {
+                            ShiftState.CAPS_LOCK -> R.drawable.img_shift_lock
+                            ShiftState.ON -> R.drawable.img_shift_once
+                            else -> R.drawable.img_shift_unused
+                        },
+                        null
+                    ),
                     weight = 1.5f
                 ),
             )
@@ -146,7 +150,7 @@ object KeyboardLayoutProvider {
         config: LayoutConfig
     ): List<KeySpec> {
         return listOf(
-            KeySpec(type = KeyType.CANCEL, icon = Icons.Default.ArrowDropDown),
+            KeySpec(type = KeyType.CANCEL, icon = Icons.Default.ArrowDropDown, weight = 1.5f),
 //            KeySpec(type = KeyType.SETTINGS, icon = Icons.Default.Settings),
 //            KeySpec(type = KeyType.LANGUAGE, icon = Icons.Default.Language),
             KeySpec(type = KeyType.EMOJI, icon = Icons.Default.EmojiEmotions),
@@ -155,7 +159,15 @@ object KeyboardLayoutProvider {
                 type = KeyType.SYMBOL,
                 label = if (config.mode == KeyboardMode.LETTERS) "?12" else "ABC",
             ),
-            KeySpec(type = KeyType.ENTER, icon = Icons.Default.KeyboardReturn)
+            KeySpec(
+                type = KeyType.ENTER,
+                icon = Icons.Default.KeyboardReturn,
+                iconDrawable = IconImage(
+                    "FIFA soccer",
+                    R.drawable.ic_soccer,
+                    BuildConfig.Fifa2026ExpireDate
+                ), weight = 1.5f
+            )
         )
     }
 }
