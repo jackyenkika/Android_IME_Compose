@@ -10,6 +10,7 @@ import com.iqqi.settings.CandidateHeight
 import com.iqqi.settings.KeyboardHeight
 import com.iqqi.settings.ThemeColor
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 
@@ -67,19 +68,15 @@ class SettingsRepository(private val context: Context) {
         }
     }
 
-    val keyboardBackgroundImageFlow = context.dataStore.data.map {
-        val stored = it[PreferencesKeys.KEYBOARD_BACKGROUND] ?: defaultSetting.backgroundImage.name
-        val image = runCatching {
-            BackgroundImage.valueOf(stored)
-        }.getOrDefault(defaultSetting.backgroundImage)
-
-        // ⭐ 若過期 → fallback
-        if (image.isExpired()) {
-            BackgroundImage.fallback()
-        } else {
-            image
+    val keyboardBackgroundImageFlow = context.dataStore.data
+        .map { prefs ->
+            val stored =
+                prefs[PreferencesKeys.KEYBOARD_BACKGROUND] ?: defaultSetting.backgroundImage.name
+            val image =
+                runCatching { BackgroundImage.valueOf(stored) }.getOrDefault(defaultSetting.backgroundImage)
+            if (image.isExpired()) BackgroundImage.fallback() else image
         }
-    }
+        .distinctUntilChanged() // 只有實際改變時才發射
 
     suspend fun setKeyboardBackgroundImage(image: BackgroundImage) {
         val validImage =

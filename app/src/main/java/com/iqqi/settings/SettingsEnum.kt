@@ -55,25 +55,21 @@ enum class BackgroundImage(
     ),
     ;
 
-    fun isExpired(now: Long = System.currentTimeMillis()): Boolean {
-        val expire = expireDateStr ?: return false
-
-        return try {
-            val sdf = SimpleDateFormat("yyyyMMddHHmmss", Locale.US)
-            val date = sdf.parse(expire) ?: return false
-            now > date.time
+    private val expireTimestamp: Long? = expireDateStr?.let {
+        try {
+            SimpleDateFormat("yyyyMMddHHmmss", Locale.US).parse(it)?.time
         } catch (e: Exception) {
-            false
+            null
         }
     }
+
+    fun isExpired(now: Long = System.currentTimeMillis()): Boolean =
+        expireTimestamp?.let { now > it } ?: false
 
     fun isAvailable(): Boolean = !isExpired()
 
     companion object {
-
-        fun availableEntries(): List<BackgroundImage> =
-            entries.filter { it.isAvailable() }
-
+        fun availableEntries(): List<BackgroundImage> = entries.filter { it.isAvailable() }
         fun fallback(): BackgroundImage = NONE
     }
 }

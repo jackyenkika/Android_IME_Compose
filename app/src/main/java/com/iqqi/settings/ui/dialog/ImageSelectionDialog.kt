@@ -1,6 +1,5 @@
 package com.iqqi.settings.ui.dialog
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -15,9 +14,11 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import coil.compose.AsyncImage
+import coil.request.ImageRequest
 import com.iqqi.settings.BackgroundImage
 
 @Composable
@@ -28,6 +29,8 @@ fun SettingImageSelectionDialog(
     onSelect: (BackgroundImage) -> Unit,
     onDismiss: () -> Unit
 ) {
+    val context = LocalContext.current
+
     AlertDialog(
         onDismissRequest = onDismiss,
         confirmButton = {},
@@ -46,14 +49,19 @@ fun SettingImageSelectionDialog(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         if (bg.resId != null) {
-                            Image(
-                                painter = painterResource(bg.resId),
+                            // 使用 Coil AsyncImage 非阻塞加載
+                            AsyncImage(
+                                model = ImageRequest.Builder(context)
+                                    .data(bg.resId)
+                                    .crossfade(true)
+                                    .build(),
                                 contentDescription = bg.label,
                                 modifier = Modifier
                                     .size(48.dp)
                                     .padding(end = 12.dp)
                             )
                         }
+
                         val isSelected = bg == current
                         Text(
                             text = bg.label,
