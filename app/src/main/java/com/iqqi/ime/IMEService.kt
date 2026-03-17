@@ -102,7 +102,8 @@ class IMEService : LifecycleInputMethodService(), ViewModelStoreOwner, SavedStat
         IMEStore.updateKeyboardState(
             IMEStore.keyboardState.value.copy(
                 language = lang,
-                inputType = attributes.inputType
+                inputType = attributes.inputType,
+                animationTick = 0,
             )
         )
 

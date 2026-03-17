@@ -4,6 +4,7 @@ import android.content.Intent
 import com.iqqi.ime.IMEKeyMapper
 import com.iqqi.ime.IMEService
 import com.iqqi.ime.IMEStore
+import com.iqqi.ime.util.LogObj
 import com.iqqi.keyboard.KeyboardLayoutProvider
 import com.iqqi.keyboard.model.KeySpec
 import com.iqqi.keyboard.model.KeyType
@@ -24,6 +25,15 @@ class KeyboardController(
         // 1️⃣ 軟鍵盤 / 功能鍵映射成 ImeAction
         mapper.map(key)?.let {
             ime.dispatch(it)
+
+            if (key.type == KeyType.ENTER) {
+                if (key.iconDrawable != null && !key.iconDrawable.isExpired()) {
+                    LogObj.trace("Enter key with animation triggered")
+                    return state.copy(
+                        animationTick = state.animationTick + 1
+                    )
+                }
+            }
 
             // 如果是輸入鍵，shift ON 則自動切回 OFF
             if (key.type == KeyType.INPUT && state.layoutConfig.shiftState == ShiftState.ON) {

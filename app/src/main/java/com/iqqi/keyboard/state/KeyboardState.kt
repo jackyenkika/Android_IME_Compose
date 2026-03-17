@@ -8,7 +8,8 @@ data class KeyboardState(
     val language: ImeLanguage = ImeLanguage(),
     val layoutConfig: LayoutConfig = LayoutConfig(),
     val inputType: Int = 0,
-    val showLanguageMenu: Boolean = false
+    val showLanguageMenu: Boolean = false,
+    val animationTick: Int = 0,
 )
 
 data class LayoutConfig(

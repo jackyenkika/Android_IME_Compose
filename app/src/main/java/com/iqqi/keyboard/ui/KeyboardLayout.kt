@@ -37,6 +37,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
@@ -45,14 +46,19 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Popup
+import androidx.compose.ui.window.PopupProperties
+import com.iqqi.ime.R
 import com.iqqi.keyboard.model.KeySpec
 import com.iqqi.keyboard.model.KeyType
 import com.iqqi.keyboard.model.KeyboardThemeSpec
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -66,6 +72,11 @@ data class DeviceConfig(
     val candidateFontScale: Float = 0.9f
 )
 
+data class AnimationConfig(
+    val shakeOffset: Float = 0f,
+    val showAnimation: Boolean = false
+)
+
 val localKeyboardStyle = staticCompositionLocalOf<KeyboardThemeSpec> {
     error("No KeyboardStyle provided")
 }
@@ -76,6 +87,7 @@ fun KeyboardLayout(
     layout: List<List<KeySpec>>,
     candidates: List<String> = emptyList(),
     candidateFunctions: List<KeySpec> = emptyList(),
+    animationConfig: AnimationConfig,
     overlay: (@Composable () -> Unit)? = null,
     onDeleteUp: () -> Unit,
     onCandidateClick: (Int) -> Unit,
@@ -87,7 +99,7 @@ fun KeyboardLayout(
     // 狀態管理
     val scope = rememberCoroutineScope() // 1. 取得外部 Scope
     var activeKey by remember { mutableStateOf<KeySpec?>(null) }
-    var containerSize by remember { mutableStateOf(androidx.compose.ui.unit.IntSize.Zero) }
+    var containerSize by remember { mutableStateOf(IntSize.Zero) }
     var longPressActive by remember { mutableStateOf(false) }
     var altKeyIndex by remember { mutableStateOf(0) } // 選擇 altChars 索引
 
@@ -125,6 +137,28 @@ fun KeyboardLayout(
         }
     }
 
+    val confettiImages = remember {
+        listOf(
+            R.drawable.img_gold_confetti_1,
+            R.drawable.img_gold_confetti_2,
+            R.drawable.img_gold_confetti_3,
+            R.drawable.img_gold_confetti_4,
+            R.drawable.img_gold_confetti_5,
+            R.drawable.img_gold_confetti_6,
+            R.drawable.img_gold_confetti_7,
+            R.drawable.img_gold_confetti_8,
+            R.drawable.img_gold_confetti_9,
+            R.drawable.img_gold_confetti_10,
+            R.drawable.img_gold_confetti_11,
+            R.drawable.img_gold_confetti_12,
+        )
+    }.map { painterResource(it) }
+
+    val footballImages =
+        remember {
+            listOf(R.drawable.img_soccer)
+        }.map { painterResource(it) }
+
     // 核心 HitTest 函數
     fun findKeyAt(offset: Offset): KeySpec? {
         if (containerSize.height <= 0 || containerSize.width <= 0) return null
@@ -151,6 +185,9 @@ fun KeyboardLayout(
         modifier = Modifier
             .height(deviceConfig.keyboardHeight)
             .fillMaxWidth()
+            .graphicsLayer {
+                translationX = animationConfig.shakeOffset
+            }
     ) {
         // 1️⃣ 背景圖片
         style.backgroundImage?.let { painter ->
@@ -201,7 +238,7 @@ fun KeyboardLayout(
 
                             altKeyIndex = 0
                             longPressActive = false
-                            var repeatJob: kotlinx.coroutines.Job? = null
+                            var repeatJob: Job? = null
                             var wasLongPressed = false
 
                             // 1. 啟動 Repeat Job (如果是 repeatable)
@@ -381,6 +418,20 @@ fun KeyboardLayout(
                 }
             }
         }
+        if (animationConfig.showAnimation) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                EnterKeyAnimation(
+                    confettiImages = confettiImages,
+                    footballImages = footballImages
+                ) {
+                    // 動畫結束後的回調，目前不需要特別處理
+                }
+            }
+        }
     }
 }
 
@@ -490,7 +541,9 @@ fun KeyPreviewOverlay(
 
         Box(
             modifier = Modifier
-                .size(with(density) { shortSidePx.toDp() }, with(density) { shortSidePx.toDp() })
+                .size(
+                    with(density) { shortSidePx.toDp() },
+                    with(density) { shortSidePx.toDp() })
                 .background(
                     style.keyPreviewedColor, RoundedCornerShape(50.dp)
                 ), contentAlignment = Alignment.Center
@@ -533,7 +586,7 @@ fun AltCharsPreviewOverlay(
 
     Popup(
         offset = IntOffset(popupX.toInt(), popupY.toInt()),
-        properties = androidx.compose.ui.window.PopupProperties(
+        properties = PopupProperties(
             focusable = false, dismissOnBackPress = true, dismissOnClickOutside = true
         )
     ) {
@@ -559,7 +612,7 @@ fun AltCharsPreviewOverlay(
                     modifier = Modifier
                         .size(cellWidthDp, cellHeightDp)
                         .background(
-                            if (isSelected) style.keyPressedColor else androidx.compose.ui.graphics.Color.Transparent,
+                            if (isSelected) style.keyPressedColor else Color.Transparent,
                             RoundedCornerShape(6.dp)
                         ), contentAlignment = Alignment.Center
                 ) {
@@ -567,8 +620,8 @@ fun AltCharsPreviewOverlay(
                         text = label,
                         color = style.keyPreviewTextColor,
                         fontSize = with(density) { (cellHeightPx * 0.4f).toSp() },
-                        style = androidx.compose.ui.text.TextStyle(
-                            fontWeight = if (isSelected) androidx.compose.ui.text.font.FontWeight.ExtraBold else androidx.compose.ui.text.font.FontWeight.Normal
+                        style = TextStyle(
+                            fontWeight = if (isSelected) FontWeight.ExtraBold else FontWeight.Normal
                         )
                     )
                 }
