@@ -234,7 +234,10 @@ fun KeyboardLayout(
                                     if (altChars.isEmpty()) return@drag
 
                                     val rowIdx = layout.indexOfFirst { it.contains(key) }
+                                    if (rowIdx == -1) return@drag
+
                                     val colIdx = layout[rowIdx].indexOf(key)
+                                    if (colIdx == -1) return@drag
 
                                     val prevWeightSum =
                                         layout[rowIdx].take(colIdx).sumOf { it.weight.toDouble() }
