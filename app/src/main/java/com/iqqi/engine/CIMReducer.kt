@@ -69,7 +69,7 @@ class CIMReducer(
             is ImeAction.Input -> when (val key = action.key) {
 
                 is Key.Char -> {
-                    if (isPinyinChar(key.c)) {
+                    if (isSpellingChar(key.c)) {
                         buildComposingState(
                             state,
                             state.buffer + key.c
@@ -125,7 +125,7 @@ class CIMReducer(
 
             is Key.Char -> {
 
-                if (isPinyinChar(key.c)) {
+                if (isSpellingChar(key.c)) {
 
                     buildComposingState(
                         state,
@@ -214,7 +214,7 @@ class CIMReducer(
 
             is ImeAction.Input -> when (val key = action.key) {
                 is Key.Char -> {
-                    if (isPinyinChar(key.c)) {
+                    if (isSpellingChar(key.c)) {
                         buildComposingState(
                             EngineState(),
                             key.c.toString()
@@ -253,8 +253,14 @@ class CIMReducer(
 
     // ---------------- Shared helpers ----------------
 
-    private fun isPinyinChar(c: Char): Boolean {
-        return c in 'a'..'z'
+
+    private fun isSpellingChar(c: Char): Boolean {
+        return when (language) {
+            KeyboardLanguage.ENGLISH -> c.isLetter() // A-Z,a-z
+            KeyboardLanguage.CHINESE -> c.isLetter()
+            // 可以擴展其他語言
+            else -> c.isLetter()
+        }
     }
 
     private fun buildComposingState(
