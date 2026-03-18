@@ -22,7 +22,7 @@ import kotlin.math.hypot
 import kotlin.math.sin
 
 @Composable
-fun EnterKeyAnimation(
+fun FootballGoalAnimation(
     confettiImages: List<Painter>,
     footballImages: List<Painter>,
     onAnimationEnd: () -> Unit

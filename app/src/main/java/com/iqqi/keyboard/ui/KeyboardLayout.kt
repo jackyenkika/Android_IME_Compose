@@ -360,6 +360,7 @@ fun KeyboardLayout(
                                 KeyboardKey(
                                     keyboardKey = key,
                                     isActive = activeKey == key,
+                                    shakeOffset = animationConfig.shakeOffset,
                                     modifier = Modifier
                                         .weight(key.weight)
                                         .padding(2.dp)
@@ -433,7 +434,7 @@ fun KeyboardLayout(
                     .fillMaxSize(),
                 contentAlignment = Alignment.Center
             ) {
-                EnterKeyAnimation(
+                FootballGoalAnimation(
                     confettiImages = confettiImages,
                     footballImages = footballImages
                 ) {
@@ -448,7 +449,7 @@ fun KeyboardLayout(
 @SuppressLint("UnusedBoxWithConstraintsScope")
 @Composable
 fun KeyboardKey(
-    keyboardKey: KeySpec, isActive: Boolean, modifier: Modifier
+    keyboardKey: KeySpec, isActive: Boolean, shakeOffset: Float, modifier: Modifier
 ) {
     val style = localKeyboardStyle.current
     val density = LocalDensity.current
@@ -466,8 +467,17 @@ fun KeyboardKey(
         else -> style.keyFunctionalTextColor
     }
 
+    val scale = if (
+        keyboardKey.type == KeyType.ENTER &&
+        shakeOffset < 0f
+    ) 0.9f else 1f
+
     BoxWithConstraints(
         modifier = modifier
+            .graphicsLayer {
+                scaleX = scale
+                scaleY = scale
+            }
             .background(
                 if (isActive) style.keyPressedColor
                 else bgColor, RoundedCornerShape(style.keyCornerRadius)

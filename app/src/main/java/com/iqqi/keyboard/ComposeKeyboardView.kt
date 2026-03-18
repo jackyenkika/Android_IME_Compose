@@ -186,7 +186,7 @@ class ComposeKeyboardView(
                 overlayConfig = OverlayConfig(
                     alpha = when {
                         stickerState.visible -> 0.95f
-                        keyboardState.showLanguageMenu -> 0.1f
+                        keyboardState.showLanguageMenu -> 0.2f
                         else -> 0f
                     }
                 ),
