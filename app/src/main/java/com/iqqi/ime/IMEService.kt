@@ -113,8 +113,7 @@ class IMEService : LifecycleInputMethodService(), ViewModelStoreOwner, SavedStat
     }
 
     override fun onKeyDown(code: Int, event: KeyEvent): Boolean {
-        val action = mapper.map(event)
-            ?: return super.onKeyDown(code, event)
+        val action = mapper.map(event) ?: return super.onKeyDown(code, event)
 
         if (action is ImeAction.Delete) {
             onDeleteKeyDown()  // 進入判斷 buffer 或長按刪除
@@ -143,10 +142,8 @@ class IMEService : LifecycleInputMethodService(), ViewModelStoreOwner, SavedStat
         val ic = currentInputConnection ?: return
 
         // 先判斷 EngineState buffer
-        val bufferNotEmpty = engine.currentState.buffer.isNotEmpty() ||
-                engine.currentState.composing.isNotEmpty() ||
-                engine.currentState.candidates.isNotEmpty() ||
-                engine.currentState.predictingCandidates.isNotEmpty()
+        val bufferNotEmpty =
+            engine.currentState.buffer.isNotEmpty() || engine.currentState.composing.isNotEmpty() || engine.currentState.candidates.isNotEmpty() || engine.currentState.predictingCandidates.isNotEmpty()
 
         if (bufferNotEmpty) {
             // buffer 還有內容 → 走 Engine 刪除
@@ -179,12 +176,11 @@ class IMEService : LifecycleInputMethodService(), ViewModelStoreOwner, SavedStat
         val dictionary = getDictionary(language.name)
 
         engine = ImeEngine(
-            reducer = CIMReducer(this@IMEService, dictionary)
+            reducer = CIMReducer(this@IMEService,language = language.name, dictionary)
         )
 
         inputDispatcher = InputDispatcher(
-            engine = engine,
-            renderer = imeRender
+            engine = engine, language = language.name, renderer = imeRender
         )
     }
 
@@ -192,16 +188,12 @@ class IMEService : LifecycleInputMethodService(), ViewModelStoreOwner, SavedStat
 
         val imm = getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager
 
-        val imi = imm.enabledInputMethodList
-            .firstOrNull { it.packageName == packageName }
-            ?: return
+        val imi = imm.enabledInputMethodList.firstOrNull { it.packageName == packageName } ?: return
 
         lang.subtype?.let {
             window?.window?.attributes?.token?.let { token ->
                 imm.setInputMethodAndSubtype(
-                    token,
-                    imi.id,
-                    it
+                    token, imi.id, it
                 )
             }
         }
@@ -214,8 +206,7 @@ class IMEService : LifecycleInputMethodService(), ViewModelStoreOwner, SavedStat
 
         // 更新 keyboardState
         val newState = IMEStore.keyboardState.value.copy(
-            language = lang,
-            showLanguageMenu = false
+            language = lang, showLanguageMenu = false
         )
 
         IMEStore.updateKeyboardState(newState)
@@ -252,15 +243,11 @@ class IMEService : LifecycleInputMethodService(), ViewModelStoreOwner, SavedStat
 
         // 🔥 生成 content:// URI
         val contentUri = androidx.core.content.FileProvider.getUriForFile(
-            this,
-            "${packageName}.stickerprovider",
-            stickerFile
+            this, "${packageName}.stickerprovider", stickerFile
         )
 
         val contentInfo = androidx.core.view.inputmethod.InputContentInfoCompat(
-            contentUri,
-            android.content.ClipDescription("sticker", arrayOf(sticker.mimeType)),
-            null
+            contentUri, android.content.ClipDescription("sticker", arrayOf(sticker.mimeType)), null
         )
 
         // 🔥 commitContent 加授權 flag
@@ -302,8 +289,7 @@ class IMEService : LifecycleInputMethodService(), ViewModelStoreOwner, SavedStat
                     locale = locale,
                     subtype = subtype,
                     enabled = imm.getEnabledInputMethodSubtypeList(imi, true)
-                        .any { it.locale == locale }
-                )
+                        .any { it.locale == locale })
             }
         }
     }

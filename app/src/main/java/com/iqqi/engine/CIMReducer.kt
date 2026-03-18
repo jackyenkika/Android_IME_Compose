@@ -9,10 +9,12 @@ import com.iqqi.core.Reducer
 import com.iqqi.dictionary.Dictionary
 import com.iqqi.dictionary.KikaDictionary
 import com.iqqi.ime.util.LogObj
+import com.iqqi.keyboard.model.KeyboardLanguage
 import java.io.File
 
 class CIMReducer(
     context: Context,
+    private val language: KeyboardLanguage,
     private val dict: Dictionary
 ) : Reducer {
 
@@ -92,7 +94,6 @@ class CIMReducer(
                 handleDelete(state)
             }
 
-            is ImeAction.Commit -> state
             is ImeAction.SelectCandidate -> state
         }
     }
@@ -106,17 +107,12 @@ class CIMReducer(
             is ImeAction.Input -> handleComposingInput(state, action)
 
             is ImeAction.SelectCandidate -> {
-                commitAndPredict(state, action.index)
+                commitAndPredict(state, action.index, isNeedAppendSpace())
             }
 
             is ImeAction.Delete -> {
                 handleDelete(state)
             }
-
-            is ImeAction.Commit -> {
-                commitAndPredict(state, state.selectedIndex)
-            }
-
         }
     }
 
@@ -150,7 +146,7 @@ class CIMReducer(
             }
 
             is Key.Space -> {
-                commitAndPredict(state, 0)
+                commitAndPredict(state, 0, isNeedAppendSpace())
             }
 
             is Key.Enter -> {
@@ -174,15 +170,11 @@ class CIMReducer(
         return when (action) {
 
             is ImeAction.SelectCandidate -> {
-                commitAndPredict(state, action.index)
+                commitAndPredict(state, action.index, isNeedAppendSpace())
             }
 
             is ImeAction.Delete -> {
                 handleDelete(state)
-            }
-
-            is ImeAction.Commit -> {
-                commitDirect(state)
             }
 
             else -> state
@@ -199,21 +191,19 @@ class CIMReducer(
         return when (action) {
 
             is ImeAction.SelectCandidate -> {
-                val commit = state.predictingCandidates.getOrNull(action.index)
+                var commit = state.predictingCandidates.getOrNull(action.index)
                     ?: return EngineState()
 
-                val predict = dict.predict(commit)
+                if (isNeedAppendSpace()) {
+                    commit = "$commit "
+                }
+                val predict = dict.predict(commit.trim())
 
                 commit(
                     text = commit,
                     nextMode = if (predict.isEmpty()) InputMode.Idle else InputMode.Predicting,
                     predict = predict
                 )
-            }
-
-            ImeAction.Commit -> {
-                val commit = state.predictingCandidates.firstOrNull()
-                EngineState(commitText = commit)
             }
 
             ImeAction.Delete -> {
@@ -237,10 +227,14 @@ class CIMReducer(
                 }
 
                 Key.Space -> {
-                    val commit = state.predictingCandidates.firstOrNull()
+                    var commit = state.predictingCandidates.firstOrNull()
                         ?: return EngineState(commitText = " ")
 
-                    val predict = dict.predict(commit)
+                    if (isNeedAppendSpace()) {
+                        commit = "$commit "
+                    }
+
+                    val predict = dict.predict(commit.trim())
 
                     commit(
                         text = commit,
@@ -291,35 +285,28 @@ class CIMReducer(
 
     private fun commitAndPredict(
         state: EngineState,
-        index: Int
+        index: Int,
+        appendSpace: Boolean = false
     ): EngineState {
 
-        val commit = state.candidates.getOrNull(index)
+        var commit = state.candidates.getOrNull(index)
             ?: state.composing
 
         if (commit.isEmpty()) {
             return EngineState()
         }
 
-        val predict = dict.predict(commit)
+        if (appendSpace) {
+            commit += " "
+        }
+
+        val predict = dict.predict(commit.trim())
 
         return commit(
             text = commit,
             nextMode = if (predict.isEmpty()) InputMode.Idle else InputMode.Predicting,
             predict = predict
         )
-    }
-
-    private fun commitDirect(state: EngineState): EngineState {
-
-        val commit = state.candidates.getOrNull(state.selectedIndex)
-            ?: state.composing
-
-        if (commit.isEmpty()) {
-            return EngineState()
-        }
-
-        return commit(commit)
     }
 
     private fun handleDelete(state: EngineState): EngineState {
@@ -364,5 +351,12 @@ class CIMReducer(
             predictingCandidates = predict,
             mode = nextMode
         )
+    }
+
+    private fun isNeedAppendSpace(): Boolean {
+        return when (language) {
+            KeyboardLanguage.ENGLISH -> true
+            else -> false
+        }
     }
 }

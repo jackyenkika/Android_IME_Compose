@@ -13,7 +13,6 @@ sealed class ImeAction {
 
     data class Input(val key: Key) : ImeAction()
     object Delete : ImeAction()
-    object Commit : ImeAction()
     data class SelectCandidate(val index: Int) : ImeAction()
 }
 
