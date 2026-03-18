@@ -24,7 +24,6 @@ import com.iqqi.data.SettingsRepository
 import com.iqqi.data.StickerRepository
 import com.iqqi.ime.IMEService
 import com.iqqi.ime.IMEStore
-import com.iqqi.ime.util.LogObj
 import com.iqqi.keyboard.controller.KeyboardController
 import com.iqqi.keyboard.model.KeySpec
 import com.iqqi.keyboard.model.KeyType
@@ -33,6 +32,7 @@ import com.iqqi.keyboard.ui.AnimationConfig
 import com.iqqi.keyboard.ui.KeyboardLayout
 import com.iqqi.keyboard.ui.KeyboardSizeCalculator
 import com.iqqi.keyboard.ui.LanguageMenu
+import com.iqqi.keyboard.ui.OverlayConfig
 import com.iqqi.keyboard.ui.StickerPanel
 import com.iqqi.settings.ui.KeyboardTheme
 
@@ -150,21 +150,46 @@ class ComposeKeyboardView(
                     )
                 },
                 animationConfig = AnimationConfig(
-                    shakeOffset = shakeOffset.value,
-                    showAnimation = keyboardState.animationTick
+                    shakeOffset = shakeOffset.value, showAnimation = keyboardState.animationTick
                 ),
-                overlay = if (stickerState.visible) {
-                    {
-                        StickerPanel(
-                            packs = stickerRepository.getStickerPacks(),
-                            onStickerClick = { sticker ->
-                                ime.commitSticker(sticker)
-                                stickerRepository.addRecent(sticker)
-                            },
-                            modifier = Modifier.fillMaxSize()
-                        )
+                overlay = when {
+                    stickerState.visible -> {
+                        {
+                            StickerPanel(
+                                packs = stickerRepository.getStickerPacks(),
+                                onStickerClick = { sticker ->
+                                    ime.commitSticker(sticker)
+                                    stickerRepository.addRecent(sticker)
+                                },
+                                modifier = Modifier.fillMaxSize()
+                            )
+                        }
                     }
-                } else null,
+
+                    keyboardState.showLanguageMenu -> {
+                        {
+                            LanguageMenu(
+                                languages = languages.filter { it.enabled },
+                                current = currentLanguage,
+                                onSelect = { lang ->
+                                    ime.switchLanguage(lang)
+                                },
+                                onDismiss = {
+                                    val newState = keyboardState.copy(showLanguageMenu = false)
+                                    IMEStore.updateKeyboardState(newState)
+                                })
+                        }
+                    }
+
+                    else -> null
+                },
+                overlayConfig = OverlayConfig(
+                    alpha = when {
+                        stickerState.visible -> 0.95f
+                        keyboardState.showLanguageMenu -> 0.1f
+                        else -> 0f
+                    }
+                ),
                 onDeleteUp = { ime.onDeleteKeyUp() },
                 onAnimationEnd = {
                     if (keyboardState.animationTick) {
@@ -183,23 +208,7 @@ class ComposeKeyboardView(
                             IMEStore.updateKeyboardState(newState)
                         }
                     }
-                }
-            )
-
-            if (keyboardState.showLanguageMenu) {
-                LogObj.trace("languages = $languages")
-                LanguageMenu(
-                    languages = languages.filter { it.enabled },
-                    current = currentLanguage,
-                    onSelect = { lang ->
-                        ime.switchLanguage(lang)
-                    },
-                    onDismiss = {
-                        val newState = keyboardState.copy(showLanguageMenu = false)
-                        IMEStore.updateKeyboardState(newState)
-                    }
-                )
-            }
+                })
         }
     }
 }

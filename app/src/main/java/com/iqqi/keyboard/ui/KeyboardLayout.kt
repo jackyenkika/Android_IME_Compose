@@ -77,6 +77,11 @@ data class AnimationConfig(
     val showAnimation: Boolean = false
 )
 
+data class OverlayConfig(
+    val alpha: Float = 0f,
+    val consumeTouch: Boolean = true
+)
+
 val localKeyboardStyle = staticCompositionLocalOf<KeyboardThemeSpec> {
     error("No KeyboardStyle provided")
 }
@@ -90,6 +95,7 @@ fun KeyboardLayout(
     specialCandidates: Set<String> = emptySet(),
     animationConfig: AnimationConfig,
     overlay: (@Composable () -> Unit)? = null,
+    overlayConfig: OverlayConfig,
     onAnimationEnd: () -> Unit,
     onDeleteUp: () -> Unit,
     onCandidateClick: (Int) -> Unit,
@@ -402,7 +408,7 @@ fun KeyboardLayout(
                     Box(
                         modifier = Modifier
                             .fillMaxSize()
-                            .background(style.backgroundColor.copy(alpha = 1.0f)) // 可視暗背景
+                            .background(style.backgroundColor.copy(alpha = overlayConfig.alpha)) // 可視暗背景
                             .pointerInput(Unit) {
                                 awaitEachGesture {
                                     val down = awaitFirstDown()
