@@ -155,7 +155,13 @@ object KeyboardLayoutProvider {
                         ","
                     }
                 ),
-                KeySpec(" ", 32, type = KeyType.SPACE, icon = Icons.Default.SpaceBar, weight = 5f),
+                KeySpec(
+                    label = language.displayName,
+                    32,
+                    type = KeyType.SPACE,
+                    icon = Icons.Default.SpaceBar,
+                    weight = 5f
+                ),
                 KeySpec(
                     type = KeyType.INPUT, label = if (language == KeyboardLanguage.CHINESE) {
                         "。"
@@ -184,7 +190,13 @@ object KeyboardLayoutProvider {
                     label = "<",
                     altChars = listOf("<", "≤", "《", "〈", "【")
                 ),
-                KeySpec(" ", 32, type = KeyType.SPACE, icon = Icons.Default.SpaceBar, weight = 5f),
+                KeySpec(
+                    label = language.displayName,
+                    32,
+                    type = KeyType.SPACE,
+                    icon = Icons.Default.SpaceBar,
+                    weight = 5f
+                ),
                 KeySpec(
                     type = KeyType.INPUT,
                     label = ">",

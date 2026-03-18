@@ -9,7 +9,7 @@ data class ImeLanguage(
     val enabled: Boolean = false
 )
 
-enum class KeyboardLanguage {
-    ENGLISH,
-    CHINESE,
+enum class KeyboardLanguage(val displayName: String) {
+    ENGLISH("English"),
+    CHINESE("简中拼音"),
 }

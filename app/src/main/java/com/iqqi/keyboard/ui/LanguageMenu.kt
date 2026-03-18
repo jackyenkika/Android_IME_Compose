@@ -34,9 +34,11 @@ fun LanguageMenu(
         properties = PopupProperties(focusable = true)
     ) {
         Box {
-            // 半透明背景遮罩
+
+            // 🔹 半透明遮罩
             Box(
                 modifier = Modifier
+                    .matchParentSize()
                     .background(Color.Black.copy(alpha = 0.4f))
                     .clickable { onDismiss() }
             )
@@ -47,26 +49,69 @@ fun LanguageMenu(
                     .padding(16.dp),
                 shape = RoundedCornerShape(20.dp)
             ) {
+
                 LazyColumn(
                     modifier = Modifier
                         .width(280.dp)
                         .padding(vertical = 8.dp)
                 ) {
+
+                    // =========================
+                    // ✅ 1️⃣ Header
+                    // =========================
+
+                    item {
+                        Text(
+                            text = "Change Keyboard",
+                            modifier = Modifier
+                                .padding(horizontal = 20.dp, vertical = 12.dp),
+                            color = Color.Gray
+                        )
+                    }
+
+                    // =========================
+                    // ✅ 語言列表
+                    // =========================
+
                     items(languages) { lang ->
+
+                        val isCurrent = lang.locale == current?.locale
+
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
+                                .padding(horizontal = 8.dp, vertical = 4.dp)
+                                .background(
+                                    color = if (isCurrent)
+                                        Color(0xFFE8F0FE) // Gboard風格淡藍
+                                    else
+                                        Color.Transparent,
+                                    shape = RoundedCornerShape(16.dp)
+                                )
                                 .clickable { onSelect(lang) }
-                                .padding(horizontal = 20.dp, vertical = 14.dp),
+                                .padding(horizontal = 16.dp, vertical = 14.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
+
+                            // =========================
+                            // ✅ 2️⃣ 勾勾在最前面
+                            // =========================
+
+                            if (isCurrent) {
+                                Text(
+                                    "✓",
+                                    modifier = Modifier.padding(end = 12.dp)
+                                )
+                            } else {
+                                // 保持對齊
+                                Box(Modifier.width(20.dp))
+                            }
+
+                            // 語言名稱
                             Text(
-                                text = lang.name.name,
+                                text = lang.name.displayName,
                                 modifier = Modifier.weight(1f)
                             )
-                            if (lang.locale == current?.locale) {
-                                Text("✓")
-                            }
                         }
                     }
                 }

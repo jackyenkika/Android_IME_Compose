@@ -477,12 +477,16 @@ fun KeyboardKey(
         // 根據類型決定比例
         val multiplier = when (keyboardKey.type) {
             KeyType.INPUT -> 0.6f
-            KeyType.SYMBOL, KeyType.NEXT_SYMBOL -> 0.4f
+            KeyType.SYMBOL, KeyType.NEXT_SYMBOL -> 0.3f
+            KeyType.SPACE -> 0.2f
             else -> 1.0f // Icon 類型
         }
 
         when (keyboardKey.type) {
-            KeyType.INPUT, KeyType.SYMBOL, KeyType.NEXT_SYMBOL -> {
+            KeyType.INPUT,
+            KeyType.SYMBOL,
+            KeyType.NEXT_SYMBOL,
+            KeyType.SPACE -> {
                 val label = keyboardKey.label ?: ""
                 val fontSize = with(density) { (shortSideDp.toPx() * multiplier).toSp() }
 
@@ -490,7 +494,7 @@ fun KeyboardKey(
                     text = label,
                     color = textColor,
                     maxLines = 1,
-                    fontWeight = FontWeight.Medium,
+                    fontWeight = FontWeight.W500,
                     fontSize = fontSize,
                 )
             }
