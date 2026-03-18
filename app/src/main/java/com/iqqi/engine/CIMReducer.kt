@@ -80,15 +80,11 @@ class CIMReducer(
                 }
 
                 Key.Space -> {
-                    EngineState(
-                        commitText = " "
-                    )
+                    commit(" ")
                 }
 
                 Key.Enter -> {
-                    EngineState(
-                        commitText = "\n"
-                    )
+                    commit("\n")
                 }
             }
 
@@ -159,9 +155,10 @@ class CIMReducer(
 
             is Key.Enter -> {
                 if (state.composing.isEmpty()) {
-                    EngineState(commitText = "\n")
+                    commit("\n")
                 } else {
-                    EngineState(commitText = state.composing.replace("'", ""))
+                    val text = state.composing.replace("'", "")
+                    commit(text)
                 }
             }
         }
@@ -207,10 +204,10 @@ class CIMReducer(
 
                 val predict = dict.predict(commit)
 
-                EngineState(
-                    commitText = commit,
-                    predictingCandidates = predict,
-                    mode = if (predict.isEmpty()) InputMode.Idle else InputMode.Predicting
+                commit(
+                    text = commit,
+                    nextMode = if (predict.isEmpty()) InputMode.Idle else InputMode.Predicting,
+                    predict = predict
                 )
             }
 
@@ -245,15 +242,15 @@ class CIMReducer(
 
                     val predict = dict.predict(commit)
 
-                    EngineState(
-                        commitText = commit,
-                        predictingCandidates = predict,
-                        mode = if (predict.isEmpty()) InputMode.Idle else InputMode.Predicting
+                    commit(
+                        text = commit,
+                        nextMode = if (predict.isEmpty()) InputMode.Idle else InputMode.Predicting,
+                        predict = predict
                     )
                 }
 
                 Key.Enter -> {
-                    EngineState(commitText = "\n")
+                    commit(text = "\n")
                 }
             }
 
@@ -306,10 +303,10 @@ class CIMReducer(
 
         val predict = dict.predict(commit)
 
-        return EngineState(
-            commitText = commit,
-            predictingCandidates = predict,
-            mode = if (predict.isEmpty()) InputMode.Idle else InputMode.Predicting
+        return commit(
+            text = commit,
+            nextMode = if (predict.isEmpty()) InputMode.Idle else InputMode.Predicting,
+            predict = predict
         )
     }
 
@@ -322,9 +319,7 @@ class CIMReducer(
             return EngineState()
         }
 
-        return EngineState(
-            commitText = commit
-        )
+        return commit(commit)
     }
 
     private fun handleDelete(state: EngineState): EngineState {
@@ -355,6 +350,19 @@ class CIMReducer(
         // 沒 buffer -> 刪 editor 字
         return EngineState(
             deleteBeforeCursor = true
+        )
+    }
+
+
+    private fun commit(
+        text: String,
+        nextMode: InputMode = InputMode.Idle,
+        predict: List<String> = emptyList()
+    ): EngineState {
+        return EngineState(
+            commitText = text,
+            predictingCandidates = predict,
+            mode = nextMode
         )
     }
 }

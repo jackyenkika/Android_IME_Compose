@@ -12,6 +12,10 @@ data class KeyboardThemeSpec(
     //候選字區顏色
     val candidateBackgroundColor: Color,
     val candidateTextColor: Color,
+    val candidateTextBackgroundColor: List<Color>,
+
+    val candidateSpecialTextColor: Color,
+    val candidateSpecialTextBackgroundColor: List<Color>,
 
     //普通按鍵
     val keyBackgroundColor: Color,

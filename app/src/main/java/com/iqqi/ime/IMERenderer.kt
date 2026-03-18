@@ -30,6 +30,7 @@ class IMERenderer(
         // commit
         output.commitText?.let {
             ic.commitText(it, 1)
+            IMEStore.commitEvents.tryEmit(it)
         }
 
         // composing

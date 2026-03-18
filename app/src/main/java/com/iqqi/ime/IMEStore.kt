@@ -4,6 +4,7 @@ import com.iqqi.ime.util.LogObj
 import com.iqqi.keyboard.state.CandidateState
 import com.iqqi.keyboard.state.KeyboardState
 import com.iqqi.keyboard.state.StickerUiState
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
@@ -20,7 +21,9 @@ object IMEStore {
 
     val stickerState: StateFlow<StickerUiState> = _stickerState
 
-
+    val commitEvents = MutableSharedFlow<String>(
+        extraBufferCapacity = 64
+    )
     //===========================================
 
     fun updateKeyboardState(newState: KeyboardState) {

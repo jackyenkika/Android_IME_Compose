@@ -9,7 +9,8 @@ data class KeyboardState(
     val layoutConfig: LayoutConfig = LayoutConfig(),
     val inputType: Int = 0,
     val showLanguageMenu: Boolean = false,
-    val animationTick: Int = 0,
+    val animationShakeTick: Int = 0,
+    val animationTick: Boolean = false,
 )
 
 data class LayoutConfig(

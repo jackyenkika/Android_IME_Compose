@@ -15,11 +15,13 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
@@ -30,6 +32,7 @@ fun CandidateBar(
     modifier: Modifier = Modifier,
     candidateFontScale: Float,
     candidates: List<String>,
+    specialCandidates: Set<String>,
     functions: List<KeySpec>,
     onCandidateClick: (Int) -> Unit,
     onFunctionClick: (KeySpec) -> Unit
@@ -46,7 +49,7 @@ fun CandidateBar(
             val density = LocalDensity.current
             val maxHeightPx = with(density) { maxHeight.toPx() } // BoxWithConstraints 提供 maxHeight
             val fontSize = with(density) { (maxHeightPx * candidateFontScale).toSp() }
-            CandidateRow(candidates, fontSize, onCandidateClick)
+            CandidateRow(candidates, fontSize, specialCandidates, onCandidateClick)
         }
     }
 }
@@ -55,6 +58,7 @@ fun CandidateBar(
 private fun CandidateRow(
     candidates: List<String>,
     fontSize: TextUnit,
+    specialCandidates: Set<String>,
     onCandidateClick: (Int) -> Unit
 ) {
     val style = localKeyboardStyle.current
@@ -66,16 +70,22 @@ private fun CandidateRow(
     ) {
         itemsIndexed(candidates) { index, word ->
 
+            val isSpecial = specialCandidates.contains(word.lowercase())
+
             Box(
                 modifier = Modifier
                     .fillMaxHeight()
-                    .padding(horizontal = 12.dp)
-                    .clickable { onCandidateClick(index) },
-                contentAlignment = Alignment.Center
+                    .padding(horizontal = 12.dp, vertical = 4.dp)
+                    .background(
+                        brush = Brush.verticalGradient(if (isSpecial) style.candidateSpecialTextBackgroundColor else style.candidateTextBackgroundColor),
+                        shape = RoundedCornerShape(10.dp)
+                    )
+                    .clickable { onCandidateClick(index) }, contentAlignment = Alignment.Center
             ) {
                 Text(
+                    modifier = Modifier.padding(horizontal = 8.dp),
                     text = word,
-                    color = style.candidateTextColor,
+                    color = if (isSpecial) style.candidateSpecialTextColor else style.candidateTextColor,
                     fontSize = fontSize,
                     maxLines = 1
                 )
@@ -95,8 +105,7 @@ private fun CandidateRow(
 
 @Composable
 private fun FunctionRow(
-    functions: List<KeySpec>,
-    onFunctionClick: (KeySpec) -> Unit
+    functions: List<KeySpec>, onFunctionClick: (KeySpec) -> Unit
 ) {
     val style = localKeyboardStyle.current
 
@@ -111,8 +120,7 @@ private fun FunctionRow(
                 modifier = Modifier
                     .fillMaxHeight()
                     .padding(horizontal = 12.dp)
-                    .clickable { onFunctionClick(func) },
-                contentAlignment = Alignment.Center
+                    .clickable { onFunctionClick(func) }, contentAlignment = Alignment.Center
             ) {
                 Icon(
                     imageVector = func.icon!!,

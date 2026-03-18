@@ -2,6 +2,7 @@ package com.iqqi.keyboard.ui
 
 // KeyboardAnimation.kt 新增 Composable
 import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -16,7 +17,9 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.delay
+import kotlin.math.cos
 import kotlin.math.hypot
+import kotlin.math.sin
 
 @Composable
 fun EnterKeyAnimation(
@@ -42,7 +45,7 @@ fun EnterKeyAnimation(
         // 🎯 用對角線作為最大爆散距離
         val maxDist = hypot(maxW, maxH) * 0.7f
 
-        repeat(20) {
+        repeat(25) {
             GoalParticleImage(
                 images = confettiImages,
                 maxDistance = maxDist,
@@ -51,7 +54,7 @@ fun EnterKeyAnimation(
             )
         }
 
-        repeat(5) {
+        repeat(10) {
             GoalParticleImage(
                 images = footballImages,
                 maxDistance = maxDist * 0.8f,
@@ -91,17 +94,29 @@ private fun GoalParticleImage(
 
     val size = remember { rand(18.0, 42.0).toFloat() }
 
-    val delayMs = remember { rand(0.0, 150.0).toLong() }
+    val delayMs = remember { rand(0.0, 400.0).toLong() }
 
     LaunchedEffect(Unit) {
         delay(delayMs)
         progress.animateTo(
             1f,
-            animationSpec = tween(durationMillis = duration)
+            animationSpec = tween(
+                durationMillis = duration,
+                easing = FastOutSlowInEasing
+            )
         )
     }
 
-    val alpha = 1f - progress.value
+    val alpha = when {
+        progress.value < 0.15f -> progress.value / 0.15f   // 淡入
+        else -> 1f - progress.value                        // 淡出
+    }
+
+    val startRadius = remember { rand(0.0, maxDistance * 0.15) }
+    val startAngle = remember { Math.random() * Math.PI * 2 }
+
+    val startX = remember { cos(startAngle).toFloat() * startRadius.toFloat() }
+    val startY = remember { sin(startAngle).toFloat() * startRadius.toFloat() }
 
     Image(
         painter = painter,
@@ -109,8 +124,8 @@ private fun GoalParticleImage(
         modifier = Modifier
             .size(size.dp)
             .graphicsLayer {
-                translationX = endX * progress.value
-                translationY = endY * progress.value
+                translationX = startX + (endX - startX) * progress.value
+                translationY = startY + (endY - startY) * progress.value
                 rotationZ = (rotationEnd * progress.value).toFloat()
                 this.alpha = alpha
                 scaleX = 0.9f + 0.2f * (1f - progress.value)

@@ -87,11 +87,13 @@ fun KeyboardLayout(
     layout: List<List<KeySpec>>,
     candidates: List<String> = emptyList(),
     candidateFunctions: List<KeySpec> = emptyList(),
+    specialCandidates: Set<String> = emptySet(),
     animationConfig: AnimationConfig,
     overlay: (@Composable () -> Unit)? = null,
+    onAnimationEnd: () -> Unit,
     onDeleteUp: () -> Unit,
     onCandidateClick: (Int) -> Unit,
-    onKeyCommit: (KeySpec) -> Unit
+    onKeyCommit: (KeySpec) -> Unit,
 ) {
     val style = localKeyboardStyle.current
     val density = LocalDensity.current
@@ -220,6 +222,7 @@ fun KeyboardLayout(
                 modifier = Modifier.height(candidateBarHeight),
                 candidateFontScale = deviceConfig.candidateFontScale,
                 candidates = candidates,
+                specialCandidates = specialCandidates,
                 functions = candidateFunctions,
                 onCandidateClick = onCandidateClick,
                 onFunctionClick = onKeyCommit,
@@ -429,6 +432,7 @@ fun KeyboardLayout(
                     footballImages = footballImages
                 ) {
                     // 動畫結束後的回調，目前不需要特別處理
+                    onAnimationEnd()
                 }
             }
         }

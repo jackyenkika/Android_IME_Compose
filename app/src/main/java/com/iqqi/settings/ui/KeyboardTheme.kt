@@ -116,6 +116,15 @@ fun KeyboardTheme(
         candidateBackgroundColor = if (painter == null) colorScheme.surfaceVariant
         else colorScheme.surfaceVariant.copy(alpha = 0.2f),
         candidateTextColor = colorScheme.onSurfaceVariant,
+        candidateTextBackgroundColor = listOf(Color.Transparent, Color.Transparent),
+
+        candidateSpecialTextColor = Color(0xFF3A2F00),
+        candidateSpecialTextBackgroundColor = listOf(
+            Color(0xFFFFF6B0), // 高光
+            Color(0xFFFFD700), // 金色
+            Color(0xFFE6B800), // 暗金
+            Color(0xFFFFD700), // 回亮
+        ),
 
         keyBackgroundColor =
             if (painter == null) colorScheme.surface else colorScheme.surface.copy(alpha = 0.2f),

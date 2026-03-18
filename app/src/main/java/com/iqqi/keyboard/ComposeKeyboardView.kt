@@ -13,9 +13,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.AbstractComposeView
 import androidx.compose.ui.platform.LocalConfiguration
@@ -37,7 +35,6 @@ import com.iqqi.keyboard.ui.KeyboardSizeCalculator
 import com.iqqi.keyboard.ui.LanguageMenu
 import com.iqqi.keyboard.ui.StickerPanel
 import com.iqqi.settings.ui.KeyboardTheme
-import kotlinx.coroutines.delay
 
 class ComposeKeyboardView(
     context: Context,
@@ -66,6 +63,10 @@ class ComposeKeyboardView(
 
         val canUseSticker = ime.canCommitSticker()
 
+        val specialCandidates = remember {
+            setOf("goal", "football", "worldcup")
+        }
+
         // 1️⃣ 取得所有語言
         val allLanguages = remember { IMEService.getAvailableLanguages(context) }
 
@@ -87,25 +88,27 @@ class ComposeKeyboardView(
             IMEStore.updateKeyboardState(newState)
         }
 
+        LaunchedEffect(Unit) {
+
+            IMEStore.commitEvents.collect { word ->
+//                LogObj.trace("commit event = $word")
+                if (specialCandidates.contains(word.lowercase())) {
+
+                    val newState = keyboardState.copy(animationTick = true)
+                    IMEStore.updateKeyboardState(newState)
+                }
+            }
+        }
+
         // 專門給 shake / enter overlay 的 state
         val shakeOffset = remember { androidx.compose.animation.core.Animatable(0f) }
-        var enterOverlayVisible by remember { mutableStateOf(false) }
-
-        LogObj.trace("showAnimation now = ${keyboardState.animationTick}")
-        LaunchedEffect(keyboardState.animationTick) {
-            if (keyboardState.animationTick == 0) return@LaunchedEffect
-            enterOverlayVisible = true
-
+        LaunchedEffect(keyboardState.animationShakeTick) {
+            if (keyboardState.animationShakeTick == 0) return@LaunchedEffect
             // Shake 動畫
             val shakeAnim = listOf(0f, -10f, 10f, -5f, 5f, 0f)
             for (v in shakeAnim) {
                 shakeOffset.animateTo(v, tween(40))
             }
-            // 保持泡泡 overlay 一小段時間
-            delay(250)
-
-            // 結束動畫
-            enterOverlayVisible = false
         }
 
         val deviceConfig = remember(
@@ -130,6 +133,7 @@ class ComposeKeyboardView(
                 deviceConfig = deviceConfig,
                 layout = layout,
                 candidates = candidateState.candidates,
+                specialCandidates = specialCandidates,
                 candidateFunctions = if (stickerState.visible) {
                     listOf(
                         KeySpec(type = KeyType.BACK, icon = Icons.Default.ArrowBackIosNew)
@@ -147,7 +151,7 @@ class ComposeKeyboardView(
                 },
                 animationConfig = AnimationConfig(
                     shakeOffset = shakeOffset.value,
-                    showAnimation = enterOverlayVisible
+                    showAnimation = keyboardState.animationTick
                 ),
                 overlay = if (stickerState.visible) {
                     {
@@ -162,17 +166,25 @@ class ComposeKeyboardView(
                     }
                 } else null,
                 onDeleteUp = { ime.onDeleteKeyUp() },
+                onAnimationEnd = {
+                    if (keyboardState.animationTick) {
+                        val newState = keyboardState.copy(animationTick = false)
+                        IMEStore.updateKeyboardState(newState)
+                    }
+                },
                 onCandidateClick = { index ->
                     ime.dispatch(ImeAction.SelectCandidate(index))
                 },
-            ) { key ->
-                if (key.type == KeyType.DELETE) {
-                    ime.onDeleteKeyDown()
-                } else {
-                    val newState = controller.onKey(key, keyboardState)
-                    IMEStore.updateKeyboardState(newState)
+                onKeyCommit = { key ->
+                    when (key.type) {
+                        KeyType.DELETE -> ime.onDeleteKeyDown()
+                        else -> {
+                            val newState = controller.onKey(key, keyboardState)
+                            IMEStore.updateKeyboardState(newState)
+                        }
+                    }
                 }
-            }
+            )
 
             if (keyboardState.showLanguageMenu) {
                 LogObj.trace("languages = $languages")

@@ -30,7 +30,7 @@ class KeyboardController(
                 if (key.iconDrawable != null && !key.iconDrawable.isExpired()) {
                     LogObj.trace("Enter key with animation triggered")
                     return state.copy(
-                        animationTick = state.animationTick + 1
+                        animationShakeTick = state.animationShakeTick + 1
                     )
                 }
             }
