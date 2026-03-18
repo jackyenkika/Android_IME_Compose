@@ -82,7 +82,15 @@ class CIMReducer(
                 }
 
                 Key.Space -> {
-                    commit(" ")
+                    if (isNeedAppendSpace() && state.lastTextWasSpace()) {
+                        EngineState(
+                            deleteBeforeCursor = true, // 刪掉上一個空格
+                            commitText = ". ",
+                            mode = InputMode.Idle
+                        )
+                    } else {
+                        commit(" ")
+                    }
                 }
 
                 Key.Enter -> {
@@ -230,20 +238,25 @@ class CIMReducer(
                 }
 
                 Key.Space -> {
-                    var commit = state.predictingCandidates.firstOrNull()
-                        ?: return EngineState(commitText = " ")
+                    if (language == KeyboardLanguage.ENGLISH) {
+                        commit(text = " ")
+                    } else {
+                        //選取預測候選字的邏輯
+                        var commit = state.predictingCandidates.firstOrNull()
+                            ?: return EngineState(commitText = " ")
 
-                    if (isNeedAppendSpace()) {
-                        commit = "$commit "
+                        if (isNeedAppendSpace()) {
+                            commit = "$commit "
+                        }
+
+                        val predict = dict.predict(commit.trim())
+
+                        commit(
+                            text = commit,
+                            nextMode = if (predict.isEmpty()) InputMode.Idle else InputMode.Predicting,
+                            predict = predict
+                        )
                     }
-
-                    val predict = dict.predict(commit.trim())
-
-                    commit(
-                        text = commit,
-                        nextMode = if (predict.isEmpty()) InputMode.Idle else InputMode.Predicting,
-                        predict = predict
-                    )
                 }
 
                 Key.Enter -> {
@@ -367,5 +380,10 @@ class CIMReducer(
             KeyboardLanguage.ENGLISH -> true
             else -> false
         }
+    }
+
+    private fun EngineState.lastTextWasSpace(): Boolean {
+        // 判斷上一次 commit 到系統的文字是否為單一空格
+        return this.commitText == " "
     }
 }

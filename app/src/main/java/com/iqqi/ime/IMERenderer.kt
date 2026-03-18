@@ -24,24 +24,52 @@ data class CommitContext(
 )
 
 class SmartCommitProcessor {
-
-    private val autoSpacePunctuation =
-        setOf(",", ".", "!", "?", ":", ";")
+    private val autoSpacePunctuation = setOf(",", ".", "!", "?", ":", ";")
+    private var lastSpaceTimestamp: Long = 0L
+    private val DOUBLE_SPACE_INTERVAL = 700L
 
     fun process(
-        ctx: CommitContext
+        ctx: CommitContext,
+        onDoubleSpaceTriggered: () -> Unit
     ): String {
-
+        val currentTime = System.currentTimeMillis()
         var text = ctx.text
 
-        // Auto-space after punctuation
-        if (ctx.language == KeyboardLanguage.ENGLISH &&
-            text in autoSpacePunctuation &&
-            ctx.beforeCursor != " "
-        ) {
-            text += " "
-        }
+        if (ctx.language == KeyboardLanguage.ENGLISH) {
+            // 情況 A: 這次只輸入一個純空格 (通常是第二次按空格時)
+            if (text == " ") {
+                val len = ctx.beforeCursor.length
+                val lastChar = if (len >= 1) ctx.beforeCursor[len - 1] else null
+                val secondLastChar = if (len >= 2) ctx.beforeCursor[len - 2] else null
 
+                val isQuickDoubleTap = (currentTime - lastSpaceTimestamp) < DOUBLE_SPACE_INTERVAL
+
+                if (lastChar == ' ' &&
+                    secondLastChar != null &&
+                    !autoSpacePunctuation.contains(secondLastChar.toString()) &&
+                    secondLastChar != ' ' &&
+                    isQuickDoubleTap
+                ) {
+                    lastSpaceTimestamp = 0L // 觸發後重置
+                    onDoubleSpaceTriggered()
+                    return ". "
+                }
+                lastSpaceTimestamp = currentTime
+            }
+            // 情況 B: 這次輸入的字串是以空格結尾 (例如 "game ")
+            else if (text.endsWith(" ")) {
+                lastSpaceTimestamp = currentTime
+            }
+            // 情況 C: 其他字元
+            else {
+                lastSpaceTimestamp = 0L
+            }
+
+            // 標點符號後補空格邏輯
+            if (text in autoSpacePunctuation && !ctx.beforeCursor.endsWith(" ")) {
+                text += " "
+            }
+        }
         return text
     }
 }
@@ -63,7 +91,7 @@ class IMERenderer(
         // commit
         output.commitText?.let { raw ->
 
-            val before = ic.getTextBeforeCursor(1, 0)
+            val before = ic.getTextBeforeCursor(2, 0)
                 ?.toString()
                 ?: ""
 
@@ -73,7 +101,13 @@ class IMERenderer(
                 language = language
             )
 
-            val finalText = processor.process(ctx)
+            val finalText = processor.process(
+                ctx = ctx,
+                onDoubleSpaceTriggered = {
+                    // 關鍵：如果觸發了雙擊空格，就在 commit ". " 之前先刪除畫面上那個空格
+                    ic.deleteSurroundingText(1, 0)
+                }
+            )
 
             ic.commitText(finalText, 1)
 
