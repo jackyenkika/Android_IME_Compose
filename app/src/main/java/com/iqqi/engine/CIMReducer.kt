@@ -153,7 +153,10 @@ class CIMReducer(
                 if (state.composing.isEmpty()) {
                     commit("\n")
                 } else {
-                    val text = state.composing.replace("'", "")
+                    var text = state.composing
+                    if (language == KeyboardLanguage.CHINESE) {
+                        text = text.replace("'", "")
+                    }
                     commit(text)
                 }
             }
