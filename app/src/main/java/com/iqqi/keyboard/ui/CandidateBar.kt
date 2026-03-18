@@ -2,6 +2,7 @@ package com.iqqi.keyboard.ui
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.PaddingValues
@@ -19,6 +20,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
@@ -80,7 +82,10 @@ private fun CandidateRow(
                         brush = Brush.verticalGradient(if (isSpecial) style.candidateSpecialTextBackgroundColor else style.candidateTextBackgroundColor),
                         shape = RoundedCornerShape(10.dp)
                     )
-                    .clickable { onCandidateClick(index) }, contentAlignment = Alignment.Center
+                    .clickable(
+                        interactionSource = remember { MutableInteractionSource() },
+                        indication = null // 禁用 ripple
+                    ) { onCandidateClick(index) }, contentAlignment = Alignment.Center
             ) {
                 Text(
                     modifier = Modifier.padding(horizontal = 8.dp),
@@ -120,8 +125,11 @@ private fun FunctionRow(
                 modifier = Modifier
                     .fillMaxHeight()
                     .padding(horizontal = 12.dp)
-                    .clickable { onFunctionClick(func) }, contentAlignment = Alignment.Center
-            ) {
+                    .then(
+                        if (func.isEnable) {
+                            Modifier.clickable { onFunctionClick(func) }
+                        } else Modifier // 不可點擊
+                    ), contentAlignment = Alignment.Center) {
                 Icon(
                     imageVector = func.icon!!,
                     contentDescription = null,

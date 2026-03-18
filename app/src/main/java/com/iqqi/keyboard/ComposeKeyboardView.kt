@@ -92,7 +92,7 @@ class ComposeKeyboardView(
 
             IMEStore.commitEvents.collect { word ->
 //                LogObj.trace("commit event = $word")
-                if (specialCandidates.contains(word.lowercase())) {
+                if (specialCandidates.contains(word.lowercase().trim())) {
 
                     val newState = keyboardState.copy(animationTick = true)
                     IMEStore.updateKeyboardState(newState)
