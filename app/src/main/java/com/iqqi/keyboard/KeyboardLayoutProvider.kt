@@ -1,9 +1,7 @@
 package com.iqqi.keyboard
 
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Backspace
-import androidx.compose.material.icons.filled.EmojiEmotions
 import androidx.compose.material.icons.filled.KeyboardReturn
 import androidx.compose.material.icons.filled.SpaceBar
 import com.iqqi.ime.BuildConfig
@@ -11,6 +9,7 @@ import com.iqqi.ime.R
 import com.iqqi.keyboard.model.IconImage
 import com.iqqi.keyboard.model.KeySpec
 import com.iqqi.keyboard.model.KeyType
+import com.iqqi.keyboard.model.KeyboardLanguage
 import com.iqqi.keyboard.model.KeyboardMode
 import com.iqqi.keyboard.state.LayoutConfig
 import com.iqqi.keyboard.state.ShiftState
@@ -18,9 +17,7 @@ import com.iqqi.keyboard.state.ShiftState
 object KeyboardLayoutProvider {
     private val numberRow = "1234567890"
     private val letterRowsBase = listOf(
-        "qwertyuiop",
-        "asdfghjkl",
-        "zxcvbnm"
+        "qwertyuiop", "asdfghjkl", "zxcvbnm"
     )
 
     val symbolPageCount
@@ -28,18 +25,16 @@ object KeyboardLayoutProvider {
     private val symbolPages = listOf(
 
         listOf(
-            "123~#@$%^&",
-            "456?!,._\"\'",
-            "789:;=-+*/",
-            "0[]{}<>\\"
+            "1234567890",
+            "@#\$_&-+()/",
+            "*\"\':;!?",
         ),
 
-//        listOf(
-//            "¡¿€¢£¥",
-//            "§©®™✓",
-//            "←↑→↓",
-//            "°•○●"
-//        )
+        listOf(
+            "~`|•√π÷×§∆",
+            "£¢€¥^°={}\\",
+            "%©®™✓[]",
+        )
     )
 
     private val altMap = mapOf(
@@ -54,7 +49,7 @@ object KeyboardLayoutProvider {
         return altMap[c.lowercaseChar()] ?: emptyList()
     }
 
-    fun create(config: LayoutConfig): List<List<KeySpec>> {
+    fun create(config: LayoutConfig, language: KeyboardLanguage): List<List<KeySpec>> {
 
         val rows = mutableListOf<List<KeySpec>>()
 
@@ -82,31 +77,25 @@ object KeyboardLayoutProvider {
         }
 
         // 3️⃣ 功能列
-        rows += createBottomRow(config)
+        rows += createBottomRow(config, language)
 
         return rows
     }
 
     private fun createCharRow(
-        chars: String,
-        config: LayoutConfig,
-        lastRow: Boolean
+        chars: String, config: LayoutConfig, lastRow: Boolean
     ): List<KeySpec> {
         val rowKeys = mutableListOf<KeySpec>()
         if (lastRow && config.hasShift && config.mode == KeyboardMode.LETTERS) {
             rowKeys.add(
                 KeySpec(
-                    type = KeyType.SHIFT,
-                    iconDrawable = IconImage(
-                        "shift",
-                        when (config.shiftState) {
+                    type = KeyType.SHIFT, iconDrawable = IconImage(
+                        "shift", when (config.shiftState) {
                             ShiftState.CAPS_LOCK -> R.drawable.img_shift_lock
                             ShiftState.ON -> R.drawable.img_shift_once
                             else -> R.drawable.img_shift_unused
-                        },
-                        null
-                    ),
-                    weight = 1.5f
+                        }, null
+                    ), weight = 1.5f
                 ),
             )
         }
@@ -114,7 +103,8 @@ object KeyboardLayoutProvider {
             rowKeys.add(
                 KeySpec(
                     type = KeyType.NEXT_SYMBOL,
-                    label = "${config.pageIndex + 1}/${symbolPages.size}"
+                    label = "${config.pageIndex + 1}/${symbolPages.size}",
+                    weight = 1.5f
                 ),
             )
         }
@@ -122,8 +112,7 @@ object KeyboardLayoutProvider {
 
             val finalChar = when (config.shiftState) {
                 ShiftState.OFF -> c.lowercaseChar()
-                ShiftState.ON,
-                ShiftState.CAPS_LOCK -> c.uppercaseChar()
+                ShiftState.ON, ShiftState.CAPS_LOCK -> c.uppercaseChar()
             }
 
             KeySpec(
@@ -138,7 +127,7 @@ object KeyboardLayoutProvider {
                     type = KeyType.DELETE,
                     icon = Icons.Default.Backspace,
                     isRepeatable = true,
-                    weight = if (config.mode == KeyboardMode.SYMBOLS) 1f else 1.5f
+                    weight = 1.5f
                 )
             )
 
@@ -147,27 +136,69 @@ object KeyboardLayoutProvider {
     }
 
     private fun createBottomRow(
-        config: LayoutConfig
+        config: LayoutConfig, language: KeyboardLanguage
     ): List<KeySpec> {
-        return listOf(
-            KeySpec(type = KeyType.CANCEL, icon = Icons.Default.ArrowDropDown, weight = 1.5f),
+        //            KeySpec(type = KeyType.CANCEL, icon = Icons.Default.ArrowDropDown, weight = 1.5f),
 //            KeySpec(type = KeyType.SETTINGS, icon = Icons.Default.Settings),
 //            KeySpec(type = KeyType.LANGUAGE, icon = Icons.Default.Language),
-            KeySpec(type = KeyType.EMOJI, icon = Icons.Default.EmojiEmotions),
-            KeySpec(" ", 32, type = KeyType.SPACE, icon = Icons.Default.SpaceBar, weight = 5f),
-            KeySpec(
-                type = KeyType.SYMBOL,
-                label = if (config.mode == KeyboardMode.LETTERS) "?12" else "ABC",
-            ),
-            KeySpec(
-                type = KeyType.ENTER,
-                icon = Icons.Default.KeyboardReturn,
-                iconDrawable = IconImage(
-                    "FIFA soccer",
-                    R.drawable.ic_soccer,
-                    BuildConfig.Fifa2026ExpireDate
-                ), weight = 1.5f
+        return if (config.mode == KeyboardMode.LETTERS) {
+            listOf(
+                KeySpec(
+                    type = KeyType.SYMBOL,
+                    label = "?123",
+                    weight = 1.5f
+                ),
+                KeySpec(
+                    type = KeyType.INPUT, label = if (language == KeyboardLanguage.CHINESE) {
+                        "，"
+                    } else {
+                        ","
+                    }
+                ),
+                KeySpec(" ", 32, type = KeyType.SPACE, icon = Icons.Default.SpaceBar, weight = 5f),
+                KeySpec(
+                    type = KeyType.INPUT, label = if (language == KeyboardLanguage.CHINESE) {
+                        "。"
+                    } else {
+                        "."
+                    }
+                ),
+                KeySpec(
+                    type = KeyType.ENTER,
+                    icon = Icons.Default.KeyboardReturn,
+                    iconDrawable = IconImage(
+                        "FIFA soccer", R.drawable.ic_soccer, BuildConfig.Fifa2026ExpireDate
+                    ),
+                    weight = 1.5f
+                )
             )
-        )
+        } else {
+            listOf(
+                KeySpec(
+                    type = KeyType.SYMBOL,
+                    label = "ABC",
+                    weight = 1.5f
+                ),
+                KeySpec(
+                    type = KeyType.INPUT,
+                    label = "<",
+                    altChars = listOf("<", "≤", "《", "〈", "【")
+                ),
+                KeySpec(" ", 32, type = KeyType.SPACE, icon = Icons.Default.SpaceBar, weight = 5f),
+                KeySpec(
+                    type = KeyType.INPUT,
+                    label = ">",
+                    altChars = listOf(">", "≥", "》", "〉", "】")
+                ),
+                KeySpec(
+                    type = KeyType.ENTER,
+                    icon = Icons.Default.KeyboardReturn,
+                    iconDrawable = IconImage(
+                        "FIFA soccer", R.drawable.ic_soccer, BuildConfig.Fifa2026ExpireDate
+                    ),
+                    weight = 1.5f
+                )
+            )
+        }
     }
 }

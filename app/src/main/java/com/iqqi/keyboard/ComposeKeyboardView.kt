@@ -123,8 +123,8 @@ class ComposeKeyboardView(
             )
         }
 
-        val layout = remember(keyboardState.layoutConfig) {
-            KeyboardLayoutProvider.create(keyboardState.layoutConfig)
+        val layout = remember(keyboardState.layoutConfig, currentLanguage.name) {
+            KeyboardLayoutProvider.create(keyboardState.layoutConfig, currentLanguage.name)
         }
         KeyboardTheme(
             themeColor = themeColor, backgroundImage = keyboardBackgroundImage
