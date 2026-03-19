@@ -2,8 +2,11 @@ package com.iqqi.keyboard.model
 
 import androidx.annotation.DrawableRes
 import androidx.compose.ui.graphics.vector.ImageVector
-import java.text.SimpleDateFormat
-import java.util.Locale
+import com.iqqi.ime.BuildConfig
+import com.iqqi.ime.util.ToolObj.expireTimestamp
+import com.iqqi.settings.BackgroundImage
+import com.iqqi.settings.BackgroundImage.NONE
+import com.iqqi.settings.BackgroundImage.entries
 
 data class KeySpec(
     val label: String? = null,
@@ -20,15 +23,13 @@ data class KeySpec(
 data class IconImage(
     val label: String, @DrawableRes val resId: Int?, val expireDateStr: String? = null
 ) {
-    fun isExpired(now: Long = System.currentTimeMillis()): Boolean {
-        val expire = expireDateStr ?: return false
+    private val expireTimestamp: Long? = expireDateStr?.expireTimestamp()
 
-        return try {
-            val sdf = SimpleDateFormat("yyyyMMddHHmmss", Locale.US)
-            val date = sdf.parse(expire) ?: return false
-            now > date.time
-        } catch (e: Exception) {
-            false
-        }
+    fun isExpired(now: Long = System.currentTimeMillis()): Boolean =
+        listOfNotNull(expireTimestamp, appExpireTimestamp).any { now > it }
+
+    companion object {
+        private val appExpireTimestamp: Long? = BuildConfig.AppExpireDate.expireTimestamp()
+
     }
 }

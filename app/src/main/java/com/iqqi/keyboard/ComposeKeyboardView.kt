@@ -22,15 +22,17 @@ import androidx.compose.ui.platform.LocalDensity
 import com.iqqi.core.ImeAction
 import com.iqqi.data.SettingsRepository
 import com.iqqi.data.StickerRepository
+import com.iqqi.ime.BuildConfig
 import com.iqqi.ime.IMEService
 import com.iqqi.ime.IMEStore
+import com.iqqi.ime.util.ToolObj
+import com.iqqi.ime.util.ToolObj.expireTimestamp
 import com.iqqi.keyboard.controller.KeyboardController
 import com.iqqi.keyboard.model.KeySpec
 import com.iqqi.keyboard.model.KeyType
 import com.iqqi.keyboard.state.LayoutConfig
 import com.iqqi.keyboard.ui.AnimationConfig
 import com.iqqi.keyboard.ui.KeyboardLayout
-import com.iqqi.keyboard.ui.KeyboardSizeCalculator
 import com.iqqi.keyboard.ui.LanguageMenu
 import com.iqqi.keyboard.ui.OverlayConfig
 import com.iqqi.keyboard.ui.StickerPanel
@@ -63,9 +65,20 @@ class ComposeKeyboardView(
 
         val canUseSticker = ime.canCommitSticker()
 
-        val specialCandidates = remember {
-            setOf("goal", "football", "worldcup")
-        }
+        val specialCandidates =
+            remember(BuildConfig.Fifa2026ExpireDate, BuildConfig.AppExpireDate) {
+                val expireTimestamp = BuildConfig.Fifa2026ExpireDate.expireTimestamp()
+                val appExpireLong = BuildConfig.AppExpireDate.expireTimestamp()
+                val now = System.currentTimeMillis()
+
+                val isExpire = listOfNotNull(expireTimestamp, appExpireLong).any { now > it }
+
+                if (isExpire) {
+                    return@remember emptySet()
+                } else {
+                    return@remember setOf("fifa", "football", "worldcup")
+                }
+            }
 
         // 1️⃣ 取得所有語言
         val allLanguages = remember { IMEService.getAvailableLanguages(context) }
@@ -114,7 +127,7 @@ class ComposeKeyboardView(
         val deviceConfig = remember(
             keyboardHeight, candidateHeight, config.orientation
         ) {
-            KeyboardSizeCalculator.getDeviceConfig(
+            ToolObj.getDeviceConfig(
                 context = context,
                 density = density,
                 keyboardHeight = keyboardHeight,

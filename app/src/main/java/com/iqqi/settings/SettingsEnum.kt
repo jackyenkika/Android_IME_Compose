@@ -3,8 +3,7 @@ package com.iqqi.settings
 import androidx.annotation.DrawableRes
 import com.iqqi.ime.BuildConfig
 import com.iqqi.ime.R
-import java.text.SimpleDateFormat
-import java.util.Locale
+import com.iqqi.ime.util.ToolObj.expireTimestamp
 
 enum class KeyboardHeight(val horizontalScale: Float, val verticalScale: Float) {
     SMALL(0.55f, 0.25f),
@@ -55,20 +54,17 @@ enum class BackgroundImage(
     ),
     ;
 
-    private val expireTimestamp: Long? = expireDateStr?.let {
-        try {
-            SimpleDateFormat("yyyyMMddHHmmss", Locale.US).parse(it)?.time
-        } catch (e: Exception) {
-            null
-        }
-    }
+    private val expireTimestamp: Long? = expireDateStr?.expireTimestamp()
 
     fun isExpired(now: Long = System.currentTimeMillis()): Boolean =
-        expireTimestamp?.let { now > it } ?: false
+        listOfNotNull(expireTimestamp, appExpireTimestamp)
+            .any { now > it }
 
     fun isAvailable(): Boolean = !isExpired()
 
     companion object {
+        private val appExpireTimestamp: Long? = BuildConfig.AppExpireDate.expireTimestamp()
+
         fun availableEntries(): List<BackgroundImage> = entries.filter { it.isAvailable() }
         fun fallback(): BackgroundImage = NONE
     }
