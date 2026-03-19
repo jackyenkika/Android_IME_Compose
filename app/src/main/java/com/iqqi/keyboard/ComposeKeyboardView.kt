@@ -38,6 +38,7 @@ import com.iqqi.keyboard.ui.OverlayConfig
 import com.iqqi.keyboard.ui.StickerPanel
 import com.iqqi.settings.ui.KeyboardTheme
 
+@Suppress("ViewConstructor")
 class ComposeKeyboardView(
     context: Context,
     private val repository: SettingsRepository,
@@ -72,11 +73,10 @@ class ComposeKeyboardView(
                 val now = System.currentTimeMillis()
 
                 val isExpire = listOfNotNull(expireTimestamp, appExpireLong).any { now > it }
-
                 if (isExpire) {
                     return@remember emptySet()
                 } else {
-                    return@remember setOf("fifa", "football", "worldcup")
+                    return@remember setOf("goal", "football", "worldcup")
                 }
             }
 
@@ -115,8 +115,8 @@ class ComposeKeyboardView(
 
         // 專門給 shake / enter overlay 的 state
         val shakeOffset = remember { androidx.compose.animation.core.Animatable(0f) }
-        LaunchedEffect(keyboardState.animationShakeTick) {
-            if (keyboardState.animationShakeTick == 0) return@LaunchedEffect
+        LaunchedEffect(keyboardState.animationShakeTick, keyboardState.animationTick) {
+            if (keyboardState.animationShakeTick == 0 && !keyboardState.animationTick) return@LaunchedEffect
             // Shake 動畫
             val shakeAnim = listOf(0f, -10f, 10f, -5f, 5f, 0f)
             for (v in shakeAnim) {
