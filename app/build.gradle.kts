@@ -119,7 +119,8 @@ dependencies {
     implementation(libs.androidx.savedstate.ktx)
     implementation(libs.androidx.lifecycle.service)
 
-    implementation("io.coil-kt:coil-compose:2.6.0")
+    implementation(libs.androidx.lifecycle.viewmodel.compose)
+    implementation("io.coil-kt:coil-compose:2.7.0")
 
     implementation(project(":kika-t9-engine-library"))
     implementation(project(":kika-pinyin-engine-library"))

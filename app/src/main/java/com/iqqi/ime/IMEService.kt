@@ -1,11 +1,9 @@
 package com.iqqi.ime
 
-import android.content.Context
 import android.view.KeyEvent
 import android.view.View
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
-import android.view.inputmethod.InputMethodSubtype
 import androidx.core.view.inputmethod.EditorInfoCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.ViewModelStore
@@ -21,8 +19,8 @@ import com.iqqi.core.ImeAction
 import com.iqqi.dictionary.CimDictionary
 import com.iqqi.dictionary.Dictionary
 import com.iqqi.dictionary.KikaDictionary
-import com.iqqi.engine.IMEReducer
 import com.iqqi.engine.IMEEngine
+import com.iqqi.engine.IMEReducer
 import com.iqqi.ime.util.DeleteRepeater
 import com.iqqi.ime.util.LogObj
 import com.iqqi.keyboard.ComposeKeyboardView
@@ -75,7 +73,8 @@ class IMEService : LifecycleInputMethodService(), ViewModelStoreOwner, SavedStat
 
         val view = ComposeKeyboardView(
             context = this,
-            repository = container.settingsRepository,
+            settingRepository = container.settingsRepository,
+            languageRepository = container.languageRepository,
             stickerRepository = container.stickerRepository
         )
 
@@ -95,7 +94,7 @@ class IMEService : LifecycleInputMethodService(), ViewModelStoreOwner, SavedStat
         IMEStore.clearCandidate()
 
         val lastLocale = runBlocking { container.settingsRepository.lastUsedLanguageFlow.first() }
-        val allLanguages = getAvailableLanguages(this)
+        val allLanguages = container.languageRepository.getAvailableLanguages()
         val lang = allLanguages.firstOrNull { it.locale == lastLocale } ?: allLanguages.first()
 
         createEngine(lang)
@@ -103,6 +102,7 @@ class IMEService : LifecycleInputMethodService(), ViewModelStoreOwner, SavedStat
             IMEStore.keyboardState.value.copy(
                 language = lang,
                 inputType = attributes.inputType,
+                showLanguageMenu = false,
                 animationShakeTick = 0,
                 animationTick = false,
             )
@@ -176,7 +176,7 @@ class IMEService : LifecycleInputMethodService(), ViewModelStoreOwner, SavedStat
         val dictionary = getDictionary(language.name)
 
         engine = IMEEngine(
-            reducer = IMEReducer(this@IMEService,language = language.name, dictionary)
+            reducer = IMEReducer(this@IMEService, language = language.name, dictionary)
         )
 
         inputDispatcher = InputDispatcher(
@@ -258,40 +258,6 @@ class IMEService : LifecycleInputMethodService(), ViewModelStoreOwner, SavedStat
             androidx.core.view.inputmethod.InputConnectionCompat.INPUT_CONTENT_GRANT_READ_URI_PERMISSION,
             null
         )
-    }
-    //=========================================================
-
-    companion object {
-        fun getAvailableLanguages(context: Context): List<ImeLanguage> {
-            val imm = context.getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager
-            val imi =
-                imm.enabledInputMethodList.firstOrNull { it.packageName == context.packageName }
-                    ?: return emptyList()
-
-            val subtypes = mutableListOf<InputMethodSubtype>()
-            imm.inputMethodList.forEach { imiInfo ->
-                if (imiInfo.packageName == context.packageName) {
-                    val count = imiInfo.subtypeCount
-                    for (i in 0 until count) {
-                        subtypes.add(imiInfo.getSubtypeAt(i))
-                    }
-                }
-            }
-
-            return subtypes.map { subtype ->
-                val locale = subtype.locale
-                val language = when {
-                    locale.startsWith("zh") -> KeyboardLanguage.CHINESE
-                    else -> KeyboardLanguage.ENGLISH
-                }
-                ImeLanguage(
-                    name = language,
-                    locale = locale,
-                    subtype = subtype,
-                    enabled = imm.getEnabledInputMethodSubtypeList(imi, true)
-                        .any { it.locale == locale })
-            }
-        }
     }
     //=========================================================
 }

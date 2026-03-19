@@ -1,10 +1,9 @@
 package com.iqqi.settings
 
-import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.iqqi.data.LanguageRepository
 import com.iqqi.data.SettingsRepository
-import com.iqqi.ime.IMEService
 import com.iqqi.ime.util.LogObj
 import com.iqqi.keyboard.model.ImeLanguage
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -16,7 +15,7 @@ import kotlinx.coroutines.launch
 
 class SettingsViewModel(
     private val repository: SettingsRepository,
-    private val context: Context
+    private val languageRepository: LanguageRepository
 ) : ViewModel() {
 
     private val _availableLanguages = MutableStateFlow<List<ImeLanguage>>(emptyList())
@@ -28,7 +27,7 @@ class SettingsViewModel(
             val enabledLocales = repository.enabledLanguagesFlow.first()
 
             // 第一次安裝，沒有任何語言時
-            val allLanguages = IMEService.getAvailableLanguages(context)
+            val allLanguages = languageRepository.getAvailableLanguages()
             val defaultLocales = allLanguages.mapNotNull { it.locale }.toSet()
 
             LogObj.trace("allLanguages = $allLanguages , defaultLocales= $defaultLocales , enabledLocales = $enabledLocales")
@@ -48,7 +47,7 @@ class SettingsViewModel(
         // 監聽 DataStore 的變化
         viewModelScope.launch {
             repository.enabledLanguagesFlow.collect { enabledLocales ->
-                val allLanguages = IMEService.getAvailableLanguages(context)
+                val allLanguages = languageRepository.getAvailableLanguages()
                 _availableLanguages.value = allLanguages.map { lang ->
                     lang.copy(enabled = lang.locale in enabledLocales)
                 }

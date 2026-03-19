@@ -20,6 +20,7 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import com.iqqi.core.ImeAction
+import com.iqqi.data.LanguageRepository
 import com.iqqi.data.SettingsRepository
 import com.iqqi.data.StickerRepository
 import com.iqqi.ime.BuildConfig
@@ -41,7 +42,8 @@ import com.iqqi.settings.ui.KeyboardTheme
 @Suppress("ViewConstructor")
 class ComposeKeyboardView(
     context: Context,
-    private val repository: SettingsRepository,
+    private val settingRepository: SettingsRepository,
+    private val languageRepository: LanguageRepository,
     private val stickerRepository: StickerRepository
 ) : AbstractComposeView(context) {
 
@@ -51,11 +53,13 @@ class ComposeKeyboardView(
         val density = LocalDensity.current
         val config = LocalConfiguration.current
 
-        val showDigital by repository.enableDigitalFlow.collectAsState(initial = repository.defaultSetting.enableDigital)
-        val keyboardHeight by repository.keyboardHeightFlow.collectAsState(initial = repository.defaultSetting.keyboardHeight)
-        val candidateHeight by repository.candidateHeightFlow.collectAsState(initial = repository.defaultSetting.candidateHeight)
-        val themeColor by repository.themeColorFlow.collectAsState(initial = repository.defaultSetting.themeColor)
-        val keyboardBackgroundImage by repository.keyboardBackgroundImageFlow.collectAsState(initial = repository.defaultSetting.backgroundImage)
+        val showDigital by settingRepository.enableDigitalFlow.collectAsState(initial = settingRepository.defaultSetting.enableDigital)
+        val keyboardHeight by settingRepository.keyboardHeightFlow.collectAsState(initial = settingRepository.defaultSetting.keyboardHeight)
+        val candidateHeight by settingRepository.candidateHeightFlow.collectAsState(initial = settingRepository.defaultSetting.candidateHeight)
+        val themeColor by settingRepository.themeColorFlow.collectAsState(initial = settingRepository.defaultSetting.themeColor)
+        val keyboardBackgroundImage by settingRepository.keyboardBackgroundImageFlow.collectAsState(
+            initial = settingRepository.defaultSetting.backgroundImage
+        )
 
         val ime = context as IMEService
         val candidateState by IMEStore.candidateState.collectAsState()
@@ -81,10 +85,10 @@ class ComposeKeyboardView(
             }
 
         // 1️⃣ 取得所有語言
-        val allLanguages = remember { IMEService.getAvailableLanguages(context) }
+        val allLanguages = remember { languageRepository.getAvailableLanguages() }
 
         // 2️⃣ 取得 DataStore 儲存的已啟用語言 locale
-        val enabledLocales by repository.enabledLanguagesFlow.collectAsState(initial = emptySet())
+        val enabledLocales by settingRepository.enabledLanguagesFlow.collectAsState(initial = emptySet())
 
         // 3️⃣ 將所有語言標記 enabled 狀態
         val languages = allLanguages.map { lang ->

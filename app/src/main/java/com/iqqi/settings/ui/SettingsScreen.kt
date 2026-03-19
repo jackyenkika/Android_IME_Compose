@@ -19,13 +19,15 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.iqqi.data.LanguageRepository
 import com.iqqi.data.SettingsRepository
 import com.iqqi.settings.BackgroundImage
 import com.iqqi.settings.CandidateHeight
 import com.iqqi.settings.KeyboardHeight
 import com.iqqi.settings.SettingsViewModel
+import com.iqqi.settings.SettingsViewModelFactory
 import com.iqqi.settings.ThemeColor
 import com.iqqi.settings.ui.dialog.SettingImageSelectionDialog
 import com.iqqi.settings.ui.dialog.SettingsSelectionDialog
@@ -35,11 +37,18 @@ import com.iqqi.settings.ui.item.SettingSwitchItemModern
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SettingsScreen() {
+fun SettingsScreen(
+    settingRepository: SettingsRepository,
+    languageRepository: LanguageRepository,
+    onBack: () -> Unit
+) {
 
-    val context = LocalContext.current
-    val repository = remember { SettingsRepository(context) }
-    val viewModel = remember { SettingsViewModel(repository, context) }
+    val viewModel: SettingsViewModel = viewModel(
+        factory = SettingsViewModelFactory(
+            settingRepository = settingRepository,
+            languageRepository = languageRepository
+        )
+    )
 
     var showKeyboardHeightDialog by remember { mutableStateOf(false) }
     var showCandidateHeightDialog by remember { mutableStateOf(false) }
@@ -61,11 +70,7 @@ fun SettingsScreen() {
                 CenterAlignedTopAppBar(
                     title = { Text("Keyboard Settings") },
                     navigationIcon = {
-                        val activity = LocalContext.current as? android.app.Activity
-
-                        IconButton(
-                            onClick = { activity?.finish() }
-                        ) {
+                        IconButton(onClick = onBack) {
                             Icon(
                                 imageVector = Icons.Default.ArrowBack,
                                 contentDescription = "Back"
