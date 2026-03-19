@@ -1,11 +1,11 @@
 package com.iqqi.ime
 
 import com.iqqi.core.ImeAction
-import com.iqqi.engine.ImeEngine
+import com.iqqi.engine.IMEEngine
 import com.iqqi.keyboard.model.KeyboardLanguage
 
 class InputDispatcher(
-    private val engine: ImeEngine,
+    private val engine: IMEEngine,
     private val language: KeyboardLanguage,
     private val renderer: IMERenderer
 ) {

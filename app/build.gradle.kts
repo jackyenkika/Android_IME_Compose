@@ -56,8 +56,8 @@ android {
                 "ime-${projectName}-${outputDate}-${targetVersion}"
             }
         buildConfigField("String", "ProjectName", "\"$projectName\"")
-        buildConfigField("String", "AppExpireDate", "\"20251231235959\"")
-        buildConfigField("String", "Fifa2026ExpireDate", "\"20251231235959\"")
+        buildConfigField("String", "AppExpireDate", "\"20261231235959\"")
+        buildConfigField("String", "Fifa2026ExpireDate", "\"20261231235959\"")
 
         ndk {
             abiFilters.add("arm64-v8a")

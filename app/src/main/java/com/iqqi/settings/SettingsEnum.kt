@@ -56,9 +56,11 @@ enum class BackgroundImage(
 
     private val expireTimestamp: Long? = expireDateStr?.expireTimestamp()
 
-    fun isExpired(now: Long = System.currentTimeMillis()): Boolean =
-        listOfNotNull(expireTimestamp, appExpireTimestamp)
+    fun isExpired(now: Long = System.currentTimeMillis()): Boolean {
+        if(expireTimestamp == null) return false
+        return listOfNotNull(expireTimestamp, appExpireTimestamp)
             .any { now > it }
+    }
 
     fun isAvailable(): Boolean = !isExpired()
 

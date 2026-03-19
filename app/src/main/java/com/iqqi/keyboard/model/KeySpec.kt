@@ -4,9 +4,6 @@ import androidx.annotation.DrawableRes
 import androidx.compose.ui.graphics.vector.ImageVector
 import com.iqqi.ime.BuildConfig
 import com.iqqi.ime.util.ToolObj.expireTimestamp
-import com.iqqi.settings.BackgroundImage
-import com.iqqi.settings.BackgroundImage.NONE
-import com.iqqi.settings.BackgroundImage.entries
 
 data class KeySpec(
     val label: String? = null,
@@ -25,11 +22,12 @@ data class IconImage(
 ) {
     private val expireTimestamp: Long? = expireDateStr?.expireTimestamp()
 
-    fun isExpired(now: Long = System.currentTimeMillis()): Boolean =
-        listOfNotNull(expireTimestamp, appExpireTimestamp).any { now > it }
+    fun isExpired(now: Long = System.currentTimeMillis()): Boolean {
+        if (expireTimestamp == null) return false
+        return listOfNotNull(expireTimestamp, appExpireTimestamp).any { now > it }
+    }
 
     companion object {
         private val appExpireTimestamp: Long? = BuildConfig.AppExpireDate.expireTimestamp()
-
     }
 }

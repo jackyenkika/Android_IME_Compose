@@ -12,7 +12,7 @@ import com.iqqi.ime.util.LogObj
 import com.iqqi.keyboard.model.KeyboardLanguage
 import java.io.File
 
-class CIMReducer(
+class IMEReducer(
     context: Context,
     private val language: KeyboardLanguage,
     private val dict: Dictionary

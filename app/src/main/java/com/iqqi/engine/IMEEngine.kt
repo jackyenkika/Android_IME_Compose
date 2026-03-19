@@ -6,7 +6,7 @@ import com.iqqi.core.ImeAction
 import com.iqqi.core.InputMode
 import com.iqqi.core.Reducer
 
-class ImeEngine(private val reducer: Reducer) {
+class IMEEngine(private val reducer: Reducer) {
     private var state = EngineState()
     val currentState: EngineState
         get() = state

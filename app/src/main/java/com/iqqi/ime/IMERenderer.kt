@@ -3,6 +3,7 @@ package com.iqqi.ime
 import android.inputmethodservice.InputMethodService
 import com.iqqi.core.EngineOutput
 import com.iqqi.ime.util.DeleteObj
+import com.iqqi.ime.util.ToolObj.expireTimestamp
 import com.iqqi.keyboard.model.KeyboardLanguage
 
 /**
@@ -78,6 +79,12 @@ class IMERenderer(
     private val ims: InputMethodService
 ) {
     private val processor = SmartCommitProcessor()
+    private var isAppExpired = false
+
+    init {
+        BuildConfig.AppExpireDate.expireTimestamp()
+            ?.let { isAppExpired = it < System.currentTimeMillis() }
+    }
 
     fun render(output: EngineOutput, language: KeyboardLanguage) {
         val ic = ims.currentInputConnection ?: return
@@ -126,9 +133,11 @@ class IMERenderer(
         if (output.candidates.isEmpty()) {
             IMEStore.clearCandidate()
         } else {
-            IMEStore.updateCandidate(
-                output.candidates, output.selectedIndex
-            )
+            if (!isAppExpired) {
+                IMEStore.updateCandidate(
+                    output.candidates, output.selectedIndex
+                )
+            }
         }
     }
 }

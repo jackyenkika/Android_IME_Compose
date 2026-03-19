@@ -21,8 +21,8 @@ import com.iqqi.core.ImeAction
 import com.iqqi.dictionary.CimDictionary
 import com.iqqi.dictionary.Dictionary
 import com.iqqi.dictionary.KikaDictionary
-import com.iqqi.engine.CIMReducer
-import com.iqqi.engine.ImeEngine
+import com.iqqi.engine.IMEReducer
+import com.iqqi.engine.IMEEngine
 import com.iqqi.ime.util.DeleteRepeater
 import com.iqqi.ime.util.LogObj
 import com.iqqi.keyboard.ComposeKeyboardView
@@ -35,7 +35,7 @@ import java.io.File
 
 class IMEService : LifecycleInputMethodService(), ViewModelStoreOwner, SavedStateRegistryOwner {
 
-    private lateinit var engine: ImeEngine
+    private lateinit var engine: IMEEngine
     private lateinit var mapper: IMEKeyMapper
     private lateinit var imeRender: IMERenderer
 
@@ -175,8 +175,8 @@ class IMEService : LifecycleInputMethodService(), ViewModelStoreOwner, SavedStat
 
         val dictionary = getDictionary(language.name)
 
-        engine = ImeEngine(
-            reducer = CIMReducer(this@IMEService,language = language.name, dictionary)
+        engine = IMEEngine(
+            reducer = IMEReducer(this@IMEService,language = language.name, dictionary)
         )
 
         inputDispatcher = InputDispatcher(
