@@ -20,3 +20,11 @@
     public static **[] values();
     public static ** valueOf(java.lang.String);
 }
+
+#防止混淆導致engine crash
+-keep class com.lib.cimenginecoreso.** { *; }
+
+#需加入，因為cim有httpRequest
+-keepclassmembers class com.lib.cimenginecoreso.** {
+    native <methods>;
+}
