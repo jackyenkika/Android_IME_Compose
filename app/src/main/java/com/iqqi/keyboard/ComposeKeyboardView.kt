@@ -156,15 +156,20 @@ class ComposeKeyboardView(
                         KeySpec(type = KeyType.BACK, icon = Icons.Default.ArrowBackIosNew)
                     )
                 } else {
-                    listOf(
-                        KeySpec(type = KeyType.SETTINGS, icon = Icons.Default.Settings),
-                        KeySpec(type = KeyType.LANGUAGE, icon = Icons.Default.Language),
-                        KeySpec(
-                            type = KeyType.STICKER,
-                            icon = Icons.Default.Gif,
-                            isEnable = canUseSticker
+                    val keys = buildList {
+                        add(KeySpec(type = KeyType.SETTINGS, icon = Icons.Default.Settings))
+                        if (BuildConfig.EnableLanguage) {
+                            add(KeySpec(type = KeyType.LANGUAGE, icon = Icons.Default.Language))
+                        }
+                        add(
+                            KeySpec(
+                                type = KeyType.STICKER,
+                                icon = Icons.Default.Gif,
+                                isEnable = canUseSticker
+                            )
                         )
-                    )
+                    }
+                    keys
                 },
                 animationConfig = AnimationConfig(
                     shakeOffset = shakeOffset.value, showAnimation = keyboardState.animationTick

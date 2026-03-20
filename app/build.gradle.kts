@@ -58,6 +58,7 @@ android {
         buildConfigField("String", "ProjectName", "\"$projectName\"")
         buildConfigField("String", "AppExpireDate", "\"20261231235959\"")
         buildConfigField("String", "Fifa2026ExpireDate", "\"20261231235959\"")
+        buildConfigField("boolean", "EnableLanguage", "false")
 
         ndk {
             abiFilters.add("arm64-v8a")

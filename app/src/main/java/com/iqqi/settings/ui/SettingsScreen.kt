@@ -23,6 +23,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.iqqi.data.LanguageRepository
 import com.iqqi.data.SettingsRepository
+import com.iqqi.ime.BuildConfig
 import com.iqqi.settings.BackgroundImage
 import com.iqqi.settings.CandidateHeight
 import com.iqqi.settings.KeyboardHeight
@@ -141,19 +142,21 @@ fun SettingsScreen(
                     }
                 }
 
-                item {
-                    SettingsCategoryCard(title = "Languages") {
-                        val languages by viewModel.availableLanguages.collectAsState()
-                        languages.forEach { lang ->
-                            SettingSwitchItemModern(
-                                title = lang.locale ?: lang.name.name,
-                                summary = "Enable this language",
-                                checked = lang.enabled,
-                                onCheckedChange = { enabled ->
-                                    viewModel.toggleLanguage(lang, enabled)
-                                }
-                            )
-                            HorizontalDivider()
+                if (BuildConfig.EnableLanguage) {
+                    item {
+                        SettingsCategoryCard(title = "Languages") {
+                            val languages by viewModel.availableLanguages.collectAsState()
+                            languages.forEach { lang ->
+                                SettingSwitchItemModern(
+                                    title = lang.locale ?: lang.name.name,
+                                    summary = "Enable this language",
+                                    checked = lang.enabled,
+                                    onCheckedChange = { enabled ->
+                                        viewModel.toggleLanguage(lang, enabled)
+                                    }
+                                )
+                                HorizontalDivider()
+                            }
                         }
                     }
                 }
