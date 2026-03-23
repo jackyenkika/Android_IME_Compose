@@ -20,6 +20,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.iqqi.ime.R
+import com.iqqi.settings.ui.localFontFamily
 
 @Composable
 fun AboutSection() {
@@ -47,12 +48,16 @@ fun AboutSection() {
 
         Text(
             text = "KIKA Keyboard",
-            style = MaterialTheme.typography.titleMedium
+            style = MaterialTheme.typography.titleMedium.copy(
+                fontFamily = localFontFamily.current
+            )
         )
 
         Text(
             text = version,
-            style = MaterialTheme.typography.bodySmall,
+            style = MaterialTheme.typography.bodySmall.copy(
+                fontFamily = localFontFamily.current
+            ),
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
 
@@ -60,13 +65,17 @@ fun AboutSection() {
 
         Text(
             text = "© 2026 KIKA Project",
-            style = MaterialTheme.typography.bodySmall,
+            style = MaterialTheme.typography.bodySmall.copy(
+                fontFamily = localFontFamily.current
+            ),
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
 
         Text(
             text = "All rights reserved",
-            style = MaterialTheme.typography.bodySmall,
+            style = MaterialTheme.typography.bodySmall.copy(
+                fontFamily = localFontFamily.current
+            ),
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
     }

@@ -60,6 +60,7 @@ class ComposeKeyboardView(
         val keyboardBackgroundImage by settingRepository.keyboardBackgroundImageFlow.collectAsState(
             initial = settingRepository.defaultSetting.backgroundImage
         )
+        val fontType by settingRepository.fontTypeFlow.collectAsState(initial = settingRepository.defaultSetting.fontType)
 
         val ime = context as IMEService
         val candidateState by IMEStore.candidateState.collectAsState()
@@ -144,7 +145,9 @@ class ComposeKeyboardView(
             KeyboardLayoutProvider.create(keyboardState.layoutConfig, currentLanguage.name)
         }
         KeyboardTheme(
-            themeColor = themeColor, backgroundImage = keyboardBackgroundImage
+            themeColor = themeColor,
+            backgroundImage = keyboardBackgroundImage,
+            fontType = fontType,
         ) {
             KeyboardLayout(
                 deviceConfig = deviceConfig,

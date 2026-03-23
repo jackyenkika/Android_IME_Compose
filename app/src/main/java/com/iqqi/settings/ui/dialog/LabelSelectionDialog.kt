@@ -13,6 +13,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.iqqi.settings.ui.localFontFamily
 
 @Composable
 fun <T> SettingsSelectionDialog(
@@ -26,7 +27,14 @@ fun <T> SettingsSelectionDialog(
     AlertDialog(
         onDismissRequest = onDismiss,
         confirmButton = {},
-        title = { Text(title) },
+        title = {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.titleMedium.copy(
+                    fontFamily = localFontFamily.current
+                )
+            )
+        },
         text = {
             Column(
                 modifier = Modifier

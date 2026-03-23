@@ -35,6 +35,7 @@ import com.iqqi.settings.ui.dialog.SettingsSelectionDialog
 import com.iqqi.settings.ui.item.AboutSection
 import com.iqqi.settings.ui.item.SettingListItemModern
 import com.iqqi.settings.ui.item.SettingSwitchItemModern
+import com.iqqi.settings.ui.theme.FontType
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -55,15 +56,20 @@ fun SettingsScreen(
     var showCandidateHeightDialog by remember { mutableStateOf(false) }
     var showThemeDialog by remember { mutableStateOf(false) }
     var showKeyboardBackgroundDialog by remember { mutableStateOf(false) }
+    var showFontDialog by remember { mutableStateOf(false) }
 
     val enableDigital by viewModel.enableDigital.collectAsState()
     val currentKeyboardHeight by viewModel.currentKeyboardHeight.collectAsState()
     val currentCandidateHeight by viewModel.currentCandidateHeight.collectAsState()
+    val fontType by viewModel.fontType.collectAsState()
 
     val themeColor by viewModel.themeColor.collectAsState()
     val backgroundImage by viewModel.keyboardBackgroundImage.collectAsState()
 
-    KeyboardTheme(themeColor = themeColor) {
+    KeyboardTheme(
+        themeColor = themeColor,
+        fontType = fontType,
+    ) {
 
         Scaffold(
             containerColor = MaterialTheme.colorScheme.background,
@@ -138,6 +144,14 @@ fun SettingsScreen(
                             onClick = { showKeyboardBackgroundDialog = true }
                         )
 
+                        HorizontalDivider()
+
+                        SettingListItemModern(
+                            title = "Font",
+                            summary = "Change keyboard font",
+                            currentValue = fontType.label,
+                            onClick = { showFontDialog = true }
+                        )
                         HorizontalDivider()
                     }
                 }
@@ -223,6 +237,20 @@ fun SettingsScreen(
                         showKeyboardBackgroundDialog = false
                     },
                     onDismiss = { showKeyboardBackgroundDialog = false }
+                )
+            }
+
+            if (showFontDialog) {
+                SettingsSelectionDialog(
+                    title = "Font",
+                    options = FontType.entries,
+                    current = fontType,
+                    optionLabel = { it.label },
+                    onSelect = {
+                        viewModel.setFontType(it)
+                        showFontDialog = false
+                    },
+                    onDismiss = { showFontDialog = false }
                 )
             }
         }

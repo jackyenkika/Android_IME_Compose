@@ -9,6 +9,7 @@ import com.iqqi.settings.BackgroundImage
 import com.iqqi.settings.CandidateHeight
 import com.iqqi.settings.KeyboardHeight
 import com.iqqi.settings.ThemeColor
+import com.iqqi.settings.ui.theme.FontType
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
@@ -65,6 +66,20 @@ class SettingsRepository(private val context: Context) {
     suspend fun setThemeColor(color: ThemeColor) {
         context.dataStore.edit {
             it[PreferencesKeys.THEME_COLOR] = color.name
+        }
+    }
+
+
+    val fontTypeFlow = context.dataStore.data.map {
+        val stored = it[PreferencesKeys.FONT_TYPE] ?: defaultSetting.fontType.name
+        runCatching {
+            FontType.valueOf(stored)
+        }.getOrDefault(defaultSetting.fontType)
+    }
+
+    suspend fun setFontType(font: FontType) {
+        context.dataStore.edit {
+            it[PreferencesKeys.FONT_TYPE] = font.name
         }
     }
 
@@ -133,6 +148,8 @@ data class DefaultSetting(
 
     val themeColor: ThemeColor = ThemeColor.WHITE,
     val backgroundImage: BackgroundImage = BackgroundImage.FIFA_GREEN,
+
+    val fontType: FontType = FontType.SYSTEM,
 
     val defaultLanguage: List<ImeLanguage> = listOf(ImeLanguage())
 )

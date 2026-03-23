@@ -20,4 +20,7 @@ object PreferencesKeys {
     val ENABLED_LANGUAGES = stringPreferencesKey("enabled_languages")
 
     val LAST_USED_LANGUAGE = stringPreferencesKey("last_used_language")
+
+    val FONT_TYPE = stringPreferencesKey("font_type")
+
 }

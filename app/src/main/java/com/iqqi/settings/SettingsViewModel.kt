@@ -6,6 +6,7 @@ import com.iqqi.data.LanguageRepository
 import com.iqqi.data.SettingsRepository
 import com.iqqi.ime.util.LogObj
 import com.iqqi.keyboard.model.ImeLanguage
+import com.iqqi.settings.ui.theme.FontType
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -102,6 +103,18 @@ class SettingsViewModel(
     fun setThemeColor(color: ThemeColor) {
         viewModelScope.launch {
             repository.setThemeColor(color)
+        }
+    }
+
+    val fontType = repository.fontTypeFlow.stateIn(
+        viewModelScope,
+        SharingStarted.WhileSubscribed(5000),
+        repository.defaultSetting.fontType
+    )
+
+    fun setFontType(font: FontType) {
+        viewModelScope.launch {
+            repository.setFontType(font)
         }
     }
 

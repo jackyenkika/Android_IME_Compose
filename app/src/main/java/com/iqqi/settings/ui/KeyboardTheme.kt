@@ -1,24 +1,52 @@
 package com.iqqi.settings.ui
 
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Typography
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.Font
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
 import com.iqqi.keyboard.model.KeyboardThemeSpec
 import com.iqqi.keyboard.ui.localKeyboardStyle
 import com.iqqi.settings.BackgroundImage
 import com.iqqi.settings.ThemeColor
+import com.iqqi.settings.ui.theme.FontType
+
+val localFontFamily = compositionLocalOf<FontFamily> { FontFamily.Default }
 
 @Composable
 fun KeyboardTheme(
     themeColor: ThemeColor,
     backgroundImage: BackgroundImage? = null,
+    fontType: FontType = FontType.SYSTEM,
     content: @Composable () -> Unit
 ) {
+
+    val fontFamily = when (fontType) {
+        FontType.SYSTEM -> FontFamily.Default
+        FontType.SANS -> FontFamily.SansSerif
+        FontType.SERIF -> FontFamily.Serif
+        FontType.MONO -> FontFamily.Monospace
+        else -> {
+            if (fontType.res == null) FontFamily.Default
+            else FontFamily(Font(fontType.res, weight = FontWeight.Normal))
+        }
+    }
+
+    val typography = Typography().copy(
+        bodyLarge = Typography().bodyLarge.copy(fontFamily = fontFamily),
+        bodyMedium = Typography().bodyMedium.copy(fontFamily = fontFamily),
+        titleLarge = Typography().titleLarge.copy(fontFamily = fontFamily),
+        labelLarge = Typography().labelLarge.copy(fontFamily = fontFamily)
+    )
+
     //2026.03.06 暫時固定暗夜配色
 //    val isDark = true
     val isDark = androidx.compose.foundation.isSystemInDarkTheme()
@@ -150,9 +178,11 @@ fun KeyboardTheme(
 
     MaterialTheme(
         colorScheme = colorScheme,
+        typography = typography
     ) {
         CompositionLocalProvider(
-            localKeyboardStyle provides keyboardStyle
+            localKeyboardStyle provides keyboardStyle,
+            localFontFamily provides fontFamily
         ) {
             content()
         }

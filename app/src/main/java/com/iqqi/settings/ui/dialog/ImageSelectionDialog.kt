@@ -20,6 +20,7 @@ import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.iqqi.settings.BackgroundImage
+import com.iqqi.settings.ui.localFontFamily
 
 @Composable
 fun SettingImageSelectionDialog(
@@ -34,7 +35,14 @@ fun SettingImageSelectionDialog(
     AlertDialog(
         onDismissRequest = onDismiss,
         confirmButton = {},
-        title = { Text(title) },
+        title = {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.titleMedium.copy(
+                    fontFamily = localFontFamily.current
+                )
+            )
+        },
         text = {
             Column(
                 modifier = Modifier
