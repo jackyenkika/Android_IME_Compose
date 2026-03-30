@@ -276,7 +276,6 @@ fun KeyboardLayout(
 
                                     val key = activeKey ?: return@drag
                                     val altChars = key.altChars
-
                                     if (altChars.isEmpty()) return@drag
 
                                     val rowIdx = layout.indexOfFirst { it.contains(key) }
@@ -292,17 +291,37 @@ fun KeyboardLayout(
                                     val totalWeight =
                                         layout[rowIdx].sumOf { it.weight.toDouble() }.toFloat()
 
-                                    val keyWidth = containerSize.width * (key.weight / totalWeight)
-                                    val keyLeft =
-                                        containerSize.width * (prevWeightSum / totalWeight)
+                                    val metrics = rowMetrics[rowIdx]
+
+                                    val rowWidth = containerSize.width * metrics.widthRatio
+                                    val rowLeft = containerSize.width * metrics.leftRatio
+
+                                    val keyWidth = rowWidth * (key.weight / totalWeight)
+                                    val keyLeft = rowLeft + rowWidth * (prevWeightSum / totalWeight)
+                                    val keyTop = (containerSize.height / layout.size) * rowIdx
+                                    val keyHeight = containerSize.height / layout.size
 
                                     val localX = change.position.x - keyLeft
+                                    val localY = change.position.y - keyTop
 
-                                    val expandFactor = 2f   // ⭐ 可調（1.4 ~ 2.0）
-                                    val cellWidth = (keyWidth / altChars.size) * expandFactor
+                                    // ====== ⭐ 多排設定 ======
+                                    val maxPerRow = 3
+                                    val rows = altChars.chunked(maxPerRow)
+                                    val rowCount = rows.size
 
-                                    altKeyIndex =
-                                        (localX / cellWidth).toInt().coerceIn(0, altChars.lastIndex)
+                                    val expandFactor = 1.6f
+                                    val cellWidth = (keyWidth / maxPerRow) * expandFactor
+                                    val cellHeight = keyHeight * 1.2f
+
+                                    val col = (localX / cellWidth).toInt()
+                                    val row = (localY / cellHeight).toInt()
+
+                                    val safeCol = col.coerceIn(0, maxPerRow - 1)
+                                    val safeRow = row.coerceIn(0, rowCount - 1)
+
+                                    val index = safeRow * maxPerRow + safeCol
+
+                                    altKeyIndex = index.coerceIn(0, altChars.lastIndex)
 
                                     change.consume()
                                 }
@@ -611,74 +630,77 @@ fun KeyPreviewOverlay(
 
 @Composable
 fun AltCharsPreviewOverlay(
-    key: KeySpec, keyBounds: Rect, selectedIndex: Int
+    key: KeySpec,
+    keyBounds: Rect,
+    selectedIndex: Int
 ) {
     val style = localKeyboardStyle.current
     val density = LocalDensity.current
     val altChars = key.altChars
     if (altChars.isEmpty()) return
 
-    // 配置參數
-    val cellWidthDp = 64.dp // 每個候選字的基本寬度
-    val cellHeightDp = 48.dp // 每個候選字的高度，略高於一般按鍵
-    val verticalOffsetDp = 8.dp // 與原按鍵上緣的間距
+    val maxPerRow = 3
+    val rows = altChars.chunked(maxPerRow)
 
-    // 計算總寬度
-    val totalWidthPx = with(density) { (cellWidthDp * altChars.size).toPx() }
-    val cellHeightPx = with(density) { cellHeightDp.toPx() }
+    val cellWidthDp = 80.dp
+    val cellHeightDp = 48.dp
+    val verticalOffsetDp = 8.dp
+
+    val totalWidthDp = cellWidthDp * maxPerRow
+    val totalHeightDp = cellHeightDp * rows.size
+
+    val totalWidthPx = with(density) { totalWidthDp.toPx() }
+    val totalHeightPx = with(density) { totalHeightDp.toPx() }
     val verticalOffsetPx = with(density) { verticalOffsetDp.toPx() }
 
-    // 計算 X 座標：盡量置中於按鍵，但避免超出螢幕 (0 到 screenWidth)
-    // 注意：這裡假設 keyBounds 是相對於鍵盤容器的
-    val preferredX = keyBounds.center.x - (totalWidthPx / 2)
-    val popupX = preferredX.coerceIn(0f, Float.MAX_VALUE) // 這裡可用 LocalConfiguration 取得寬度做更嚴謹限制
+    val popupX = (keyBounds.center.x - totalWidthPx / 2)
+        .coerceAtLeast(0f)
 
-    // 計算 Y 座標：按鍵頂部 - 選單高度 - 間距
-    val popupY = keyBounds.top - cellHeightPx - verticalOffsetPx
+    val popupY = keyBounds.top - totalHeightPx - verticalOffsetPx
 
     Popup(
         offset = IntOffset(popupX.toInt(), popupY.toInt()),
-        properties = PopupProperties(
-            focusable = false, dismissOnBackPress = true, dismissOnClickOutside = true
-        )
+        properties = PopupProperties(focusable = false)
     ) {
-        // 使用 Row 建立一個連續的面板
-        Row(
+        Column(
             modifier = Modifier
                 .background(
-                    color = style.keyPreviewedColor, // 面板背景色
-                    shape = RoundedCornerShape(8.dp)
+                    style.keyPreviewedColor,
+                    RoundedCornerShape(10.dp)
                 )
                 .border(
-                    width = 0.5.dp,
-                    color = style.keyBorderColor.copy(alpha = 0.5f),
-                    shape = RoundedCornerShape(8.dp)
+                    0.5.dp,
+                    style.keyBorderColor.copy(alpha = 0.5f),
+                    RoundedCornerShape(10.dp)
                 )
-                .padding(4.dp), // 內邊距讓選取的 Highlight 不會貼邊
-            verticalAlignment = Alignment.CenterVertically
+                .padding(4.dp)
         ) {
-            altChars.forEachIndexed { index, label ->
-                val isSelected = index == selectedIndex
+            rows.forEachIndexed { rowIndex, rowItems ->
+                Row {
+                    rowItems.forEachIndexed { colIndex, label ->
+                        val index = rowIndex * maxPerRow + colIndex
+                        val isSelected = index == selectedIndex
 
-                Box(
-                    modifier =
-                        Modifier
-                            .size(cellWidthDp, cellHeightDp)
-                            .background(
-                                if (isSelected) style.keyPressedColor else Color.Transparent,
-                                RoundedCornerShape(10.dp)
+                        Box(
+                            modifier = Modifier
+                                .size(cellWidthDp, cellHeightDp)
+                                .background(
+                                    if (isSelected) style.keyPressedColor else Color.Transparent,
+                                    RoundedCornerShape(8.dp)
+                                ),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = label,
+                                maxLines = 1,
+                                fontSize = with(density) { (cellHeightDp.toPx() * 0.32f).toSp() },
+                                color = style.keyPreviewTextColor,
+                                style = TextStyle(
+                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
+                                )
                             )
-                            .padding(horizontal = 8.dp), contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = label,
-                        fontSize = with(density) { (cellHeightPx * 0.3f).toSp() },
-                        color = style.keyPreviewTextColor,
-                        maxLines = 1,
-                        style = TextStyle(
-                            fontWeight = if (isSelected) FontWeight.ExtraBold else FontWeight.Normal
-                        )
-                    )
+                        }
+                    }
                 }
             }
         }

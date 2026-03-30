@@ -276,7 +276,7 @@ object KeyboardLayoutProvider {
                     )
 
                     "@" -> key.copy(
-                        altChars = listOf("@gmail.com", "@yahoo.com", "@outlook.com", "@icloud.com")
+                        altChars = listOf("@gmail", "@yahoo", "@outlook", "@icloud")
                     )
 
                     else -> key
