@@ -13,9 +13,7 @@ import com.iqqi.keyboard.model.KeyboardLanguage
 import java.io.File
 
 class IMEReducer(
-    context: Context,
-    private val language: KeyboardLanguage,
-    private val dict: Dictionary
+    context: Context, private val language: KeyboardLanguage, private val dict: Dictionary
 ) : Reducer {
 
     init {
@@ -38,9 +36,7 @@ class IMEReducer(
     }
 
     private fun getResourcePath(context: Context): String {
-        val libraryPaths = System.getProperty("java.library.path")
-            ?.split(":")
-            ?: emptyList()
+        val libraryPaths = System.getProperty("java.library.path")?.split(":") ?: emptyList()
 
         val path = libraryPaths.firstOrNull {
             File("$it/libIQQILib.so").exists()
@@ -50,6 +46,13 @@ class IMEReducer(
     }
 
     override fun reduce(state: EngineState, action: ImeAction): EngineState {
+        // 🔥 最高優先級：Reset
+        if (action is ImeAction.Reset) {
+            val resetState = EngineState()  // 完全乾淨狀態
+            LogObj.debug("reduce RESET -> $resetState")
+            return resetState
+        }
+
         LogObj.debug("reduce start state = $state , action = $action")
         val endState = when (state.mode) {
             InputMode.Idle -> handleIdle(state, action)
@@ -71,8 +74,7 @@ class IMEReducer(
                 is Key.Char -> {
                     if (isSpellingChar(key.c)) {
                         buildComposingState(
-                            state,
-                            state.buffer + key.c
+                            state, state.buffer + key.c
                         )
                     } else {
                         EngineState(
@@ -91,8 +93,7 @@ class IMEReducer(
                     if (isNeedAppendSpace() && state.lastTextWasSpace()) {
                         EngineState(
                             deleteBeforeCursor = true, // 刪掉上一個空格
-                            commitText = ". ",
-                            mode = InputMode.Idle
+                            commitText = ". ", mode = InputMode.Idle
                         )
                     } else {
                         commit(" ")
@@ -109,6 +110,9 @@ class IMEReducer(
             }
 
             is ImeAction.SelectCandidate -> state
+            else -> {
+                state
+            }
         }
     }
 
@@ -127,12 +131,15 @@ class IMEReducer(
             is ImeAction.Delete -> {
                 handleDelete(state)
             }
+
+            else -> {
+                state
+            }
         }
     }
 
     private fun handleComposingInput(
-        state: EngineState,
-        action: ImeAction.Input
+        state: EngineState, action: ImeAction.Input
     ): EngineState {
 
         return when (val key = action.key) {
@@ -142,31 +149,26 @@ class IMEReducer(
                 if (isSpellingChar(key.c)) {
 
                     buildComposingState(
-                        state,
-                        state.buffer + key.c
+                        state, state.buffer + key.c
                     )
 
                 } else {
 
                     // 先 commit 現有 composing
-                    val commit = state.candidates.getOrNull(state.selectedIndex)
-                        ?: state.composing
+                    val commit = state.candidates.getOrNull(state.selectedIndex) ?: state.composing
 
                     EngineState(
-                        commitText = commit + key.c,
-                        mode = InputMode.Idle
+                        commitText = commit + key.c, mode = InputMode.Idle
                     )
                 }
             }
 
             is Key.Text -> {
 
-                val commit = state.candidates.getOrNull(state.selectedIndex)
-                    ?: state.composing
+                val commit = state.candidates.getOrNull(state.selectedIndex) ?: state.composing
 
                 EngineState(
-                    commitText = commit + key.text,
-                    mode = InputMode.Idle
+                    commitText = commit + key.text, mode = InputMode.Idle
                 )
             }
 
@@ -188,11 +190,10 @@ class IMEReducer(
         }
     }
 
-    // ---------------- Selecting ----------------
+// ---------------- Selecting ----------------
 
     private fun handleSelecting(
-        state: EngineState,
-        action: ImeAction
+        state: EngineState, action: ImeAction
     ): EngineState {
 
         return when (action) {
@@ -212,21 +213,24 @@ class IMEReducer(
 
                 else -> state
             }
+
+            else -> {
+                state
+            }
         }
     }
 
-    // ---------------- Predicting ----------------
+// ---------------- Predicting ----------------
 
     private fun handlePredicting(
-        state: EngineState,
-        action: ImeAction
+        state: EngineState, action: ImeAction
     ): EngineState {
 
         return when (action) {
 
             is ImeAction.SelectCandidate -> {
-                var commit = state.predictingCandidates.getOrNull(action.index)
-                    ?: return EngineState()
+                var commit =
+                    state.predictingCandidates.getOrNull(action.index) ?: return EngineState()
 
                 if (isNeedAppendSpace()) {
                     commit = "$commit "
@@ -250,8 +254,7 @@ class IMEReducer(
                 is Key.Char -> {
                     if (isSpellingChar(key.c)) {
                         buildComposingState(
-                            EngineState(),
-                            key.c.toString()
+                            EngineState(), key.c.toString()
                         )
                     } else {
                         EngineState(
@@ -271,8 +274,9 @@ class IMEReducer(
                         commit(text = " ")
                     } else {
                         //選取預測候選字的邏輯
-                        var commit = state.predictingCandidates.firstOrNull()
-                            ?: return EngineState(commitText = " ")
+                        var commit = state.predictingCandidates.firstOrNull() ?: return EngineState(
+                            commitText = " "
+                        )
 
                         if (isNeedAppendSpace()) {
                             commit = "$commit "
@@ -293,10 +297,13 @@ class IMEReducer(
                 }
             }
 
+            else -> {
+                state
+            }
         }
     }
 
-    // ---------------- Shared helpers ----------------
+// ---------------- Shared helpers ----------------
 
 
     private fun isSpellingChar(c: Char): Boolean {
@@ -309,16 +316,12 @@ class IMEReducer(
     }
 
     private fun buildComposingState(
-        state: EngineState,
-        buffer: String
+        state: EngineState, buffer: String
     ): EngineState {
 
         if (buffer.isEmpty()) {
             return state.copy(
-                buffer = "",
-                composing = "",
-                candidates = emptyList(),
-                mode = InputMode.Idle
+                buffer = "", composing = "", candidates = emptyList(), mode = InputMode.Idle
             )
         }
 
@@ -335,13 +338,10 @@ class IMEReducer(
     }
 
     private fun commitAndPredict(
-        state: EngineState,
-        index: Int,
-        appendSpace: Boolean = false
+        state: EngineState, index: Int, appendSpace: Boolean = false
     ): EngineState {
 
-        var commit = state.candidates.getOrNull(index)
-            ?: state.composing
+        var commit = state.candidates.getOrNull(index) ?: state.composing
 
         if (commit.isEmpty()) {
             return EngineState()
@@ -393,14 +393,10 @@ class IMEReducer(
 
 
     private fun commit(
-        text: String,
-        nextMode: InputMode = InputMode.Idle,
-        predict: List<String> = emptyList()
+        text: String, nextMode: InputMode = InputMode.Idle, predict: List<String> = emptyList()
     ): EngineState {
         return EngineState(
-            commitText = text,
-            predictingCandidates = predict,
-            mode = nextMode
+            commitText = text, predictingCandidates = predict, mode = nextMode
         )
     }
 

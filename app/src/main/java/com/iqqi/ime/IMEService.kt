@@ -132,6 +132,67 @@ class IMEService : LifecycleInputMethodService(), ViewModelStoreOwner, SavedStat
         }
         return super.onKeyUp(code, event)
     }
+
+    //=========================================================
+
+    override fun onUpdateSelection(
+        oldSelStart: Int,
+        oldSelEnd: Int,
+        newSelStart: Int,
+        newSelEnd: Int,
+        candidatesStart: Int,
+        candidatesEnd: Int
+    ) {
+        super.onUpdateSelection(
+            oldSelStart,
+            oldSelEnd,
+            newSelStart,
+            newSelEnd,
+            candidatesStart,
+            candidatesEnd
+        )
+
+        val ic = currentInputConnection ?: return
+
+        val isSelectionChanged = oldSelStart != newSelStart || oldSelEnd != newSelEnd
+
+        val hasComposing = candidatesStart != -1 && candidatesEnd != -1
+
+        var shouldClear = false
+
+        // ------------------------------------------------
+        // 1️⃣ 光標移出 composing 區域
+        // ------------------------------------------------
+        if (hasComposing) {
+            if (newSelStart !in candidatesStart..candidatesEnd ||
+                newSelEnd !in candidatesStart..candidatesEnd
+            ) {
+                shouldClear = true
+            }
+        }
+
+        // ------------------------------------------------
+        // 2️⃣ 沒有 composing，但光標被移動（使用者點擊）
+        // 👉 很多 App 不會給 candidates range
+        // ------------------------------------------------
+        if (!hasComposing && isSelectionChanged) {
+            shouldClear = true
+        }
+
+        // ------------------------------------------------
+        // 3️⃣ 執行清理（最關鍵）
+        // ------------------------------------------------
+        if (shouldClear) {
+            LogObj.trace("⚠️ Force finish composing due to cursor move")
+
+            ic.finishComposingText()
+
+            // 🔥 關鍵：同步清 Engine 狀態
+            dispatch(ImeAction.Reset)   // ← 你需要這個 action
+
+            IMEStore.clearCandidate()
+        }
+    }
     //=========================================================
 
     fun dispatch(action: ImeAction) {
@@ -188,7 +249,8 @@ class IMEService : LifecycleInputMethodService(), ViewModelStoreOwner, SavedStat
 
         val imm = getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager
 
-        val imi = imm.enabledInputMethodList.firstOrNull { it.packageName == packageName } ?: return
+        val imi =
+            imm.enabledInputMethodList.firstOrNull { it.packageName == packageName } ?: return
 
         lang.subtype?.let {
             window?.window?.attributes?.token?.let { token ->
@@ -247,7 +309,9 @@ class IMEService : LifecycleInputMethodService(), ViewModelStoreOwner, SavedStat
         )
 
         val contentInfo = androidx.core.view.inputmethod.InputContentInfoCompat(
-            contentUri, android.content.ClipDescription("sticker", arrayOf(sticker.mimeType)), null
+            contentUri,
+            android.content.ClipDescription("sticker", arrayOf(sticker.mimeType)),
+            null
         )
 
         // 🔥 commitContent 加授權 flag
