@@ -17,7 +17,6 @@ class KikaEngineAdapter {
         begin: Int,
         number: Int
     ): List<String> {
-
         val arr = arrayOfNulls<String>(number)
         val count = qwt9ini.GetCandidates(
             getImeId(engineId),
@@ -30,9 +29,26 @@ class KikaEngineAdapter {
             null
         )
 
-        LogObj.debug("candidates arr: ${arr.contentToString()}")
+        val rawList = arr.take(count).filterNotNull().toMutableList()
 
-        return arr.take(count).filterNotNull()
+        // --- 針對英語 "i" 的核心邏輯修正 ---
+        // 當使用者輸入單個 "i" 時，我們希望候選字清單中出現 "I"，且排在第一位
+        if (code.lowercase(Locale.US) == "i") {
+            // 1. 檢查清單中是否有 "i" 或 "I"
+            val iIndex = rawList.indexOfFirst { it.equals("i", ignoreCase = true) }
+
+            if (iIndex != -1) {
+                // 移除舊的，並在首位插入正確的大寫 "I"
+                rawList.removeAt(iIndex)
+                rawList.add(0, "I")
+            } else {
+                // 如果引擎居然沒給 "i"，我們手動補在第一位
+                rawList.add(0, "I")
+            }
+        }
+
+        LogObj.debug("candidates arr: $rawList")
+        return rawList
     }
 
     fun predict(
@@ -41,7 +57,6 @@ class KikaEngineAdapter {
         begin: Int,
         number: Int
     ): List<String> {
-
         val arr = arrayOfNulls<String>(number)
         val count = qwt9ini.GetNextWordCandidates(
             getImeId(engineId),
@@ -52,7 +67,6 @@ class KikaEngineAdapter {
         )
 
         LogObj.debug("predict arr: ${arr.contentToString()}")
-
         return arr.take(count).filterNotNull()
     }
 
@@ -66,6 +80,5 @@ class KikaEngineAdapter {
 
     private fun getImeId(engineId: Int): qwt9ini.IQQI_IME_ID {
         return qwt9ini.IQQI_IME_ID.entries[engineId]
-
     }
 }

@@ -272,10 +272,13 @@ object KeyboardLayoutProvider {
             EditorInfo.TYPE_TEXT_VARIATION_EMAIL_ADDRESS -> {
                 when (key.label) {
                     "." -> key.copy(
-                        altChars = listOf(".", ".com", ".net", ".org")
+                        altChars = listOf(".gov", ".edu", ".org", ".com", ".net")
                     )
 
-                    "@" -> key
+                    "@" -> key.copy(
+                        altChars = listOf("@gmail.com", "@yahoo.com", "@outlook.com", "@icloud.com")
+                    )
+
                     else -> key
                 }
             }
@@ -284,11 +287,11 @@ object KeyboardLayoutProvider {
             EditorInfo.TYPE_TEXT_VARIATION_URI -> {
                 when (key.label) {
                     "." -> key.copy(
-                        altChars = listOf(".", ".com", ".tw", ".net")
+                        altChars = listOf(".gov", ".edu", ".org", ".com", ".net")
                     )
 
                     "/" -> key.copy(
-                        altChars = listOf("/", "https://", "http://")
+                        altChars = listOf("www.", "https://", "http://")
                     )
 
                     else -> key
@@ -321,7 +324,7 @@ object KeyboardLayoutProvider {
                     // 📧 EMAIL → 左右給 , .
                     EditorInfo.TYPE_TEXT_VARIATION_EMAIL_ADDRESS -> {
                         if (isLeft) {
-                            KeySpec(type = KeyType.INPUT, label = ",")
+                            KeySpec(type = KeyType.INPUT, label = "@")
                         } else {
                             KeySpec(type = KeyType.INPUT, label = ".")
                         }
@@ -330,17 +333,9 @@ object KeyboardLayoutProvider {
                     // 🌐 URL → 強化 dot / slash
                     EditorInfo.TYPE_TEXT_VARIATION_URI -> {
                         if (isLeft) {
-                            KeySpec(
-                                type = KeyType.INPUT,
-                                label = "/",
-                                altChars = listOf("/", "https://", "http://")
-                            )
+                            KeySpec(type = KeyType.INPUT, label = "/")
                         } else {
-                            KeySpec(
-                                type = KeyType.INPUT,
-                                label = ".",
-                                altChars = listOf(".com", ".tw", ".net")
-                            )
+                            KeySpec(type = KeyType.INPUT, label = ".")
                         }
                     }
 

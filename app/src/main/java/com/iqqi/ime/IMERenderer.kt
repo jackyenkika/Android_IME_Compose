@@ -70,10 +70,16 @@ class CaseProcessor {
 
     // 判定當前游標位置是否處於「需要大寫」的邊界
     fun isAtBoundary(before: String, mode: CapsMode): Boolean {
+        // --- 核心修正：如果是 NONE，絕對不觸發大寫 ---
+        if (mode == CapsMode.NONE) return false
+
         if (mode == CapsMode.CHARACTERS) return true
+
+        // 如果前面是空的，通常視為 Session 的開始，判定為邊界
         if (before.isEmpty()) return true
 
         val trimmed = before.trimEnd()
+        // 如果全是空格，對 SENTENCES 來說是句首，對 WORDS 來說是詞首
         if (trimmed.isEmpty()) return true
 
         return when (mode) {
@@ -90,6 +96,10 @@ class CaseProcessor {
     // 執行轉換：首字母大寫或全大寫
     fun applyCase(text: String, shouldCap: Boolean, mode: CapsMode): String {
         if (text.isEmpty()) return text
+
+        // --- 核心修正：如果模式是 NONE，直接原樣回傳 ---
+        if (mode == CapsMode.NONE) return text
+
         if (mode == CapsMode.CHARACTERS) return text.uppercase()
 
         return if (shouldCap) {
@@ -105,9 +115,7 @@ class IMERenderer(private val ims: InputMethodService) {
     private val commitProcessor = SmartCommitProcessor()
     private val caseProcessor = CaseProcessor()
     private var isAppExpired = false
-
-    // 關鍵：鎖定當前輸入 Session 是否從大寫邊界開始
-    private var isSessionStartingAtBoundary = false
+    private var isSessionStartingAtBoundary = false   // 鎖定當前輸入 Session 是否從大寫邊界開始
 
     init {
         BuildConfig.AppExpireDate.expireTimestamp()
@@ -150,8 +158,10 @@ class IMERenderer(private val ims: InputMethodService) {
         }
 
         // --- 第三步：狀態機邏輯更新 ---
-        if (composing.isEmpty()) {
-            // Commit 完後，現在 before 應該包含剛才上屏的字了
+        if (capsMode == CaseProcessor.CapsMode.NONE) {
+            // 如果 inputType 根本沒要求大寫，強制鎖死為 false
+            isSessionStartingAtBoundary = false
+        } else if (composing.isEmpty()) {
             val before = ic.getTextBeforeCursor(20, 0)?.toString() ?: ""
             isSessionStartingAtBoundary = caseProcessor.isAtBoundary(before, capsMode)
         } else if (composing.length == 1) {
@@ -173,19 +183,26 @@ class IMERenderer(private val ims: InputMethodService) {
         }
 
         // --- 第五步：處理候選字 (含預測詞) ---
-        if (output.candidates.isEmpty()) {
+        val rawList = output.candidates.ifEmpty { emptyList() }
+        if (rawList.isEmpty() || isAppExpired) {
             IMEStore.clearCandidate()
             return
         }
 
-        if (!isAppExpired) {
-            // 根據 Session 鎖定的狀態進行轉換
-            val adjustedCandidates = output.candidates.map {
-                caseProcessor.applyCase(it, isSessionStartingAtBoundary, capsMode)
-            }
+        val processedCandidates = mutableListOf<String>()
+        val originalIndexMap = mutableListOf<Int>() // 用來記錄 UI 索引對應原始 output 的哪個索引
 
-            LogObj.trace("InputType: $inputType, SessionCap: $isSessionStartingAtBoundary, Original: ${output.candidates[0]}, Adjusted: ${adjustedCandidates[0]}")
-            IMEStore.updateCandidate(adjustedCandidates, output.selectedIndex)
+        rawList.forEachIndexed { index, s ->
+            val adjusted = caseProcessor.applyCase(s, isSessionStartingAtBoundary, capsMode)
+
+            // 需求 1：去重判斷
+            if (!processedCandidates.contains(adjusted)) {
+                processedCandidates.add(adjusted)
+                originalIndexMap.add(index)
+            }
         }
+
+        LogObj.trace("InputType: $inputType, SessionCap: $isSessionStartingAtBoundary, Original: ${output.candidates[0]}, Adjusted: ${processedCandidates[0]}")
+        IMEStore.updateCandidate(processedCandidates, originalIndexMap)
     }
 }

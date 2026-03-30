@@ -32,11 +32,11 @@ object IMEStore {
 
     //===========================================
 
-    fun updateCandidate(candidates: List<String>, selectedIndex: Int) {
+    fun updateCandidate(candidates: List<String>, indexMap: List<Int>) {
         _candidateState.update {
             it.copy(
                 candidates = candidates,
-                selectedIndex = selectedIndex
+                indexMap = indexMap
             )
         }
     }

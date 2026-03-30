@@ -228,8 +228,20 @@ class ComposeKeyboardView(
                         IMEStore.updateKeyboardState(newState)
                     }
                 },
-                onCandidateClick = { index ->
-                    ime.dispatch(ImeAction.SelectCandidate(index))
+                onCandidateClick = { uiIndex ->
+                    // 核心邏輯：從 map 中找回原始索引
+                    val indexMap = candidateState.indexMap
+
+                    // 預防萬一：如果 map 是空的或越界，回退到原始索引，但正常情況下 map 必須存在
+                    val realIndex = if (indexMap.isNotEmpty() && uiIndex < indexMap.size) {
+                        indexMap[uiIndex]
+                    } else {
+                        uiIndex
+                    }
+
+                    // 發送給 IMEService，進而交給 IMEReducer 處理
+                    // 此時 IMEReducer 拿到的 realIndex 就能精準對應它當初產生的原生清單
+                    ime.dispatch(ImeAction.SelectCandidate(realIndex))
                 },
                 onKeyCommit = { key ->
                     when (key.type) {
