@@ -297,7 +297,9 @@ fun KeyboardLayout(
                                         containerSize.width * (prevWeightSum / totalWeight)
 
                                     val localX = change.position.x - keyLeft
-                                    val cellWidth = keyWidth / altChars.size
+
+                                    val expandFactor = 2f   // ⭐ 可調（1.4 ~ 2.0）
+                                    val cellWidth = (keyWidth / altChars.size) * expandFactor
 
                                     altKeyIndex =
                                         (localX / cellWidth).toInt().coerceIn(0, altChars.lastIndex)
@@ -569,6 +571,8 @@ private fun rememberPainterForKey(key: KeySpec): Painter? {
     return null
 }
 
+//==================================
+
 @Composable
 fun KeyPreviewOverlay(
     label: String, keyBounds: Rect
@@ -615,8 +619,8 @@ fun AltCharsPreviewOverlay(
     if (altChars.isEmpty()) return
 
     // 配置參數
-    val cellWidthDp = 48.dp // 每個候選字的基本寬度
-    val cellHeightDp = 56.dp // 每個候選字的高度，略高於一般按鍵
+    val cellWidthDp = 64.dp // 每個候選字的基本寬度
+    val cellHeightDp = 48.dp // 每個候選字的高度，略高於一般按鍵
     val verticalOffsetDp = 8.dp // 與原按鍵上緣的間距
 
     // 計算總寬度
@@ -657,17 +661,20 @@ fun AltCharsPreviewOverlay(
                 val isSelected = index == selectedIndex
 
                 Box(
-                    modifier = Modifier
-                        .size(cellWidthDp, cellHeightDp)
-                        .background(
-                            if (isSelected) style.keyPressedColor else Color.Transparent,
-                            RoundedCornerShape(6.dp)
-                        ), contentAlignment = Alignment.Center
+                    modifier =
+                        Modifier
+                            .size(cellWidthDp, cellHeightDp)
+                            .background(
+                                if (isSelected) style.keyPressedColor else Color.Transparent,
+                                RoundedCornerShape(10.dp)
+                            )
+                            .padding(horizontal = 8.dp), contentAlignment = Alignment.Center
                 ) {
                     Text(
                         text = label,
+                        fontSize = with(density) { (cellHeightPx * 0.3f).toSp() },
                         color = style.keyPreviewTextColor,
-                        fontSize = with(density) { (cellHeightPx * 0.4f).toSp() },
+                        maxLines = 1,
                         style = TextStyle(
                             fontWeight = if (isSelected) FontWeight.ExtraBold else FontWeight.Normal
                         )
@@ -677,3 +684,4 @@ fun AltCharsPreviewOverlay(
         }
     }
 }
+//==================================

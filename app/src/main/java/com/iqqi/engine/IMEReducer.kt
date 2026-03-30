@@ -81,6 +81,12 @@ class IMEReducer(
                     }
                 }
 
+                is Key.Text -> {
+                    EngineState(
+                        commitText = key.text
+                    )
+                }
+
                 Key.Space -> {
                     if (isNeedAppendSpace() && state.lastTextWasSpace()) {
                         EngineState(
@@ -153,6 +159,17 @@ class IMEReducer(
                 }
             }
 
+            is Key.Text -> {
+
+                val commit = state.candidates.getOrNull(state.selectedIndex)
+                    ?: state.composing
+
+                EngineState(
+                    commitText = commit + key.text,
+                    mode = InputMode.Idle
+                )
+            }
+
             is Key.Space -> {
                 commitAndPredict(state, 0, isNeedAppendSpace())
             }
@@ -188,7 +205,13 @@ class IMEReducer(
                 handleDelete(state)
             }
 
-            else -> state
+            is ImeAction.Input -> when (val key = action.key) {
+                is Key.Text -> {
+                    EngineState(commitText = key.text)
+                }
+
+                else -> state
+            }
         }
     }
 
@@ -235,6 +258,12 @@ class IMEReducer(
                             commitText = key.c.toString()
                         )
                     }
+                }
+
+                is Key.Text -> {
+                    EngineState(
+                        commitText = key.text
+                    )
                 }
 
                 Key.Space -> {

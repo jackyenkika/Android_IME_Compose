@@ -26,6 +26,7 @@ sealed class ImeAction {
  */
 sealed class Key {
     data class Char(val c: kotlin.Char) : Key()
+    data class Text(val text: String) : Key()
     object Space : Key()
     object Enter : Key()
 }

@@ -25,7 +25,12 @@ class IMEKeyMapper() {
 
             KeyType.INPUT -> {
                 val label = key.label ?: return null
-                ImeAction.Input(Key.Char(label.first()))
+                val mappedKey = when {
+                    label.length == 1 -> Key.Char(label[0])
+                    else -> Key.Text(label) // ✅ 支援 https:// .com
+                }
+
+                ImeAction.Input(mappedKey)
             }
 
             KeyType.DELETE -> {

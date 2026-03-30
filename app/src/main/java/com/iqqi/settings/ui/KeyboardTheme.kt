@@ -168,8 +168,8 @@ fun KeyboardTheme(
             if (painter == null) colorScheme.primary else colorScheme.primary.copy(alpha = 0.5f),
         keyPrimaryTextColor = colorScheme.onPrimary,
 
-        keyPreviewedColor = colorScheme.primary.copy(alpha = 0.95f),
-        keyPreviewTextColor = colorScheme.onPrimary,
+        keyPreviewedColor = colorScheme.surface.copy(alpha = 0.95f),
+        keyPreviewTextColor = colorScheme.onSurface,
 
         keyPressedColor = colorScheme.primary.copy(alpha = 0.2f),
 
