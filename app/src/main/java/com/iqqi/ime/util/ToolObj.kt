@@ -9,7 +9,10 @@ import java.text.SimpleDateFormat
 import java.util.Locale
 
 object ToolObj {
-
+    //=======================================
+    /**
+     * 獲取裝置配置
+     */
     fun getDeviceConfig(
         context: Context,
         density: Density,
@@ -27,7 +30,10 @@ object ToolObj {
         return DeviceConfig(keyboardHeightDp, candidateHeightDp, candidateHeight.scale)
     }
 
-
+    //=======================================
+    /**
+     * 判斷是否為過期日期字符串，並返回過期時間戳
+     */
     fun String.expireTimestamp(): Long? = this.let {
         try {
             SimpleDateFormat("yyyyMMddHHmmss", Locale.CHINESE).parse(it)?.time
@@ -35,4 +41,5 @@ object ToolObj {
             null
         }
     }
+    //=======================================
 }

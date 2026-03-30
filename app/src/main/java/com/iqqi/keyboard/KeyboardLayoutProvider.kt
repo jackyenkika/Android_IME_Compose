@@ -1,5 +1,7 @@
 package com.iqqi.keyboard
 
+import android.text.InputType
+import android.view.inputmethod.EditorInfo
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Backspace
 import androidx.compose.material.icons.filled.KeyboardReturn
@@ -16,8 +18,13 @@ import com.iqqi.keyboard.state.ShiftState
 
 object KeyboardLayoutProvider {
     private val numberRow = "1234567890"
-    private val letterRowsBase = listOf(
-        "qwertyuiop", "asdfghjkl", "zxcvbnm"
+
+    private val letterRowsMap = mapOf(
+        KeyboardLanguage.ENGLISH to listOf(
+            "qwertyuiop", "asdfghjkl", "zxcvbnm"
+        ), KeyboardLanguage.CHINESE to listOf( // 注音 or 倉頡你之後可換
+            "qwertyuiop", "asdfghjkl", "zxcvbnm"
+        )
     )
 
     val symbolPageCount
@@ -49,41 +56,159 @@ object KeyboardLayoutProvider {
         return altMap[c.lowercaseChar()] ?: emptyList()
     }
 
-    fun create(config: LayoutConfig, language: KeyboardLanguage): List<List<KeySpec>> {
+    private fun getLetterRows(language: KeyboardLanguage): List<String> {
+        return letterRowsMap[language] ?: letterRowsMap[KeyboardLanguage.ENGLISH]!!
+    }
 
+    //=======================================
+
+    fun create(
+        config: LayoutConfig, language: KeyboardLanguage, inputType: Int
+    ): List<List<KeySpec>> {
+
+        val inputClass = inputType and InputType.TYPE_MASK_CLASS
+
+        return when (config.mode) {
+            KeyboardMode.LETTERS -> {
+                when (inputClass) {
+                    InputType.TYPE_CLASS_DATETIME, InputType.TYPE_CLASS_PHONE, InputType.TYPE_CLASS_NUMBER -> {
+                        createNumberLayout(config, inputType = inputType)
+                    }
+
+                    else -> createLetterLayout(config, language, inputType)
+                }
+            }
+
+            KeyboardMode.SYMBOLS -> createSymbolLayout(config, language, inputType)
+        }
+    }
+
+    //=======================================
+
+    private fun createLetterLayout(
+        config: LayoutConfig, language: KeyboardLanguage, inputType: Int
+    ): List<List<KeySpec>> {
         val rows = mutableListOf<List<KeySpec>>()
 
         // 1️⃣ Number row
-        if (config.showNumberRow && config.mode == KeyboardMode.LETTERS) {
-            rows += createCharRow(numberRow, config, false)
+        if (config.showNumberRow) {
+            rows += createCharRow(
+                chars = numberRow, config = config, lastRow = false, inputType = inputType
+            )
         }
 
+        val letterRowsBase = getLetterRows(language)
         // 2️⃣ Main rows
-        when (config.mode) {
-
-            KeyboardMode.LETTERS -> {
-                letterRowsBase.forEach { row ->
-                    rows += createCharRow(row, config, row == letterRowsBase.last())
-                }
-            }
-
-            KeyboardMode.SYMBOLS -> {
-                val page = config.pageIndex % symbolPages.size
-                val targetSymbol = symbolPages[page]
-                targetSymbol.forEach { row ->
-                    rows += createCharRow(row, config, row == targetSymbol.last())
-                }
-            }
+        letterRowsBase.forEach { row ->
+            rows += createCharRow(
+                chars = row,
+                config = config,
+                lastRow = row == letterRowsBase.last(),
+                inputType = inputType
+            )
         }
 
         // 3️⃣ 功能列
-        rows += createBottomRow(config, language)
+        rows += listOf(
+            KeySpec(
+                type = KeyType.SYMBOL, label = "?123", weight = 1.5f
+            ), generateSpaceSideKey(
+                mode = KeyboardMode.LETTERS,
+                isLeft = true,
+                language = language,
+                inputType = inputType
+            ), KeySpec(
+                label = language.displayName,
+                32,
+                type = KeyType.SPACE,
+                icon = Icons.Default.SpaceBar,
+                weight = 5f
+            ), generateSpaceSideKey(
+                mode = KeyboardMode.LETTERS,
+                isLeft = false,
+                language = language,
+                inputType = inputType
+            ), KeySpec(
+                type = KeyType.ENTER, icon = Icons.Default.KeyboardReturn, iconDrawable = IconImage(
+                    "FIFA soccer", R.drawable.ic_soccer, BuildConfig.Fifa2026ExpireDate
+                ), weight = 1.5f
+            )
+        )
 
         return rows
     }
 
+    private fun createSymbolLayout(
+        config: LayoutConfig, language: KeyboardLanguage, inputType: Int
+    ): List<List<KeySpec>> {
+        val rows = mutableListOf<List<KeySpec>>()
+
+        val page = config.pageIndex % symbolPages.size
+        val targetSymbol = symbolPages[page]
+        targetSymbol.forEach { row ->
+            rows += createCharRow(
+                chars = row,
+                config = config,
+                lastRow = row == targetSymbol.last(),
+                inputType = inputType
+            )
+        }
+
+        // 3️⃣ 功能列
+        rows += listOf(
+            KeySpec(
+                type = KeyType.SYMBOL, label = "ABC", weight = 1.5f
+            ), generateSpaceSideKey(
+                mode = KeyboardMode.SYMBOLS,
+                isLeft = true,
+                language = language,
+                inputType = inputType
+            ), KeySpec(
+                label = language.displayName,
+                code = 32,
+                type = KeyType.SPACE,
+                icon = Icons.Default.SpaceBar,
+                weight = 5f
+            ), generateSpaceSideKey(
+                mode = KeyboardMode.SYMBOLS,
+                isLeft = false,
+                language = language,
+                inputType = inputType
+            ), KeySpec(
+                type = KeyType.ENTER, icon = Icons.Default.KeyboardReturn, iconDrawable = IconImage(
+                    "FIFA soccer", R.drawable.ic_soccer, BuildConfig.Fifa2026ExpireDate
+                ), weight = 1.5f
+            )
+        )
+        return rows
+    }
+
+    private fun createNumberLayout(config: LayoutConfig, inputType: Int): List<List<KeySpec>> {
+        return listOf(
+            createCharRow("123-", config, false, inputType = inputType),
+            createCharRow("456", config, false, inputType = inputType) + KeySpec(
+                code = 32, type = KeyType.SPACE, icon = Icons.Default.SpaceBar, weight = 1f
+            ),
+            createCharRow("789", config, false, inputType = inputType) +
+
+                    KeySpec(
+                        type = KeyType.DELETE,
+                        icon = Icons.Default.Backspace,
+                        isRepeatable = true,
+                        weight = 1f
+                    ),
+            createCharRow(",0.", config, false, inputType = inputType) + KeySpec(
+                type = KeyType.ENTER, icon = Icons.Default.KeyboardReturn, iconDrawable = IconImage(
+                    "FIFA soccer", R.drawable.ic_soccer, BuildConfig.Fifa2026ExpireDate
+                ), weight = 1f
+            )
+        )
+    }
+
+    //=======================================
+
     private fun createCharRow(
-        chars: String, config: LayoutConfig, lastRow: Boolean
+        chars: String, config: LayoutConfig, lastRow: Boolean, inputType: Int
     ): List<KeySpec> {
         val rowKeys = mutableListOf<KeySpec>()
         if (lastRow && config.hasShift && config.mode == KeyboardMode.LETTERS) {
@@ -115,11 +240,13 @@ object KeyboardLayoutProvider {
                 ShiftState.ON, ShiftState.CAPS_LOCK -> c.uppercaseChar()
             }
 
-            KeySpec(
+            val baseKey = KeySpec(
                 label = finalChar.toString(),
                 code = finalChar.code,
                 altChars = getAltChars(finalChar)
             )
+
+            transformKey(baseKey, inputType)
         })
         if (lastRow) {
             rowKeys.add(
@@ -135,82 +262,133 @@ object KeyboardLayoutProvider {
         return rowKeys
     }
 
-    private fun createBottomRow(
-        config: LayoutConfig, language: KeyboardLanguage
-    ): List<KeySpec> {
-        //            KeySpec(type = KeyType.CANCEL, icon = Icons.Default.ArrowDropDown, weight = 1.5f),
-//            KeySpec(type = KeyType.SETTINGS, icon = Icons.Default.Settings),
-//            KeySpec(type = KeyType.LANGUAGE, icon = Icons.Default.Language),
-        return if (config.mode == KeyboardMode.LETTERS) {
-            listOf(
-                KeySpec(
-                    type = KeyType.SYMBOL,
-                    label = "?123",
-                    weight = 1.5f
-                ),
-                KeySpec(
-                    type = KeyType.INPUT, label = if (language == KeyboardLanguage.CHINESE) {
-                        "，"
-                    } else {
-                        ","
-                    }
-                ),
-                KeySpec(
-                    label = language.displayName,
-                    32,
-                    type = KeyType.SPACE,
-                    icon = Icons.Default.SpaceBar,
-                    weight = 5f
-                ),
-                KeySpec(
-                    type = KeyType.INPUT, label = if (language == KeyboardLanguage.CHINESE) {
-                        "。"
-                    } else {
-                        "."
-                    }
-                ),
-                KeySpec(
-                    type = KeyType.ENTER,
-                    icon = Icons.Default.KeyboardReturn,
-                    iconDrawable = IconImage(
-                        "FIFA soccer", R.drawable.ic_soccer, BuildConfig.Fifa2026ExpireDate
-                    ),
-                    weight = 1.5f
+    private fun transformKey(key: KeySpec, inputType: Int): KeySpec {
+
+        val variation = inputType and EditorInfo.TYPE_MASK_VARIATION
+
+        return when (variation) {
+
+            // 📧 EMAIL
+            EditorInfo.TYPE_TEXT_VARIATION_EMAIL_ADDRESS -> {
+                when (key.label) {
+                    "." -> key.copy(
+                        altChars = listOf(".", ".com", ".net", ".org")
+                    )
+
+                    "@" -> key
+                    else -> key
+                }
+            }
+
+            // 🌐 URL
+            EditorInfo.TYPE_TEXT_VARIATION_URI -> {
+                when (key.label) {
+                    "." -> key.copy(
+                        altChars = listOf(".", ".com", ".tw", ".net")
+                    )
+
+                    "/" -> key.copy(
+                        altChars = listOf("/", "https://", "http://")
+                    )
+
+                    else -> key
+                }
+            }
+
+            // 🔒 PASSWORD
+            EditorInfo.TYPE_TEXT_VARIATION_PASSWORD, EditorInfo.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD -> {
+                key.copy(
+                    altChars = emptyList()
                 )
-            )
-        } else {
-            listOf(
-                KeySpec(
-                    type = KeyType.SYMBOL,
-                    label = "ABC",
-                    weight = 1.5f
-                ),
-                KeySpec(
-                    type = KeyType.INPUT,
-                    label = "<",
-                    altChars = listOf("<", "≤", "《", "〈", "【")
-                ),
-                KeySpec(
-                    label = language.displayName,
-                    32,
-                    type = KeyType.SPACE,
-                    icon = Icons.Default.SpaceBar,
-                    weight = 5f
-                ),
-                KeySpec(
-                    type = KeyType.INPUT,
-                    label = ">",
-                    altChars = listOf(">", "≥", "》", "〉", "】")
-                ),
-                KeySpec(
-                    type = KeyType.ENTER,
-                    icon = Icons.Default.KeyboardReturn,
-                    iconDrawable = IconImage(
-                        "FIFA soccer", R.drawable.ic_soccer, BuildConfig.Fifa2026ExpireDate
-                    ),
-                    weight = 1.5f
-                )
-            )
+            }
+
+            else -> key
         }
     }
+
+    private fun generateSpaceSideKey(
+        mode: KeyboardMode, isLeft: Boolean, language: KeyboardLanguage, inputType: Int
+    ): KeySpec {
+
+        val variation = inputType and EditorInfo.TYPE_MASK_VARIATION
+
+        val rawKey = when (mode) {
+
+            KeyboardMode.LETTERS -> {
+
+                when (variation) {
+
+                    // 📧 EMAIL → 左右給 , .
+                    EditorInfo.TYPE_TEXT_VARIATION_EMAIL_ADDRESS -> {
+                        if (isLeft) {
+                            KeySpec(type = KeyType.INPUT, label = ",")
+                        } else {
+                            KeySpec(type = KeyType.INPUT, label = ".")
+                        }
+                    }
+
+                    // 🌐 URL → 強化 dot / slash
+                    EditorInfo.TYPE_TEXT_VARIATION_URI -> {
+                        if (isLeft) {
+                            KeySpec(
+                                type = KeyType.INPUT,
+                                label = "/",
+                                altChars = listOf("/", "https://", "http://")
+                            )
+                        } else {
+                            KeySpec(
+                                type = KeyType.INPUT,
+                                label = ".",
+                                altChars = listOf(".com", ".tw", ".net")
+                            )
+                        }
+                    }
+
+                    // 🔒 PASSWORD → 不要干擾
+                    EditorInfo.TYPE_TEXT_VARIATION_PASSWORD, EditorInfo.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD -> {
+                        if (isLeft) {
+                            KeySpec(type = KeyType.INPUT, label = ",")
+                        } else {
+                            KeySpec(type = KeyType.INPUT, label = ".")
+                        }
+                    }
+
+                    // 🧠 一般文字輸入（重點）
+                    else -> {
+                        if (isLeft) {
+                            KeySpec(
+                                type = KeyType.INPUT,
+                                label = if (language == KeyboardLanguage.CHINESE) "，" else ","
+                            )
+                        } else {
+                            KeySpec(
+                                type = KeyType.INPUT,
+                                label = if (language == KeyboardLanguage.CHINESE) "。" else "."
+                            )
+                        }
+                    }
+                }
+            }
+
+            // 🔣 SYMBOL 模式
+            KeyboardMode.SYMBOLS -> {
+                if (isLeft) {
+                    KeySpec(
+                        type = KeyType.INPUT,
+                        label = "<",
+                        altChars = listOf("<", "≤", "《", "〈", "【")
+                    )
+                } else {
+                    KeySpec(
+                        type = KeyType.INPUT,
+                        label = ">",
+                        altChars = listOf(">", "≥", "》", "〉", "】")
+                    )
+                }
+            }
+        }
+
+        return transformKey(rawKey, inputType)
+    }
+    //=======================================
 }

@@ -501,8 +501,7 @@ fun KeyboardKey(
         when (keyboardKey.type) {
             KeyType.INPUT,
             KeyType.SYMBOL,
-            KeyType.NEXT_SYMBOL,
-            KeyType.SPACE -> {
+            KeyType.NEXT_SYMBOL -> {
                 val label = keyboardKey.label ?: ""
                 val fontSize = with(density) { (shortSideDp.toPx() * multiplier).toSp() }
 
@@ -513,6 +512,31 @@ fun KeyboardKey(
                     fontWeight = FontWeight.W500,
                     fontSize = fontSize,
                 )
+            }
+
+            KeyType.SPACE -> {
+                val label = keyboardKey.label ?: ""
+                if (label.isEmpty()) {
+                    val painter = rememberPainterForKey(keyboardKey)
+
+                    if (painter != null) {
+                        Icon(
+                            painter = painter,
+                            contentDescription = null,
+                            tint = textColor,
+                            modifier = Modifier.fillMaxSize(0.6f)
+                        )
+                    }
+                } else {
+                    val fontSize = with(density) { (shortSideDp.toPx() * multiplier).toSp() }
+                    Text(
+                        text = label,
+                        color = textColor,
+                        maxLines = 1,
+                        fontWeight = FontWeight.W500,
+                        fontSize = fontSize,
+                    )
+                }
             }
 
             else -> {

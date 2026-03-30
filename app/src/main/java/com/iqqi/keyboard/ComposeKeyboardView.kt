@@ -141,8 +141,14 @@ class ComposeKeyboardView(
             )
         }
 
-        val layout = remember(keyboardState.layoutConfig, currentLanguage.name) {
-            KeyboardLayoutProvider.create(keyboardState.layoutConfig, currentLanguage.name)
+        val layout = remember(
+            keyboardState.layoutConfig, currentLanguage.name, keyboardState.inputType
+        ) {
+            KeyboardLayoutProvider.create(
+                config = keyboardState.layoutConfig,
+                language = currentLanguage.name,
+                inputType = keyboardState.inputType
+            )
         }
         KeyboardTheme(
             themeColor = themeColor,
