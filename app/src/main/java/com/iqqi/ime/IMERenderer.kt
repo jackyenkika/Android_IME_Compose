@@ -56,65 +56,48 @@ class SmartCommitProcessor {
 }
 
 class CaseProcessor {
+    enum class CapsMode { NONE, SENTENCES, WORDS, CHARACTERS }
 
-    fun process(
-        text: String,
-        beforeCursor: String,
-        composing: String,
-        inputType: Int,
-        language: KeyboardLanguage
-    ): String {
-        if (language != KeyboardLanguage.ENGLISH || text.isEmpty()) return text
-        if (isPassword(inputType)) return text
-        if (isEmail(inputType)) return text.lowercase()
-
-        val capsMode = getCapsMode(inputType)
-        val boundaryText = beforeCursor + composing
-
+    // 根據 InputType 判斷當前的大寫模式
+    fun getCapsMode(inputType: Int): CapsMode {
         return when {
-            text.length == 1 -> handleSingleChar(text, boundaryText, capsMode)
-            capsMode == CapsMode.CHARACTERS -> text.uppercase()
-            capsMode == CapsMode.WORDS -> if (isWordBoundary(boundaryText)) text.capitalize() else text
-            capsMode == CapsMode.SENTENCES -> if (isSentenceBoundary(boundaryText)) text.capitalize() else text
-            else -> text
+            (inputType and InputType.TYPE_TEXT_FLAG_CAP_CHARACTERS) != 0 -> CapsMode.CHARACTERS
+            (inputType and InputType.TYPE_TEXT_FLAG_CAP_WORDS) != 0 -> CapsMode.WORDS
+            (inputType and InputType.TYPE_TEXT_FLAG_CAP_SENTENCES) != 0 -> CapsMode.SENTENCES
+            else -> CapsMode.NONE
         }
     }
 
-    private fun isPassword(inputType: Int) =
-        inputType and InputType.TYPE_TEXT_VARIATION_PASSWORD != 0
+    // 判定當前游標位置是否處於「需要大寫」的邊界
+    fun isAtBoundary(before: String, mode: CapsMode): Boolean {
+        if (mode == CapsMode.CHARACTERS) return true
+        if (before.isEmpty()) return true
 
-    private fun isEmail(inputType: Int) =
-        inputType and InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS != 0
-
-    private fun getCapsMode(inputType: Int) = when {
-        inputType and InputType.TYPE_TEXT_FLAG_CAP_CHARACTERS != 0 -> CapsMode.CHARACTERS
-        inputType and InputType.TYPE_TEXT_FLAG_CAP_WORDS != 0 -> CapsMode.WORDS
-        inputType and InputType.TYPE_TEXT_FLAG_CAP_SENTENCES != 0 -> CapsMode.SENTENCES
-        else -> CapsMode.NONE
-    }
-
-    private fun isSentenceBoundary(before: String): Boolean {
         val trimmed = before.trimEnd()
         if (trimmed.isEmpty()) return true
-        return trimmed.last() in listOf('.', '!', '?', '\n')
+
+        return when (mode) {
+            CapsMode.SENTENCES -> {
+                val lastChar = trimmed.last()
+                lastChar == '.' || lastChar == '!' || lastChar == '?' || lastChar == '\n'
+            }
+
+            CapsMode.WORDS -> before.last().isWhitespace()
+            else -> false
+        }
     }
 
-    private fun isWordBoundary(before: String): Boolean =
-        before.isEmpty() || before.last().isWhitespace()
+    // 執行轉換：首字母大寫或全大寫
+    fun applyCase(text: String, shouldCap: Boolean, mode: CapsMode): String {
+        if (text.isEmpty()) return text
+        if (mode == CapsMode.CHARACTERS) return text.uppercase()
 
-    private fun handleSingleChar(text: String, before: String, mode: CapsMode): String =
-        when (mode) {
-            CapsMode.CHARACTERS -> text.uppercase()
-            CapsMode.WORDS, CapsMode.SENTENCES -> if (before.isBlank() || before.lastOrNull()
-                    ?.isWhitespace() == true
-            ) text.uppercase() else text
-
-            else -> text
+        return if (shouldCap) {
+            text.replaceFirstChar { if (it.isLowerCase()) it.titlecase() else it.toString() }
+        } else {
+            text
         }
-
-    private fun String.capitalize(): String = replaceFirstChar { it.uppercase() }
-
-    private enum class CapsMode { NONE, SENTENCES, WORDS, CHARACTERS }
+    }
 }
 
 class IMERenderer(private val ims: InputMethodService) {
@@ -123,6 +106,9 @@ class IMERenderer(private val ims: InputMethodService) {
     private val caseProcessor = CaseProcessor()
     private var isAppExpired = false
 
+    // 關鍵：鎖定當前輸入 Session 是否從大寫邊界開始
+    private var isSessionStartingAtBoundary = false
+
     init {
         BuildConfig.AppExpireDate.expireTimestamp()
             ?.let { isAppExpired = it < System.currentTimeMillis() }
@@ -130,42 +116,76 @@ class IMERenderer(private val ims: InputMethodService) {
 
     fun render(output: EngineOutput, language: KeyboardLanguage) {
         val ic = ims.currentInputConnection ?: return
-        val inputType = IMEStore.keyboardState.value.inputType
-        val before = ic.getTextBeforeCursor(10, 0)?.toString() ?: ""
+        val keyboardState = IMEStore.keyboardState.value
+        val inputType = keyboardState.inputType
         val composing = output.composingText ?: ""
+        val capsMode = caseProcessor.getCapsMode(inputType)
 
+        // --- 第一步：處理刪除 ---
         if (output.deleteBeforeCursor) {
             ic.finishComposingText()
             DeleteObj.delete(ic)
         }
 
+        // --- 第二步：處理 Commit ---
+        // 這樣可以確保文字先上屏，ic.getTextBeforeCursor 才能抓到正確的後續環境
         output.commitText?.let { raw ->
-            val caseAdjusted = caseProcessor.process(raw, before, composing, inputType, language)
+            // 這裡必須使用「進入這一幀之前」的 isSessionStartingAtBoundary
+            val caseAdjusted = if (raw.isNotEmpty() && raw != " " && raw != "\n") {
+                caseProcessor.applyCase(raw, isSessionStartingAtBoundary, capsMode)
+            } else {
+                raw
+            }
+
+            val currentBefore = ic.getTextBeforeCursor(10, 0)?.toString() ?: ""
             val finalText = commitProcessor.process(
-                CommitContext(
-                    caseAdjusted, before, language
-                )
+                CommitContext(caseAdjusted, currentBefore, language)
             ) { ic.deleteSurroundingText(1, 0) }
+
             ic.commitText(finalText, 1)
             IMEStore.commitEvents.tryEmit(finalText)
+
+            // 重要：如果是 Commit 動作，我們暫時不在此處重置 SessionCap，
+            // 讓後面的狀態更新邏輯去處理。
         }
 
-        LogObj.trace("render composing: $composing")
-        if (composing.isNotEmpty()) ic.setComposingText(composing, 1) else ic.finishComposingText()
+        // --- 第三步：狀態機邏輯更新 ---
+        if (composing.isEmpty()) {
+            // Commit 完後，現在 before 應該包含剛才上屏的字了
+            val before = ic.getTextBeforeCursor(20, 0)?.toString() ?: ""
+            isSessionStartingAtBoundary = caseProcessor.isAtBoundary(before, capsMode)
+        } else if (composing.length == 1) {
+            val fullBefore = ic.getTextBeforeCursor(21, 0)?.toString() ?: ""
+            val actualBefore = if (fullBefore.isNotEmpty()) fullBefore.dropLast(1) else ""
+            isSessionStartingAtBoundary = caseProcessor.isAtBoundary(actualBefore, capsMode)
+        }
+        // 當長度 > 1 時，不再更新 isSessionStartingAtBoundary，直到 Session 結束
 
+        LogObj.trace("InputType: $inputType, SessionCap: $isSessionStartingAtBoundary, Composing: '$composing', CapsMode: $capsMode")
+
+        // --- 第四步：處理 Composing Text ---
+        if (composing.isNotEmpty()) {
+            val adjustedComposing =
+                caseProcessor.applyCase(composing, isSessionStartingAtBoundary, capsMode)
+            ic.setComposingText(adjustedComposing, 1)
+        } else {
+            ic.finishComposingText()
+        }
+
+        // --- 第五步：處理候選字 (含預測詞) ---
         if (output.candidates.isEmpty()) {
             IMEStore.clearCandidate()
             return
         }
 
         if (!isAppExpired) {
-            LogObj.trace("inputType = $inputType , raw candidates1 : ${output.candidates}, selectedIndex = ${output.selectedIndex}")
-            // ✅ 使用 inputType + CapsMode 轉換候選字
-            val adjusted = output.candidates.map {
-                caseProcessor.process(it, before, composing, inputType, language)
+            // 根據 Session 鎖定的狀態進行轉換
+            val adjustedCandidates = output.candidates.map {
+                caseProcessor.applyCase(it, isSessionStartingAtBoundary, capsMode)
             }
-            LogObj.trace("render candidates2 : $adjusted, selectedIndex = ${output.selectedIndex}")
-            IMEStore.updateCandidate(adjusted, output.selectedIndex)
+
+            LogObj.trace("InputType: $inputType, SessionCap: $isSessionStartingAtBoundary, Original: ${output.candidates[0]}, Adjusted: ${adjustedCandidates[0]}")
+            IMEStore.updateCandidate(adjustedCandidates, output.selectedIndex)
         }
     }
 }
