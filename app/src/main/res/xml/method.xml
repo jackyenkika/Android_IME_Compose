@@ -84,12 +84,12 @@
 <!--        android:languageTag="zh-TW" />-->
 
     <!-- 中文（簡體）Chinese_CN-->
-    <subtype
-        android:imeSubtypeLocale="zh_CN"
-        android:imeSubtypeMode="keyboard"
-        android:isAsciiCapable="true"
-        android:label="@string/ime_language_chinese_pinyin_display_name"
-        android:languageTag="zh-CN" />
+<!--    <subtype-->
+<!--        android:imeSubtypeLocale="zh_CN"-->
+<!--        android:imeSubtypeMode="keyboard"-->
+<!--        android:isAsciiCapable="true"-->
+<!--        android:label="@string/ime_language_chinese_pinyin_display_name"-->
+<!--        android:languageTag="zh-CN" />-->
 
 <!--    &lt;!&ndash; 中文（簡體）Chinese_CN_9key&ndash;&gt;-->
 <!--    &lt;!&ndash;    <subtype&ndash;&gt;-->

@@ -31,7 +31,8 @@ class SmartCommitProcessor {
             else -> lastSpaceTimestamp = 0L
         }
 
-        if (text in autoSpacePunctuation && !ctx.beforeCursor.endsWith(" ")) {
+        val lastChar = ctx.beforeCursor.lastOrNull()?.toString()
+        if (text in autoSpacePunctuation && lastChar != null && lastChar != " " && lastChar !in autoSpacePunctuation) {
             text += " "
         }
         return text
